@@ -258,7 +258,7 @@ const GameLobby = () => {
               {rooms.map((room) => (
                 <button
                   key={room.id}
-                  onClick={() => handleJoin(room.id, !!room.password_hash)}
+                  onClick={() => handleJoin(room.id, !!room.password_hash, room.status)}
                   className="w-full flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card/50 hover:bg-card/80 transition-colors text-left"
                 >
                   {room.password_hash ? (
@@ -272,9 +272,16 @@ const GameLobby = () => {
                       {room.status === "waiting" ? "Waiting" : "In Progress"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>{room.player_count}/{room.max_players}</span>
+                  <div className="flex items-center gap-2">
+                    {room.status === "in_progress" && (
+                      <span className="text-xs font-display tracking-wider text-primary bg-primary/10 px-2 py-1 rounded">
+                        RESUME
+                      </span>
+                    )}
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Users className="h-4 w-4" />
+                      <span>{room.player_count}/{room.max_players}</span>
+                    </div>
                   </div>
                 </button>
               ))}
