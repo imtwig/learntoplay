@@ -498,6 +498,8 @@ function settleHand(state: BJGameState, player: BJPlayerState, hand: BJHand, dea
       if (dealer) { dealer.netProfit -= hand.bet; dealer.roundProfit -= hand.bet; }
       break;
     case "lose":
+    case "bust":
+    case "fail":
       player.netProfit -= hand.bet;
       player.roundProfit -= hand.bet;
       if (dealer) { dealer.netProfit += hand.bet; dealer.roundProfit += hand.bet; }
