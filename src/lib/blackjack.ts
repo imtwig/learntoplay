@@ -413,7 +413,7 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
 
   // Dealer must have at least 15 points to reveal hands (unless they have a natural)
   const dealerHasNatural = dealer?.hands[0] && (dealer.hands[0].result === "blackjack" || dealer.hands[0].result === "double_aces");
-  if (dealerVal < 15 && !dealerHasNatural) return s;
+  if (dealerVal < 16 && !dealerHasNatural) return s;
 
   s.revealedPlayerIds.push(playerId);
   const player = s.players.find((p) => p.playerId === playerId);
