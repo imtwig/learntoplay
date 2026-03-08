@@ -393,9 +393,8 @@ const SequenceTable = ({
                           : "border-border/50 hover:border-border"
                         }
                         ${isSpecial ? "bg-secondary/50" : ""}
-                        ${!isMyTurn ? "opacity-50" : ""}
+                        ${!isMyTurn ? "opacity-70" : ""}
                       `}
-                      disabled={!isMyTurn}
                     >
                       <span
                         className="font-display font-bold text-sm leading-none"
