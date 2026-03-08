@@ -68,7 +68,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
         (payload) => {
           const gs = payload.new?.game_state;
           if (gs && typeof gs === "object" && "phase" in (gs as any)) {
-            setRawGameState(gs as unknown as BJGameState);
+            setRawGameState(normalizeGameState(gs as unknown as BJGameState));
           }
         }
       )
