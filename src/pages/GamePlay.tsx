@@ -18,10 +18,12 @@ const GamePlay = () => {
   const game = room ? getGame(room.game_type as GameId) : null;
   const isSequence = room?.game_type === "sequence";
   const isPoker = room?.game_type === "poker";
+  const isADD = room?.game_type === "asshole_daidi";
 
-  const blackjack = useBlackjack(roomId, (isSequence || isPoker) ? [] : players);
+  const blackjack = useBlackjack(roomId, (isSequence || isPoker || isADD) ? [] : players);
   const sequence = useSequence(roomId, isSequence ? players : []);
   const poker = usePoker(roomId, isPoker ? players : []);
+  const add = useAssholeDaiDi(roomId, isADD ? players : []);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
 
