@@ -326,7 +326,7 @@ const SequenceTable = ({
                           ${isPreview ? "ring-2 ring-green-500 bg-green-50" : ""}
                           ${isOccupiedMatch ? "ring-2 ring-orange-400 bg-orange-50/50" : ""}
                           ${isSeqCell ? "ring-1 ring-game-gold" : ""}
-                          ${isLastRemoved ? "ring-2 ring-destructive/50" : ""}
+                          ${""}
                         `}
                         style={isLastPlaced && chip ? {
                           backgroundColor: chip.owner === "A" ? "rgba(239,68,68,0.25)"
