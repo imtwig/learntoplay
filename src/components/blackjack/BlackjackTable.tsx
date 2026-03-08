@@ -337,7 +337,7 @@ const BlackjackTable = ({
                     }
                   />
                 ))}
-                <ProfitDisplay profit={myBJPlayer.netProfit} />
+                <ProfitDisplay profit={myBJPlayer.roundProfit} />
               </motion.div>
             )}
 
