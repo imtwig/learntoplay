@@ -360,6 +360,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
       // --- 5-card rule (non-dealer only) ---
       if (!player.isDealer && hand.cards.length >= 5) {
         hand.revealed = true;
+        for (const c of hand.cards) c.faceUp = true;
         if (!s.revealedPlayerIds.includes(player.playerId)) {
           s.revealedPlayerIds.push(player.playerId);
         }
