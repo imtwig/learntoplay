@@ -320,6 +320,25 @@ export async function leaveRoom(playerId: string, roomId: string) {
     }
   }
 
+  // Update sequence game state to remove player from teams
+  const { data: room } = await supabase
+    .from("rooms")
+    .select("game_type, game_state")
+    .eq("id", roomId)
+    .single();
+
+  if (room?.game_type === "sequence" && room.game_state) {
+    const gs = room.game_state as any;
+    if (gs.board && gs.players) {
+      const { removeSeqPlayer } = await import("@/lib/sequence");
+      const updatedState = removeSeqPlayer(gs, playerId);
+      await supabase
+        .from("rooms")
+        .update({ game_state: updatedState as any })
+        .eq("id", roomId);
+    }
+  }
+
   await supabase
     .from("players")
     .update({ connected: false })
