@@ -4,6 +4,7 @@ import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Chec
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import HandDisplay from "./HandDisplay";
+import DealingAnimation from "./DealingAnimation";
 import LeaderboardButton from "./LeaderboardButton";
 import RoundResultOverlay from "./RoundResultOverlay";
 import type { BJGameState, PlayerAction, BJSettings } from "@/lib/blackjack";
