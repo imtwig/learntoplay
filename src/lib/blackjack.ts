@@ -301,12 +301,35 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
         break;
       }
 
+      // --- Dealer triple sevens check ---
+      if (player.isDealer && hasTripleSevens(hand.cards)) {
+        hand.result = "triple_sevens";
+        // Dealer wins 7x from all remaining (non-settled) players
+        for (const p of s.players) {
+          if (p.isDealer || s.revealedPlayerIds.includes(p.playerId)) continue;
+          for (const h of p.hands) {
+            if (h.result !== "pending") continue;
+            h.result = "lose";
+            h.revealed = true;
+            p.netProfit -= h.bet * 7;
+            p.roundProfit -= h.bet * 7;
+            player.netProfit += h.bet * 7;
+            player.roundProfit += h.bet * 7;
+          }
+          if (!s.revealedPlayerIds.includes(p.playerId)) {
+            s.revealedPlayerIds.push(p.playerId);
+          }
+        }
+        finishDealerTurn(s);
+        break;
+      }
+
       // --- Dealer 5-card rule ---
       if (player.isDealer && hand.cards.length >= 5) {
         const dealerVal = handValue(hand.cards);
         
         if (dealerVal <= 21) {
-          // Dealer wins x2 from all remaining (unrevealed) players
+          // Dealer ngou leng — wins x2 from all remaining (unsettled) players
           hand.result = "five_card";
           for (const p of s.players) {
             if (p.isDealer || s.revealedPlayerIds.includes(p.playerId)) continue;
@@ -324,7 +347,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
             }
           }
         } else {
-          // Dealer busts with 5 cards - loses x2 to all remaining players (except those who also busted)
+          // Dealer busts with 5 cards - regular bust
           hand.result = "bust";
           for (const p of s.players) {
             if (p.isDealer || s.revealedPlayerIds.includes(p.playerId)) continue;
@@ -333,15 +356,13 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
               const pVal = handValue(h.cards);
               h.revealed = true;
               if (pVal > 21) {
-                // Both busted — push, no money exchanged
                 h.result = "push";
               } else {
-                // Player didn't bust - wins x2
                 h.result = "win";
-                p.netProfit += h.bet * 2;
-                p.roundProfit += h.bet * 2;
-                player.netProfit -= h.bet * 2;
-                player.roundProfit -= h.bet * 2;
+                p.netProfit += h.bet;
+                p.roundProfit += h.bet;
+                player.netProfit -= h.bet;
+                player.roundProfit -= h.bet;
               }
             }
             if (!s.revealedPlayerIds.includes(p.playerId)) {
