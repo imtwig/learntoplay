@@ -283,10 +283,15 @@ const SequenceTable = ({
                   const isPreview = previewSet.has(`${r},${c}`);
                   const isOccupiedMatch = occupiedMatchSet.has(`${r},${c}`);
                   const cellKey = `${r},${c}`;
-                  const isAnimating = animatingCell === cellKey;
-                  const isLastMove = gameState.lastMove?.row === r && gameState.lastMove?.col === c;
+                  const isLastPlaced = lastMoveCell === cellKey && gameState.lastMove?.type === "place";
+                  const isLastRemoved = lastMoveCell === cellKey && gameState.lastMove?.type === "remove";
                   const { rank, suitSymbol, suitColor } = parseCard(cell);
                   const isSeqCell = chip?.partOfSequence;
+
+                  // Background color: team color fill for last placed cell
+                  const teamBgClass = isLastPlaced && chip
+                    ? `${chipColorClass(chip.owner).replace("bg-", "bg-")}/30`
+                    : "";
 
                   return (
                     <motion.button
@@ -299,16 +304,24 @@ const SequenceTable = ({
                       }}
                       className={`
                         relative flex flex-col items-center justify-center rounded-[3px] leading-tight
-                        transition-all duration-150 aspect-square overflow-visible
+                        transition-all duration-300 aspect-square overflow-visible
                         ${isFree
                           ? "bg-game-gold/20 border border-game-gold/30"
-                          : "bg-white border border-gray-200"
+                          : "border border-gray-200"
                         }
+                        ${!isFree && !isLastPlaced ? "bg-white" : ""}
                         ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
                         ${isPreview ? "ring-2 ring-green-500 bg-green-50" : ""}
                         ${isOccupiedMatch ? "ring-2 ring-orange-400 bg-orange-50/50" : ""}
                         ${isSeqCell ? "ring-1 ring-game-gold" : ""}
+                        ${isLastRemoved ? "ring-2 ring-destructive/50" : ""}
                       `}
+                      style={isLastPlaced && chip ? {
+                        backgroundColor: chip.owner === "A" ? "rgba(239,68,68,0.25)"
+                          : chip.owner === "B" ? "rgba(59,130,246,0.25)"
+                          : chip.owner === "C" ? "rgba(34,197,94,0.25)"
+                          : undefined
+                      } : undefined}
                     >
                       {isFree ? (
                         <span className="text-game-gold font-bold text-sm">★</span>
@@ -330,32 +343,22 @@ const SequenceTable = ({
                       )}
                       {/* Chip */}
                       {chip && (
-                        <motion.div
-                          initial={isAnimating ? { scale: 0 } : false}
-                          animate={{ scale: 1 }}
-                          transition={{ duration: 0.3, type: "spring" }}
+                        <div
                           className={`absolute inset-[15%] rounded-full ${chipColorClass(chip.owner)} opacity-75 ${
                             isSeqCell ? "opacity-90 ring-1 ring-white/50" : ""
                           }`}
                         />
                       )}
-                      {/* Hand drop animation on last move */}
-                      <AnimatePresence>
-                        {isAnimating && (
-                          <motion.span
-                            initial={{ y: -20, opacity: 1, scale: 1.2 }}
-                            animate={{ y: 10, opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.4, ease: "easeOut" }}
-                            className="absolute inset-0 flex items-end justify-center text-lg z-10 pointer-events-none"
-                          >
-                            🫳
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                      {settledCell === cellKey && (
-                        <span className="absolute inset-0 flex items-end justify-center text-lg z-10 pointer-events-none">
-                          🫳
-                        </span>
+                      {/* Dotted outline for last removed cell (jack action) */}
+                      {isLastRemoved && !chip && (
+                        <div
+                          className="absolute inset-[15%] rounded-full border-2 border-dashed opacity-60"
+                          style={{
+                            borderColor: gameState.lastMove?.type === "remove"
+                              ? "rgba(239,68,68,0.6)"
+                              : undefined
+                          }}
+                        />
                       )}
                       {/* Free corner chip indicator */}
                       {isFree && (
