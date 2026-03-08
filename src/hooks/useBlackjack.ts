@@ -31,56 +31,75 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
   const [rawGameState, setRawGameState] = useState<BJGameState | null>(null);
   const [myBetInput, setMyBetInput] = useState<string>("");
   const initialized = useRef(false);
+  const roomIdRef = useRef(roomId);
+  roomIdRef.current = roomId;
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
   const isHost = myPlayer?.is_host ?? false;
 
-  const loadGameState = useCallback(async () => {
+  // Single effect: load + subscribe + poll fallback
+  useEffect(() => {
     if (!roomId) return;
-    const { data } = await supabase
-      .from("rooms")
-      .select("game_state")
-      .eq("id", roomId)
-      .single();
-    if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any) && "players" in (data.game_state as any)) {
-      const gs = normalizeGameState(data.game_state as unknown as BJGameState);
-      setRawGameState(gs);
-      initialized.current = true;
-      if (myPlayer) {
-        const myBJ = gs.players.find((p) => p.playerId === myPlayer.id);
-        if (myBJ && myBJ.currentBet > 0) {
-          setMyBetInput(String(myBJ.currentBet));
-        }
+    let active = true;
+    let pollTimer: ReturnType<typeof setTimeout>;
+
+    const isValidBJState = (gs: any): boolean =>
+      gs && typeof gs === "object" && "phase" in gs && "players" in gs;
+
+    const fetchState = async () => {
+      const { data } = await supabase
+        .from("rooms")
+        .select("game_state")
+        .eq("id", roomId)
+        .single();
+      if (!active) return;
+      if (data?.game_state && isValidBJState(data.game_state)) {
+        const gs = normalizeGameState(data.game_state as unknown as BJGameState);
+        setRawGameState(gs);
+        initialized.current = true;
       }
-    }
-  }, [roomId, myPlayer?.id]);
+    };
 
-  useEffect(() => {
-    loadGameState();
-  }, [loadGameState]);
+    // Initial load
+    fetchState();
 
-  useEffect(() => {
-    if (!roomId) return;
+    // Realtime subscription
     const channel = supabase
       .channel(`blackjack-${roomId}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "rooms", filter: `id=eq.${roomId}` },
         (payload) => {
+          if (!active) return;
           const gs = payload.new?.game_state;
-          if (gs && typeof gs === "object" && "phase" in (gs as any) && "players" in (gs as any)) {
+          if (isValidBJState(gs)) {
             setRawGameState(normalizeGameState(gs as unknown as BJGameState));
           }
         }
       )
       .subscribe((status) => {
-        // Re-fetch after subscription is established to handle race condition
-        if (status === "SUBSCRIBED") {
-          loadGameState();
+        if (status === "SUBSCRIBED" && active) {
+          fetchState();
         }
       });
-    return () => { supabase.removeChannel(channel); };
-  }, [roomId, loadGameState]);
+
+    // Polling fallback: retry every 2s until state is loaded, then every 10s
+    const poll = () => {
+      if (!active) return;
+      fetchState().then(() => {
+        if (active) {
+          pollTimer = setTimeout(poll, rawGameState ? 10000 : 2000);
+        }
+      });
+    };
+    pollTimer = setTimeout(poll, 2000);
+
+    return () => {
+      active = false;
+      clearTimeout(pollTimer);
+      supabase.removeChannel(channel);
+    };
+  }, [roomId]);
 
   const saveState = useCallback(async (state: BJGameState) => {
     if (!roomId) return;
