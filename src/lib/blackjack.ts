@@ -290,12 +290,12 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
           player.roundProfit += hand.bet * 2;
           if (dealer) { dealer.netProfit -= hand.bet * 2; dealer.roundProfit -= hand.bet * 2; }
         } else {
-          // Busted at 5 cards — regular bust
+          // Busted at 5 cards — 2x loss
           hand.result = "bust";
           const dealer = s.players.find((p) => p.isDealer);
-          player.netProfit -= hand.bet;
-          player.roundProfit -= hand.bet;
-          if (dealer) { dealer.netProfit += hand.bet; dealer.roundProfit += hand.bet; }
+          player.netProfit -= hand.bet * 2;
+          player.roundProfit -= hand.bet * 2;
+          if (dealer) { dealer.netProfit += hand.bet * 2; dealer.roundProfit += hand.bet * 2; }
         }
         advanceHand(s, player);
         break;
