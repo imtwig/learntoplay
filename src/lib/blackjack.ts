@@ -427,7 +427,7 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
     const playerBust = isBust(h.cards);
 
     if (playerBust) {
-      h.result = "lose";
+      h.result = "bust";
       settleHand(s, player, h, dealer);
     } else if (playerVal > dealerVal) {
       h.result = "win";
