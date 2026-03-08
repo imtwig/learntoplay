@@ -146,13 +146,10 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
   switch (action) {
     case "hit": {
       hand.cards.push(draw(s));
-      if (isBust(hand.cards)) {
+      // Dealer auto-busts, but players must manually press Done
+      if (player.isDealer && isBust(hand.cards)) {
         hand.result = "lose";
-        if (player.isDealer) {
-          finishDealerTurn(s);
-        } else {
-          advanceHand(s, player);
-        }
+        finishDealerTurn(s);
       }
       break;
     }
