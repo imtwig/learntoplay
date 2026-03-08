@@ -514,8 +514,7 @@ export function filterStateForPlayer(state: BJGameState, viewerPlayerId: string)
   if (!s.settings) s.settings = { showFirstCard: false, showFirstCardNextRound: false };
   for (const p of s.players) {
     if (p.playerId === viewerPlayerId) continue;
-    if ((s.phase === "dealer_turn" || s.phase === "results") && 
-        s.revealedPlayerIds.includes(p.playerId)) {
+    if (s.revealedPlayerIds.includes(p.playerId)) {
       continue;
     }
     for (const h of p.hands) {
