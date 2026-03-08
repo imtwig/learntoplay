@@ -95,9 +95,13 @@ const SequenceTable = ({
       }
     }
     const set = new Set<string>();
+    const myTeam = mySeqPlayer.team;
     for (const [r, c] of allPositions) {
       const key = `${r},${c}`;
-      if (!validSet.has(key) && !previewSet.has(key) && gameState.board[r][c] !== null) {
+      const cellOccupant = gameState.board[r][c];
+      if (!validSet.has(key) && !previewSet.has(key) && cellOccupant !== null) {
+        // For one-eyed jacks (remove), don't highlight your own team's chips
+        if (isOneEyedJack(card) && cellOccupant === myTeam) continue;
         set.add(key);
       }
     }
