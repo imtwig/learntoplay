@@ -470,6 +470,10 @@ const BlackjackTable = ({
           )}
         </div>
       </main>
+      <RoundResultOverlay
+        roundProfit={myBJPlayer?.roundProfit ?? 0}
+        visible={showResultOverlay}
+      />
     </div>
   );
 };
