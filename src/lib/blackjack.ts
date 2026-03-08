@@ -271,12 +271,14 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
           hand.result = "five_card";
           const dealer = s.players.find((p) => p.isDealer);
           player.netProfit += hand.bet * 2;
-          if (dealer) dealer.netProfit -= hand.bet * 2;
+          player.roundProfit += hand.bet * 2;
+          if (dealer) { dealer.netProfit -= hand.bet * 2; dealer.roundProfit -= hand.bet * 2; }
         } else {
           hand.result = "lose";
           const dealer = s.players.find((p) => p.isDealer);
           player.netProfit -= hand.bet * 2;
-          if (dealer) dealer.netProfit += hand.bet * 2;
+          player.roundProfit -= hand.bet * 2;
+          if (dealer) { dealer.netProfit += hand.bet * 2; dealer.roundProfit += hand.bet * 2; }
         }
         advanceHand(s, player);
         break;
