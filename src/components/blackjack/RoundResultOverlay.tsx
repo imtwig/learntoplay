@@ -212,7 +212,7 @@ const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHan
                   transition={{ delay: 0.5 }}
                   className="text-sm font-display text-muted-foreground tracking-wider"
                 >
-                  PUSH
+                  DRAW
                 </motion.p>
               </>
             )}
