@@ -492,9 +492,9 @@ const BlackjackTable = ({
                       </Button>
                     ))}
                   </div>
-                  <Button onClick={onRevealAll} variant="outline" className="w-full gap-2 font-display tracking-wider text-xs">
+                  <Button onClick={() => { onRevealAll(); onNextRound(); }} variant="outline" className="w-full gap-2 font-display tracking-wider text-xs">
                     <Eye className="h-4 w-4" />
-                    Reveal All
+                    Reveal All & Done
                   </Button>
                 </div>
               )}
