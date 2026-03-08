@@ -153,12 +153,12 @@ export async function createRoom(
   const { data: room, error: roomError } = await supabase
     .from("rooms")
     .insert({
-      game_type: gameType,
+      game_type: gameType as string,
       room_name: roomName,
       password_hash: passwordHash,
-      settings,
+      settings: settings as any,
       max_players: maxPlayers,
-    })
+    } as any)
     .select()
     .single();
 
