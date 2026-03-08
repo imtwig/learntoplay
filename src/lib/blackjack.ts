@@ -445,6 +445,12 @@ export function revealAll(state: BJGameState): BJGameState {
   const s = structuredClone(state);
   if (s.phase !== "dealer_turn") return s;
 
+  // Dealer must have at least 15 points to reveal hands
+  const dealer2 = s.players.find((p) => p.isDealer);
+  const dealerVal2 = dealer2 ? handValue(dealer2.hands[0]?.cards ?? []) : 0;
+  const dealerHasNatural2 = dealer2?.hands[0] && (dealer2.hands[0].result === "blackjack" || dealer2.hands[0].result === "double_aces");
+  if (dealerVal2 < 15 && !dealerHasNatural2) return s;
+
   const dealer = s.players.find((p) => p.isDealer);
   const dealerVal = dealer ? handValue(dealer.hands[0]?.cards ?? []) : 0;
 
