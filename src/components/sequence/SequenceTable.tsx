@@ -96,7 +96,12 @@ const SequenceTable = ({
           <ArrowLeft className="h-3.5 w-3.5" />
           Leave
         </Button>
-        <span className="font-display text-[10px] tracking-widest text-muted-foreground">SEQUENCE</span>
+        <div className="flex items-center gap-2">
+          <span className="font-display text-[10px] tracking-widest text-muted-foreground">SEQUENCE</span>
+          {gameState.houseRules && (
+            <span className="text-[8px] font-display tracking-wider px-1.5 py-0.5 rounded bg-game-gold/20 text-game-gold">HOUSE RULES</span>
+          )}
+        </div>
         <div className="text-xs text-muted-foreground font-display">
           {sequences.length > 0 && (
             <span>
