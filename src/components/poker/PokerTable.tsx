@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Crown, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Crown, ChevronDown, ChevronUp, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { PokerGameState, PokerAction } from "@/lib/poker";
@@ -20,6 +20,7 @@ interface Props {
   onDeal: () => void;
   onNextHand: () => void;
   onLeave: () => void;
+  onKickPlayer: (playerId: string) => void;
   players: Player[];
   myPlayerId: string | undefined;
 }
@@ -78,6 +79,7 @@ const PokerTable = ({
   onDeal,
   onNextHand,
   onLeave,
+  onKickPlayer,
   players,
   myPlayerId,
 }: Props) => {
@@ -150,7 +152,14 @@ const PokerTable = ({
                     {p.allIn && <span className="text-game-gold text-[9px] font-bold">ALL-IN</span>}
                     {p.eliminated && <span className="text-destructive text-[9px]">Out</span>}
                   </div>
-                  <span className="font-display text-game-gold">${p.chips}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-game-gold">${p.chips}</span>
+                    {isHost && p.playerId !== myPlayerId && (
+                      <Button variant="ghost" size="sm" onClick={() => onKickPlayer(p.playerId)} className="text-destructive h-6 w-6 p-0">
+                        <UserX className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

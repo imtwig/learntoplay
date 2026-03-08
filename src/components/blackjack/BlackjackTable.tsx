@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Check, X, Settings, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Check, X, Settings, ChevronDown, ChevronUp, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import HandDisplay from "./HandDisplay";
@@ -28,6 +28,7 @@ interface Props {
   onRevealAll: () => void;
   onLeave: () => void;
   onTransferHost: (playerId: string) => void;
+  onKickPlayer: (playerId: string) => void;
   onToggleShowFirstCard: () => void;
   players: Player[];
   myPlayerId: string | undefined;
@@ -68,6 +69,7 @@ const BlackjackTable = ({
   onRevealAll,
   onLeave,
   onTransferHost,
+  onKickPlayer,
   onToggleShowFirstCard,
   players,
   myPlayerId,
@@ -215,15 +217,24 @@ const BlackjackTable = ({
           <p className="text-xs text-muted-foreground font-display mb-2">Transfer host to:</p>
           <div className="flex gap-2 flex-wrap">
             {players.filter((p) => p.id !== myPlayerId).map((p) => (
-              <Button
-                key={p.id}
-                variant="outline"
-                size="sm"
-                onClick={() => { onTransferHost(p.id); setShowTransfer(false); }}
-                className="text-xs"
-              >
-                {p.display_name}
-              </Button>
+              <div key={p.id} className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { onTransferHost(p.id); setShowTransfer(false); }}
+                  className="text-xs"
+                >
+                  {p.display_name}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onKickPlayer(p.id)}
+                  className="text-destructive h-7 w-7 p-0"
+                >
+                  <UserX className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             ))}
           </div>
         </div>

@@ -1,9 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Users, Copy, Play, LogOut, Check, X } from "lucide-react";
+import { Crown, Users, Copy, Play, LogOut, Check, X, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRoom, leaveRoom, startGame, sessionId, toggleReady } from "@/hooks/useRoom";
+import { useRoom, leaveRoom, startGame, sessionId, toggleReady, kickPlayer } from "@/hooks/useRoom";
 import { getGame, type GameId } from "@/lib/gameData";
 import { toast } from "@/hooks/use-toast";
 
@@ -33,6 +33,7 @@ const WaitingRoom = () => {
   const minPlayers = game?.minPlayers ?? 2;
   const canStart = players.length >= minPlayers;
   const myPlayer = players.find((p) => p.session_id === sessionId);
+  const isHost = myPlayer?.is_host ?? false;
   const iAmReady = (myPlayer?.player_state as any)?.ready === true;
   const allReady = players.length > 0 && players.every((p) => (p.player_state as any)?.ready === true);
 
@@ -161,6 +162,16 @@ const WaitingRoom = () => {
                       <Check className="h-4 w-4 text-primary" />
                     ) : (
                       <span className="text-xs text-muted-foreground">not ready</span>
+                    )}
+                    {isHost && player.session_id !== sessionId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => kickPlayer(roomId!, player.id)}
+                        className="text-destructive h-7 w-7 p-0"
+                      >
+                        <UserX className="h-3.5 w-3.5" />
+                      </Button>
                     )}
                   </div>
                 </motion.div>

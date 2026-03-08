@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronDown, ChevronUp, Trophy, Crown } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Trophy, Crown, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ADDGameState, ADDPlayer, PlayedCombination } from "@/lib/assholeDaiDi";
 import { cardDisplay, sortHand, detectCombination } from "@/lib/assholeDaiDi";
@@ -23,6 +23,7 @@ interface Props {
   onFinishSwap: () => void;
   onRematch: () => void;
   onLeave: () => void;
+  onKickPlayer: (playerId: string) => void;
   players: Player[];
   myPlayerId: string | undefined;
 }
@@ -94,6 +95,7 @@ const AssholeDaiDiTable = ({
   onFinishSwap,
   onRematch,
   onLeave,
+  onKickPlayer,
   players,
   myPlayerId,
 }: Props) => {
@@ -180,6 +182,11 @@ const AssholeDaiDiTable = ({
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] text-muted-foreground">{p.cardCount} cards</span>
                     <span className="font-display text-game-gold">{p.cumulativeScore}pts</span>
+                    {isHost && p.playerId !== myPlayerId && (
+                      <Button variant="ghost" size="sm" onClick={() => onKickPlayer(p.playerId)} className="text-destructive h-6 w-6 p-0">
+                        <UserX className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

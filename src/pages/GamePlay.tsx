@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useCallback } from "react";
-import { useRoom, leaveRoom, sessionId, transferHost } from "@/hooks/useRoom";
+import { useRoom, leaveRoom, sessionId, transferHost, kickPlayer } from "@/hooks/useRoom";
 import { useBlackjack } from "@/hooks/useBlackjack";
 import { useSequence } from "@/hooks/useSequence";
 import { usePoker } from "@/hooks/usePoker";
@@ -68,6 +68,11 @@ const GamePlay = () => {
     await transferHost(roomId, myPlayer.id, targetPlayerId);
   }, [roomId, myPlayer]);
 
+  const handleKickPlayer = useCallback(async (playerId: string) => {
+    if (!roomId) return;
+    await kickPlayer(roomId, playerId);
+  }, [roomId]);
+
   if (loading || !room || !game) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -100,6 +105,7 @@ const GamePlay = () => {
         onPass={dd.doPass}
         onRematch={dd.doRematch}
         onLeave={handleLeave}
+        onKickPlayer={handleKickPlayer}
         players={players}
         myPlayerId={myPlayer?.id}
       />
@@ -134,6 +140,7 @@ const GamePlay = () => {
         onFinishSwap={add.doFinishSwap}
         onRematch={add.doRematch}
         onLeave={handleLeave}
+        onKickPlayer={handleKickPlayer}
         players={players}
         myPlayerId={myPlayer?.id}
       />
@@ -202,6 +209,7 @@ const GamePlay = () => {
         onRevealAll={blackjack.doRevealAll}
         onLeave={handleLeave}
         onTransferHost={handleTransferHost}
+        onKickPlayer={handleKickPlayer}
         onToggleShowFirstCard={blackjack.doToggleShowFirstCard}
         players={players}
         myPlayerId={myPlayer?.id}

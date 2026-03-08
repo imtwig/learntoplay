@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronDown, ChevronUp, Trophy } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Trophy, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DDGameState, DDPlayer, PlayedCombination } from "@/lib/daiDi";
 import { cardDisplay, detectCombination } from "@/lib/daiDi";
@@ -19,6 +19,7 @@ interface Props {
   onPass: () => void;
   onRematch: () => void;
   onLeave: () => void;
+  onKickPlayer: (playerId: string) => void;
   players: Player[];
   myPlayerId: string | undefined;
 }
@@ -78,6 +79,7 @@ const DaiDiTable = ({
   onPass,
   onRematch,
   onLeave,
+  onKickPlayer,
   players,
   myPlayerId,
 }: Props) => {
@@ -170,6 +172,11 @@ const DaiDiTable = ({
                     <span className="text-[9px] text-muted-foreground">{p.cardCount} cards</span>
                     <span className="text-[9px] text-destructive">-{p.cumulativeScore}</span>
                     <span className="font-display text-game-gold">+{p.cumulativeEarnings}</span>
+                    {isHost && p.playerId !== myPlayerId && (
+                      <Button variant="ghost" size="sm" onClick={() => onKickPlayer(p.playerId)} className="text-destructive h-6 w-6 p-0">
+                        <UserX className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
