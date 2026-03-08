@@ -15,6 +15,7 @@ export interface BJPlayerState {
   playerId: string;
   name: string;
   netProfit: number;
+  roundProfit: number;
   hands: BJHand[];
   activeHandIndex: number;
   done: boolean;
