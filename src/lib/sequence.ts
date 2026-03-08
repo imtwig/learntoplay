@@ -42,8 +42,34 @@ export interface SeqGameState {
   winner: string | null;
   lastMove: { row: number; col: number; type: "place" | "remove" } | null;
   message: string | null;
-  houseRules: boolean;
+  houseRules: boolean | SeqHouseRules;
   roundStartIndex: number;
+}
+
+export interface SeqHouseRules {
+  jokers: boolean;       // Add 4 jokers as wild placement cards
+  allJacksRemove: boolean; // All jacks are removal cards (not just one-eyed)
+  removeFromSequence: boolean; // Can remove chips from completed sequences
+}
+
+export const DEFAULT_HOUSE_RULES: SeqHouseRules = {
+  jokers: true,
+  allJacksRemove: true,
+  removeFromSequence: true,
+};
+
+/** Normalize legacy boolean houseRules to the new object format */
+export function normalizeHouseRules(hr: boolean | SeqHouseRules): SeqHouseRules {
+  if (typeof hr === "boolean") {
+    return hr ? { ...DEFAULT_HOUSE_RULES } : { jokers: false, allJacksRemove: false, removeFromSequence: false };
+  }
+  return hr;
+}
+
+/** Check if any house rule is active */
+export function anyHouseRuleActive(hr: boolean | SeqHouseRules): boolean {
+  const rules = normalizeHouseRules(hr);
+  return rules.jokers || rules.allJacksRemove || rules.removeFromSequence;
 }
 
 /* ── Helpers ────────────────────────────────────────────── */
@@ -57,10 +83,9 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function createSequenceDeck(houseRules: boolean): string[] {
-  const ranks = houseRules
-    ? ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
-    : ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+function createSequenceDeck(hr: boolean | SeqHouseRules): string[] {
+  const rules = normalizeHouseRules(hr);
+  const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
   const suits = ["S", "C", "D", "H"];
   const deck: string[] = [];
   for (let d = 0; d < 2; d++) {
@@ -71,7 +96,7 @@ function createSequenceDeck(houseRules: boolean): string[] {
     }
   }
   // House rules: add 4 jokers (wild cards)
-  if (houseRules) {
+  if (rules.jokers) {
     deck.push("JKR1", "JKR2", "JKR3", "JKR4");
   }
   return shuffle(deck);
@@ -108,7 +133,7 @@ export function isValidPlayerCount(playerCount: number): boolean {
 
 export function initSequenceGame(
   playerNames: { id: string; name: string }[],
-  houseRules: boolean = false,
+  houseRules: boolean | SeqHouseRules = false,
   roundStartIndex: number = 0
 ): SeqGameState {
   const n = playerNames.length;
@@ -219,7 +244,7 @@ export function getValidPlacements(
   card: string
 ): [number, number][] {
   const owner = ownerOf(state, playerId);
-  const hr = state.houseRules;
+  const hr = normalizeHouseRules(state.houseRules);
 
   // Jokers are wild (house rules only) — place on any empty non-corner
   if (isJoker(card)) {
@@ -234,8 +259,8 @@ export function getValidPlacements(
     return valid;
   }
 
-  // Standard rules: two-eyed jacks are wild
-  if (!hr && isTwoEyedJack(card)) {
+  // Two-eyed jacks: wild when allJacksRemove is OFF (standard behavior)
+  if (!hr.allJacksRemove && isTwoEyedJack(card)) {
     const valid: [number, number][] = [];
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 10; c++) {
@@ -247,8 +272,8 @@ export function getValidPlacements(
     return valid;
   }
 
-  // Standard rules: one-eyed jacks remove (not from sequences)
-  if (!hr && isOneEyedJack(card)) {
+  // One-eyed jacks remove (standard behavior, always active)
+  if (!hr.allJacksRemove && isOneEyedJack(card)) {
     const valid: [number, number][] = [];
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 10; c++) {
@@ -261,13 +286,13 @@ export function getValidPlacements(
     return valid;
   }
 
-  // House rules: ALL jacks are removal cards (can remove even from sequences)
-  if (hr && isJack(card)) {
+  // All jacks remove (house rule): can remove from sequences if that rule is on
+  if (hr.allJacksRemove && isJack(card)) {
     const valid: [number, number][] = [];
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 10; c++) {
         const chip = state.board[r][c];
-        if (chip && chip.owner !== owner) {
+        if (chip && chip.owner !== owner && (hr.removeFromSequence || !chip.partOfSequence)) {
           valid.push([r, c]);
         }
       }
@@ -298,21 +323,21 @@ export function playCard(
   if (card === undefined) return s;
 
   const owner = ownerOf(s, playerId);
-  const hr = s.houseRules;
+  const hr = normalizeHouseRules(s.houseRules);
 
   // Determine if this is a removal action
-  const isRemoval = hr
+  const isRemoval = hr.allJacksRemove
     ? isJack(card)
     : isOneEyedJack(card);
 
   if (isRemoval) {
     const chip = s.board[row][col];
     if (!chip || chip.owner === owner) return s;
-    // Standard rules: can't remove from sequence. House rules: can.
-    if (!hr && chip.partOfSequence) return s;
+    // Can't remove from sequence unless removeFromSequence is on
+    if (!hr.removeFromSequence && chip.partOfSequence) return s;
 
-    // If removing from a sequence (house rules), invalidate that sequence
-    if (hr && chip.partOfSequence) {
+    // If removing from a sequence, invalidate that sequence
+    if (hr.removeFromSequence && chip.partOfSequence) {
       // Remove sequences that include this position
       s.sequences = s.sequences.filter((seq) => {
         const includes = seq.positions.some(([pr, pc]) => pr === row && pc === col);

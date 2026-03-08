@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { type SeqHouseRules, DEFAULT_HOUSE_RULES } from "@/lib/sequence";
 import {
   Accordion,
   AccordionContent,
@@ -38,7 +40,7 @@ const GameLobby = () => {
   const [joinRoomId, setJoinRoomId] = useState("");
   const [joinPassword, setJoinPassword] = useState("");
   const [creating, setCreating] = useState(false);
-  const [houseRules, setHouseRules] = useState(false);
+  const [houseRules, setHouseRules] = useState<SeqHouseRules>({ jokers: false, allJacksRemove: false, removeFromSequence: false });
 
   if (!game) {
     navigate("/");
@@ -54,8 +56,9 @@ const GameLobby = () => {
     try {
       localStorage.setItem("player_name", playerName);
       const settings: Record<string, unknown> = {};
-      if (game.id === "sequence" && houseRules) {
-        settings.houseRules = true;
+      const anyActive = houseRules.jokers || houseRules.allJacksRemove || houseRules.removeFromSequence;
+      if (game.id === "sequence" && anyActive) {
+        settings.houseRules = houseRules;
       }
       const { room } = await createRoom(
         game.id,
@@ -224,14 +227,47 @@ const GameLobby = () => {
                     />
                   </div>
                   {game.id === "sequence" && (
-                    <div className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2">
-                      <div>
+                    <div className="rounded-lg border border-border/50 px-3 py-2 space-y-2">
+                      <div className="flex items-center justify-between">
                         <Label className="text-sm font-medium">House Rules</Label>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          4 Jokers as wilds, all Jacks remove chips (even from sequences)
-                        </p>
+                        <button
+                          type="button"
+                          className="text-[10px] font-display tracking-wider text-primary hover:underline"
+                          onClick={() => {
+                            const allOn = houseRules.jokers && houseRules.allJacksRemove && houseRules.removeFromSequence;
+                            if (allOn) {
+                              setHouseRules({ jokers: false, allJacksRemove: false, removeFromSequence: false });
+                            } else {
+                              setHouseRules({ ...DEFAULT_HOUSE_RULES });
+                            }
+                          }}
+                        >
+                          {houseRules.jokers && houseRules.allJacksRemove && houseRules.removeFromSequence ? "Deselect All" : "Select All"}
+                        </button>
                       </div>
-                      <Switch checked={houseRules} onCheckedChange={setHouseRules} />
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={houseRules.jokers}
+                            onCheckedChange={(v) => setHouseRules((prev) => ({ ...prev, jokers: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">4 Jokers as wild cards</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={houseRules.allJacksRemove}
+                            onCheckedChange={(v) => setHouseRules((prev) => ({ ...prev, allJacksRemove: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">All Jacks are removal cards</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={houseRules.removeFromSequence}
+                            onCheckedChange={(v) => setHouseRules((prev) => ({ ...prev, removeFromSequence: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Can remove chips from sequences</span>
+                        </label>
+                      </div>
                     </div>
                   )}
                   <Button

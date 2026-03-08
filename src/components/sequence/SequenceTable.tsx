@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, RotateCcw, Crown, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SeqGameState, SeqTeam } from "@/lib/sequence";
-import { teamsBalanced, isValidPlayerCount } from "@/lib/sequence";
+import { teamsBalanced, isValidPlayerCount, normalizeHouseRules, anyHouseRuleActive } from "@/lib/sequence";
 import type { SeqPlayer } from "@/lib/sequence";
 import type { Player } from "@/hooks/useRoom";
 import { SEQUENCE_BOARD, parseCard, isCorner, isOneEyedJack, isTwoEyedJack, isJack, getBoardPositions } from "@/lib/sequenceBoard";
@@ -82,8 +82,9 @@ const SequenceTable = ({
     if (selectedCardIndex === null || !mySeqPlayer) return new Set<string>();
     const card = mySeqPlayer.hand[selectedCardIndex];
     if (!card || card === "HIDDEN") return new Set<string>();
+    const hr = normalizeHouseRules(gameState.houseRules);
     // Skip occupied highlights for jokers and wild (two-eyed) jacks — only show available spots
-    if (card.startsWith("JKR") || isTwoEyedJack(card)) return new Set<string>();
+    if (card.startsWith("JKR") || (!hr.allJacksRemove && isTwoEyedJack(card))) return new Set<string>();
     let allPositions = getBoardPositions(card);
     // For jacks (wild/remove), match all non-corner board cells
     if (allPositions.length === 0 && isJack(card)) {
@@ -159,7 +160,7 @@ const SequenceTable = ({
         </Button>
         <div className="flex items-center gap-2">
           <span className="font-display text-[10px] tracking-widest text-muted-foreground">SEQUENCE</span>
-          {gameState.houseRules && (
+          {anyHouseRuleActive(gameState.houseRules) && (
             <span className="text-[9px] font-display tracking-wider font-bold px-2 py-0.5 rounded-full bg-game-gold/30 text-game-gold border border-game-gold/40">🏠 HOUSE RULES</span>
           )}
           {mySeqPlayer?.team && phase !== "team_setup" && (
@@ -456,17 +457,17 @@ const SequenceTable = ({
                   const isSelected = selectedCardIndex === i;
                   const isJokerCard = card.startsWith("JKR");
                   const isSpecial = isJack(card) || isJokerCard;
-                  const hr = gameState.houseRules;
+                  const hr = normalizeHouseRules(gameState.houseRules);
 
                   // Label logic
                   let label: { text: string; color: string } | null = null;
                   if (isJokerCard) {
                     label = { text: "WILD", color: "text-primary" };
-                  } else if (hr && isJack(card)) {
+                  } else if (hr.allJacksRemove && isJack(card)) {
                     label = { text: "REM", color: "text-destructive" };
-                  } else if (!hr && isTwoEyedJack(card)) {
+                  } else if (!hr.allJacksRemove && isTwoEyedJack(card)) {
                     label = { text: "WILD", color: "text-primary" };
-                  } else if (!hr && isOneEyedJack(card)) {
+                  } else if (!hr.allJacksRemove && isOneEyedJack(card)) {
                     label = { text: "REM", color: "text-destructive" };
                   }
 
