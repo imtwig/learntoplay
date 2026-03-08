@@ -259,7 +259,7 @@ const SequenceTable = ({
               className={`
                 grid gap-[1px] w-full max-w-[520px] aspect-square bg-white rounded-lg p-1
                 transition-all duration-300
-                ${isMyTurn ? "ring-2 ring-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : ""}
+                ${isMyTurn ? "ring-[3px] ring-green-500 shadow-[0_0_35px_rgba(34,197,94,0.45)]" : ""}
               `}
               style={{ gridTemplateColumns: "repeat(10, 1fr)" }}
             >
