@@ -267,114 +267,112 @@ const SequenceTable = ({
 
           {/* Board */}
           <div className="flex-1 flex items-center justify-center p-2 overflow-auto">
-            <div
-              className={`
-                grid gap-[1px] w-full max-w-[520px] aspect-square bg-white rounded-lg p-1
-                transition-all duration-300
-                ${isMyTurn ? "ring-[3px] ring-green-500 shadow-[0_0_35px_rgba(34,197,94,0.45)]" : ""}
-              `}
-              style={{ gridTemplateColumns: "repeat(10, 1fr)" }}
-            >
-              {SEQUENCE_BOARD.map((row, r) =>
-                row.map((cell, c) => {
-                  const chip = gameState.board[r][c];
-                  const isFree = isCorner(r, c);
-                  const isValid = validSet.has(`${r},${c}`);
-                  const isPreview = previewSet.has(`${r},${c}`);
-                  const isOccupiedMatch = occupiedMatchSet.has(`${r},${c}`);
-                  const cellKey = `${r},${c}`;
-                  const isLastPlaced = lastMoveCell === cellKey && gameState.lastMove?.type === "place";
-                  const isLastRemoved = lastMoveCell === cellKey && gameState.lastMove?.type === "remove";
-                  const { rank, suitSymbol, suitColor } = parseCard(cell);
-                  const isSeqCell = chip?.partOfSequence;
+            <div className="flex flex-col items-center w-full max-w-[520px]">
+              <div
+                className={`
+                  grid gap-[1px] w-full aspect-square bg-white rounded-lg p-1
+                  transition-all duration-300
+                  ${isMyTurn ? "ring-[3px] ring-green-500 shadow-[0_0_35px_rgba(34,197,94,0.45)]" : ""}
+                `}
+                style={{ gridTemplateColumns: "repeat(10, 1fr)" }}
+              >
+                {SEQUENCE_BOARD.map((row, r) =>
+                  row.map((cell, c) => {
+                    const chip = gameState.board[r][c];
+                    const isFree = isCorner(r, c);
+                    const isValid = validSet.has(`${r},${c}`);
+                    const isPreview = previewSet.has(`${r},${c}`);
+                    const isOccupiedMatch = occupiedMatchSet.has(`${r},${c}`);
+                    const cellKey = `${r},${c}`;
+                    const isLastPlaced = lastMoveCell === cellKey && gameState.lastMove?.type === "place";
+                    const isLastRemoved = lastMoveCell === cellKey && gameState.lastMove?.type === "remove";
+                    const { rank, suitSymbol, suitColor } = parseCard(cell);
+                    const isSeqCell = chip?.partOfSequence;
 
-                  // Background color: team color fill for last placed cell
-                  const teamBgClass = isLastPlaced && chip
-                    ? `${chipColorClass(chip.owner).replace("bg-", "bg-")}/30`
-                    : "";
+                    const teamBgClass = isLastPlaced && chip
+                      ? `${chipColorClass(chip.owner).replace("bg-", "bg-")}/30`
+                      : "";
 
-                  return (
-                    <motion.button
-                      key={`${r}-${c}`}
-                      disabled={!isValid || !isMyTurn}
-                      onClick={() => {
-                        if (isValid && selectedCardIndex !== null) {
-                          onPlayCard(selectedCardIndex, r, c);
-                        }
-                      }}
-                      className={`
-                        relative flex flex-col items-center justify-center rounded-[3px] leading-tight
-                        transition-all duration-300 aspect-square overflow-visible
-                        ${isFree
-                          ? "bg-game-gold/20 border border-game-gold/30"
-                          : "border border-gray-200"
-                        }
-                        ${!isFree && !isLastPlaced ? "bg-white" : ""}
-                        ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
-                        ${isPreview ? "ring-2 ring-green-500 bg-green-50" : ""}
-                        ${isOccupiedMatch ? "ring-2 ring-orange-400 bg-orange-50/50" : ""}
-                        ${isSeqCell ? "ring-1 ring-game-gold" : ""}
-                        ${isLastRemoved ? "ring-2 ring-destructive/50" : ""}
-                      `}
-                      style={isLastPlaced && chip ? {
-                        backgroundColor: chip.owner === "A" ? "rgba(239,68,68,0.25)"
-                          : chip.owner === "B" ? "rgba(59,130,246,0.25)"
-                          : chip.owner === "C" ? "rgba(34,197,94,0.25)"
-                          : undefined
-                      } : undefined}
-                    >
-                      {isFree ? (
-                        <span className="text-game-gold font-bold text-sm">★</span>
-                      ) : (
-                        <>
-                          <span
-                            className="font-display font-bold leading-none text-[11px]"
-                            style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
-                          >
-                            {rank}
-                          </span>
-                          <span
-                            className="leading-none text-[9px]"
-                            style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
-                          >
-                            {suitSymbol}
-                          </span>
-                        </>
-                      )}
-                      {/* Chip */}
-                      {chip && (
-                        <div
-                          className={`absolute inset-[15%] rounded-full ${chipColorClass(chip.owner)} opacity-75 ${
-                            isSeqCell ? "opacity-90 ring-1 ring-white/50" : ""
-                          }`}
-                        />
-                      )}
-                      {/* Dotted outline for last removed cell (jack action) */}
-                      {isLastRemoved && !chip && (
-                        <div
-                          className="absolute inset-[15%] rounded-full border-2 border-dashed opacity-60"
-                          style={{
-                            borderColor: gameState.lastMove?.type === "remove"
-                              ? "rgba(239,68,68,0.6)"
-                              : undefined
-                          }}
-                        />
-                      )}
-                      {/* Free corner chip indicator */}
-                      {isFree && (
-                        <div className="absolute inset-[20%] rounded-full bg-game-gold/30" />
-                      )}
-                    </motion.button>
-                  );
-                })
+                    return (
+                      <motion.button
+                        key={`${r}-${c}`}
+                        disabled={!isValid || !isMyTurn}
+                        onClick={() => {
+                          if (isValid && selectedCardIndex !== null) {
+                            onPlayCard(selectedCardIndex, r, c);
+                          }
+                        }}
+                        className={`
+                          relative flex flex-col items-center justify-center rounded-[3px] leading-tight
+                          transition-all duration-300 aspect-square overflow-visible
+                          ${isFree
+                            ? "bg-game-gold/20 border border-game-gold/30"
+                            : "border border-gray-200"
+                          }
+                          ${!isFree && !isLastPlaced ? "bg-white" : ""}
+                          ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
+                          ${isPreview ? "ring-2 ring-green-500 bg-green-50" : ""}
+                          ${isOccupiedMatch ? "ring-2 ring-orange-400 bg-orange-50/50" : ""}
+                          ${isSeqCell ? "ring-1 ring-game-gold" : ""}
+                          ${isLastRemoved ? "ring-2 ring-destructive/50" : ""}
+                        `}
+                        style={isLastPlaced && chip ? {
+                          backgroundColor: chip.owner === "A" ? "rgba(239,68,68,0.25)"
+                            : chip.owner === "B" ? "rgba(59,130,246,0.25)"
+                            : chip.owner === "C" ? "rgba(34,197,94,0.25)"
+                            : undefined
+                        } : undefined}
+                      >
+                        {isFree ? (
+                          <span className="text-game-gold font-bold text-sm">★</span>
+                        ) : (
+                          <>
+                            <span
+                              className="font-display font-bold leading-none text-[11px]"
+                              style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
+                            >
+                              {rank}
+                            </span>
+                            <span
+                              className="leading-none text-[9px]"
+                              style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
+                            >
+                              {suitSymbol}
+                            </span>
+                          </>
+                        )}
+                        {chip && (
+                          <div
+                            className={`absolute inset-[15%] rounded-full ${chipColorClass(chip.owner)} opacity-75 ${
+                              isSeqCell ? "opacity-90 ring-1 ring-white/50" : ""
+                            }`}
+                          />
+                        )}
+                        {isLastRemoved && !chip && (
+                          <div
+                            className="absolute inset-[15%] rounded-full border-2 border-dashed opacity-60"
+                            style={{
+                              borderColor: gameState.lastMove?.type === "remove"
+                                ? "rgba(239,68,68,0.6)"
+                                : undefined
+                            }}
+                          />
+                        )}
+                        {isFree && (
+                          <div className="absolute inset-[20%] rounded-full bg-game-gold/30" />
+                        )}
+                      </motion.button>
+                    );
+                  })
+                )}
+              </div>
+              {/* Team banner */}
+              {mySeqPlayer?.team && phase === "playing" && (
+                <div className={`w-full rounded-b-lg py-1.5 text-center text-xs font-display font-bold tracking-wider text-white ${TEAM_COLORS[mySeqPlayer.team]}`}>
+                  You are team {mySeqPlayer.team === "A" ? "Red" : mySeqPlayer.team === "B" ? "Blue" : "Green"}!
+                </div>
               )}
             </div>
-            {/* Team banner */}
-            {mySeqPlayer?.team && phase === "playing" && (
-              <div className={`w-full max-w-[520px] rounded-b-lg py-1.5 text-center text-xs font-display font-bold tracking-wider text-white ${TEAM_COLORS[mySeqPlayer.team]}`}>
-                You are team {mySeqPlayer.team === "A" ? "Red" : mySeqPlayer.team === "B" ? "Blue" : "Green"}!
-              </div>
-            )}
           </div>
 
           {/* Player hand */}
