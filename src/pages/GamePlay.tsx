@@ -140,6 +140,7 @@ const GamePlay = () => {
         onFinishSwap={add.doFinishSwap}
         onRematch={add.doRematch}
         onLeave={handleLeave}
+        onKickPlayer={handleKickPlayer}
         players={players}
         myPlayerId={myPlayer?.id}
       />
