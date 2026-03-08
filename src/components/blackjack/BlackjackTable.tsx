@@ -443,7 +443,7 @@ const BlackjackTable = ({
         )}
 
         {/* Controls */}
-        <div className="w-full max-w-sm space-y-4">
+        {!showDealingAnim && <div className="w-full max-w-sm space-y-4">
           {/* Player turn actions: Draw / Done */}
           {phase === "player_turns" && availableActions.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3 justify-center">
