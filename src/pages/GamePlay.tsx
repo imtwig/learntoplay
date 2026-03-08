@@ -15,9 +15,11 @@ const GamePlay = () => {
   const { room, players, loading } = useRoom(roomId);
   const game = room ? getGame(room.game_type as GameId) : null;
   const isSequence = room?.game_type === "sequence";
+  const isPoker = room?.game_type === "poker";
 
-  const blackjack = useBlackjack(roomId, isSequence ? [] : players);
+  const blackjack = useBlackjack(roomId, (isSequence || isPoker) ? [] : players);
   const sequence = useSequence(roomId, isSequence ? players : []);
+  const poker = usePoker(roomId, isPoker ? players : []);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
 
