@@ -353,7 +353,6 @@ const SequenceTable = ({
                           <motion.span
                             initial={{ y: -20, opacity: 1, scale: 1.2 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
                             transition={{ duration: 0.4, ease: "easeOut" }}
                             className="absolute inset-0 flex items-center justify-center text-lg z-10 pointer-events-none"
                           >
@@ -361,6 +360,11 @@ const SequenceTable = ({
                           </motion.span>
                         )}
                       </AnimatePresence>
+                      {settledCell === cellKey && (
+                        <span className="absolute inset-0 flex items-center justify-center text-lg z-10 pointer-events-none">
+                          🫳
+                        </span>
+                      )}
                       {/* Free corner chip indicator */}
                       {isFree && (
                         <div className="absolute inset-[20%] rounded-full bg-game-gold/30" />
