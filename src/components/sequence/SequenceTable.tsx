@@ -324,7 +324,7 @@ const SequenceTable = ({
                           ${!isFree && !isLastPlaced ? "bg-white" : ""}
                           ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
                           ${isPreview ? "ring-2 ring-green-500 bg-green-50" : ""}
-                          ${isOccupiedMatch ? "ring-2 ring-orange-400 bg-orange-50/50" : ""}
+                          ${isOccupiedMatch ? "ring-2 ring-foreground/70 bg-muted/50" : ""}
                           ${isSeqCell ? "ring-1 ring-game-gold" : ""}
                           ${""}
                         `}
