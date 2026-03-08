@@ -91,23 +91,15 @@ const SequenceTable = ({
     return set;
   })();
 
-  // Track last move for hand animation
-  const [animatingCell, setAnimatingCell] = useState<string | null>(null);
-  const [settledCell, setSettledCell] = useState<string | null>(null);
+  // Track last move for highlight
+  const [lastMoveCell, setLastMoveCell] = useState<string | null>(null);
   const lastMoveRef = useState<string | null>(null);
 
   useEffect(() => {
     const key = gameState.lastMove ? `${gameState.lastMove.row},${gameState.lastMove.col}` : null;
     if (key && key !== lastMoveRef[0]) {
       lastMoveRef[0] = key;
-      setAnimatingCell(key);
-      setSettledCell(null);
-      // After drop animation, settle the hand in place
-      const t = setTimeout(() => {
-        setAnimatingCell(null);
-        setSettledCell(key);
-      }, 400);
-      return () => clearTimeout(t);
+      setLastMoveCell(key);
     }
   }, [gameState.lastMove]);
 
