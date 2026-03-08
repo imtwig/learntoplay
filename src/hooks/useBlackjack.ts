@@ -150,16 +150,16 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
   }, [rawGameState, myPlayer, saveState]);
 
   const doRevealPlayer = useCallback(async (playerId: string) => {
-    if (!rawGameState || !isHost) return;
+    if (!rawGameState || !isBJDealer) return;
     const next = revealPlayer(rawGameState, playerId);
     await saveState(next);
-  }, [rawGameState, isHost, saveState]);
+  }, [rawGameState, isBJDealer, saveState]);
 
   const doRevealAll = useCallback(async () => {
-    if (!rawGameState || !isHost) return;
+    if (!rawGameState || !isBJDealer) return;
     const next = revealAll(rawGameState);
     await saveState(next);
-  }, [rawGameState, isHost, saveState]);
+  }, [rawGameState, isBJDealer, saveState]);
 
   const nextRound = useCallback(async () => {
     if (!rawGameState || !isHost) return;
