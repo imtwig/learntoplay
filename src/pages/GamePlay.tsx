@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useCallback } from "react";
-import { useRoom, leaveRoom, sessionId, transferHost } from "@/hooks/useRoom";
+import { useRoom, leaveRoom, sessionId, transferHost, kickPlayer } from "@/hooks/useRoom";
 import { useBlackjack } from "@/hooks/useBlackjack";
 import { useSequence } from "@/hooks/useSequence";
 import { usePoker } from "@/hooks/usePoker";
