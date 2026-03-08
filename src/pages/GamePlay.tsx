@@ -70,6 +70,7 @@ const GamePlay = () => {
     return (
       <BlackjackTable
         gameState={gameState}
+        rawSettings={rawSettings}
         myBJPlayer={myBJPlayer}
         availableActions={availableActions}
         isHost={isHost}
@@ -84,6 +85,7 @@ const GamePlay = () => {
         onRevealAll={doRevealAll}
         onLeave={handleLeave}
         onTransferHost={handleTransferHost}
+        onToggleShowFirstCard={doToggleShowFirstCard}
         players={players}
         myPlayerId={myPlayer?.id}
       />
