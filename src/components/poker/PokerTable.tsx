@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Crown, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Crown, ChevronDown, ChevronUp, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { PokerGameState, PokerAction } from "@/lib/poker";
