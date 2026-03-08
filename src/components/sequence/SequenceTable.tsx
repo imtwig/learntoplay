@@ -71,7 +71,34 @@ const SequenceTable = ({
 }: Props) => {
   const { phase, players: seqPlayers, currentPlayerIndex, winner, isTeamGame, teams, sequences, message, teamCount } = gameState;
   const validSet = new Set(validPlacements.map(([r, c]) => `${r},${c}`));
+  const previewSet = new Set(previewPlacements.map(([r, c]) => `${r},${c}`));
   const currentPlayer = seqPlayers[currentPlayerIndex];
+
+  // Track last move for pop animation
+  const [animatingCell, setAnimatingCell] = useState<string | null>(null);
+  const lastMoveRef = useState<string | null>(null);
+
+  useEffect(() => {
+    const key = gameState.lastMove ? `${gameState.lastMove.row},${gameState.lastMove.col}` : null;
+    if (key && key !== lastMoveRef[0]) {
+      lastMoveRef[0] = key;
+      setAnimatingCell(key);
+      const t = setTimeout(() => setAnimatingCell(null), 500);
+      return () => clearTimeout(t);
+    }
+  }, [gameState.lastMove]);
+
+  // Flash animation when it becomes your turn
+  const [turnFlash, setTurnFlash] = useState(false);
+  useEffect(() => {
+    if (isMyTurn && phase === "playing") {
+      setTurnFlash(true);
+      const t = setTimeout(() => setTurnFlash(false), 1500);
+      return () => clearTimeout(t);
+    } else {
+      setTurnFlash(false);
+    }
+  }, [isMyTurn, currentPlayerIndex]);
 
   // Determine win/loss for overlay
   const isFinished = phase === "finished" && winner;
