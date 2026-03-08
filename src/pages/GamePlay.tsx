@@ -5,11 +5,13 @@ import { useBlackjack } from "@/hooks/useBlackjack";
 import { useSequence } from "@/hooks/useSequence";
 import { usePoker } from "@/hooks/usePoker";
 import { useAssholeDaiDi } from "@/hooks/useAssholeDaiDi";
+import { useDaiDi } from "@/hooks/useDaiDi";
 import { getGame, type GameId } from "@/lib/gameData";
 import BlackjackTable from "@/components/blackjack/BlackjackTable";
 import SequenceTable from "@/components/sequence/SequenceTable";
 import PokerTable from "@/components/poker/PokerTable";
 import AssholeDaiDiTable from "@/components/asshole-daidi/AssholeDaiDiTable";
+import DaiDiTable from "@/components/dai-di/DaiDiTable";
 
 const GamePlay = () => {
   const { roomId } = useParams<{ roomId: string }>();
