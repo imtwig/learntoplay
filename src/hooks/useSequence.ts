@@ -14,6 +14,8 @@ import {
   newSequenceRound,
   getValidPlacements,
   isDeadCard,
+  syncSeqPlayers,
+  removeSeqPlayer,
 } from "@/lib/sequence";
 
 export function useSequence(roomId: string | undefined, players: Player[]) {
