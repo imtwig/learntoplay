@@ -49,17 +49,6 @@ export const games: GameInfo[] = [
     gradient: "from-game-gold/20 to-primary/10",
   },
   {
-    id: "asshole_daidi",
-    name: "Asshole Dai Di",
-    tagline: "Shedding Card Game",
-    description: "Get rid of your cards by playing higher combinations. Earn ranks like President or Asshole, then swap cards before the next round.",
-    icon: Flame,
-    minPlayers: 3,
-    maxPlayers: 7,
-    color: "text-game-red",
-    gradient: "from-game-red/20 to-game-gold/10",
-  },
-  {
     id: "dai_di",
     name: "Dai Di (Big 2)",
     tagline: "Classic Shedding Game",
@@ -69,6 +58,17 @@ export const games: GameInfo[] = [
     maxPlayers: 4,
     color: "text-game-blue",
     gradient: "from-game-blue/20 to-primary/10",
+  },
+  {
+    id: "asshole_daidi",
+    name: "Asshole Dai Di",
+    tagline: "Shedding Card Game",
+    description: "Get rid of your cards by playing higher combinations. Earn ranks like President or Asshole, then swap cards before the next round.",
+    icon: Flame,
+    minPlayers: 3,
+    maxPlayers: 7,
+    color: "text-game-red",
+    gradient: "from-game-red/20 to-game-gold/10",
   },
 ];
 
