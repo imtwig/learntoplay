@@ -28,6 +28,7 @@ interface Props {
   onRevealAll: () => void;
   onLeave: () => void;
   onTransferHost: (playerId: string) => void;
+  onKickPlayer: (playerId: string) => void;
   onToggleShowFirstCard: () => void;
   players: Player[];
   myPlayerId: string | undefined;
