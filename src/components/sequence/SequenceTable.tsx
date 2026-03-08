@@ -396,7 +396,30 @@ const SequenceTable = ({
                 )}
               </div>
               <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {mySeqPlayer.hand.map((card, i) => {
+                {(() => {
+                  const suitOrder: Record<string, number> = { "♠": 0, "♥": 1, "♣": 2, "♦": 3 };
+                  const rankOrder: Record<string, number> = { A: 14, K: 13, Q: 12, J: 11, "10": 10, "9": 9, "8": 8, "7": 7, "6": 6, "5": 5, "4": 4, "3": 3, "2": 2 };
+                  const sortedIndices = mySeqPlayer.hand
+                    .map((c, i) => ({ card: c, idx: i }))
+                    .filter((e) => e.card !== "HIDDEN")
+                    .sort((a, b) => {
+                      const aJkr = a.card.startsWith("JKR");
+                      const bJkr = b.card.startsWith("JKR");
+                      if (aJkr && !bJkr) return -1;
+                      if (!aJkr && bJkr) return 1;
+                      if (aJkr && bJkr) return 0;
+                      const aJack = isJack(a.card);
+                      const bJack = isJack(b.card);
+                      if (aJack && !bJack) return -1;
+                      if (!aJack && bJack) return 1;
+                      const aP = parseCard(a.card);
+                      const bP = parseCard(b.card);
+                      const aSuit = suitOrder[aP.suitSymbol] ?? 9;
+                      const bSuit = suitOrder[bP.suitSymbol] ?? 9;
+                      if (aSuit !== bSuit) return aSuit - bSuit;
+                      return (rankOrder[bP.rank] ?? 0) - (rankOrder[aP.rank] ?? 0);
+                    });
+                  return sortedIndices.map(({ card, idx: i }) => {
                   if (card === "HIDDEN") return null;
                   const { rank, suitSymbol, suitColor } = parseCard(card);
                   const isSelected = selectedCardIndex === i;
