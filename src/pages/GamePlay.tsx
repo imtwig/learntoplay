@@ -4,10 +4,12 @@ import { useRoom, leaveRoom, sessionId, transferHost } from "@/hooks/useRoom";
 import { useBlackjack } from "@/hooks/useBlackjack";
 import { useSequence } from "@/hooks/useSequence";
 import { usePoker } from "@/hooks/usePoker";
+import { useAssholeDaiDi } from "@/hooks/useAssholeDaiDi";
 import { getGame, type GameId } from "@/lib/gameData";
 import BlackjackTable from "@/components/blackjack/BlackjackTable";
 import SequenceTable from "@/components/sequence/SequenceTable";
 import PokerTable from "@/components/poker/PokerTable";
+import AssholeDaiDiTable from "@/components/asshole-daidi/AssholeDaiDiTable";
 
 const GamePlay = () => {
   const { roomId } = useParams<{ roomId: string }>();
