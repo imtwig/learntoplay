@@ -294,7 +294,7 @@ const SequenceTable = ({
                           : "bg-white border border-gray-200"
                         }
                         ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
-                        ${isPreview ? "bg-primary/5 border-primary/20" : ""}
+                        ${isPreview ? "ring-1 ring-green-400/50 bg-green-50/50" : ""}
                         ${isLastMove && !isAnimating ? "ring-2 ring-accent" : ""}
                         ${isSeqCell ? "ring-1 ring-game-gold" : ""}
                       `}
