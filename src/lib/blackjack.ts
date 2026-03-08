@@ -15,6 +15,7 @@ export interface BJPlayerState {
   playerId: string;
   name: string;
   netProfit: number;
+  roundProfit: number;
   hands: BJHand[];
   activeHandIndex: number;
   done: boolean;
@@ -67,6 +68,7 @@ export function initGameState(
       playerId: p.id,
       name: p.name,
       netProfit: 0,
+      roundProfit: 0,
       hands: [],
       activeHandIndex: 0,
       done: false,
@@ -124,6 +126,7 @@ export function startDeal(state: BJGameState): BJGameState {
     p.hands = [{ cards: [], bet: p.currentBet, result: "pending", stood: false, revealed: false }];
     p.activeHandIndex = 0;
     p.done = false;
+    p.roundProfit = 0;
   }
   s.phase = "dealing";
   return dealInitial(s);
@@ -162,7 +165,8 @@ function dealInitial(state: BJGameState): BJGameState {
         p.hands[0].revealed = true;
         const mult = dealerStrength; // 2 for blackjack, 3 for double aces
         p.netProfit -= p.hands[0].bet * mult;
-        if (dealer) dealer.netProfit += p.hands[0].bet * mult;
+        p.roundProfit -= p.hands[0].bet * mult;
+        if (dealer) { dealer.netProfit += p.hands[0].bet * mult; dealer.roundProfit += p.hands[0].bet * mult; }
         p.done = true;
       } else {
         // Equal — push
@@ -179,7 +183,8 @@ function dealInitial(state: BJGameState): BJGameState {
       p.hands[0].revealed = true;
       const mult = dealerStrength;
       p.netProfit -= p.hands[0].bet * mult;
-      if (dealer) dealer.netProfit += p.hands[0].bet * mult;
+      p.roundProfit -= p.hands[0].bet * mult;
+      if (dealer) { dealer.netProfit += p.hands[0].bet * mult; dealer.roundProfit += p.hands[0].bet * mult; }
       p.done = true;
       if (!s.revealedPlayerIds.includes(p.playerId)) {
         s.revealedPlayerIds.push(p.playerId);
@@ -246,7 +251,8 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
         hand.revealed = true;
         const dealer = s.players.find((p) => p.isDealer);
         player.netProfit += hand.bet * 3;
-        if (dealer) dealer.netProfit -= hand.bet * 3;
+        player.roundProfit += hand.bet * 3;
+        if (dealer) { dealer.netProfit -= hand.bet * 3; dealer.roundProfit -= hand.bet * 3; }
         if (!s.revealedPlayerIds.includes(player.playerId)) {
           s.revealedPlayerIds.push(player.playerId);
         }
@@ -265,12 +271,14 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
           hand.result = "five_card";
           const dealer = s.players.find((p) => p.isDealer);
           player.netProfit += hand.bet * 2;
-          if (dealer) dealer.netProfit -= hand.bet * 2;
+          player.roundProfit += hand.bet * 2;
+          if (dealer) { dealer.netProfit -= hand.bet * 2; dealer.roundProfit -= hand.bet * 2; }
         } else {
           hand.result = "lose";
           const dealer = s.players.find((p) => p.isDealer);
           player.netProfit -= hand.bet * 2;
-          if (dealer) dealer.netProfit += hand.bet * 2;
+          player.roundProfit -= hand.bet * 2;
+          if (dealer) { dealer.netProfit += hand.bet * 2; dealer.roundProfit += hand.bet * 2; }
         }
         advanceHand(s, player);
         break;
@@ -394,28 +402,28 @@ export function revealAll(state: BJGameState): BJGameState {
 function settleHand(state: BJGameState, player: BJPlayerState, hand: BJHand, dealer: BJPlayerState | undefined) {
   switch (hand.result) {
     case "blackjack":
-      // Opening blackjack = x2
       player.netProfit += hand.bet * 2;
-      if (dealer) dealer.netProfit -= hand.bet * 2;
+      player.roundProfit += hand.bet * 2;
+      if (dealer) { dealer.netProfit -= hand.bet * 2; dealer.roundProfit -= hand.bet * 2; }
       break;
     case "double_aces":
-      // Opening double aces = x3
       player.netProfit += hand.bet * 3;
-      if (dealer) dealer.netProfit -= hand.bet * 3;
+      player.roundProfit += hand.bet * 3;
+      if (dealer) { dealer.netProfit -= hand.bet * 3; dealer.roundProfit -= hand.bet * 3; }
       break;
     case "triple_sevens":
-      // Already settled inline (x3)
       break;
     case "five_card":
-      // Already settled inline (x2)
       break;
     case "win":
       player.netProfit += hand.bet;
-      if (dealer) dealer.netProfit -= hand.bet;
+      player.roundProfit += hand.bet;
+      if (dealer) { dealer.netProfit -= hand.bet; dealer.roundProfit -= hand.bet; }
       break;
     case "lose":
       player.netProfit -= hand.bet;
-      if (dealer) dealer.netProfit += hand.bet;
+      player.roundProfit -= hand.bet;
+      if (dealer) { dealer.netProfit += hand.bet; dealer.roundProfit += hand.bet; }
       break;
     case "push":
       break;

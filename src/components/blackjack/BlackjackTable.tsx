@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Check, X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import HandDisplay from "./HandDisplay";
+import LeaderboardButton from "./LeaderboardButton";
+import RoundResultOverlay from "./RoundResultOverlay";
 import type { BJGameState, PlayerAction, BJSettings } from "@/lib/blackjack";
 import type { BJPlayerState } from "@/lib/blackjack";
 import type { Player } from "@/hooks/useRoom";
@@ -73,6 +75,18 @@ const BlackjackTable = ({
   const { phase, players: bjPlayers, roundNumber, revealedPlayerIds = [] } = gameState;
   const [showTransfer, setShowTransfer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showResultOverlay, setShowResultOverlay] = useState(false);
+  const [prevPhase, setPrevPhase] = useState(phase);
+
+  // Show result overlay when phase transitions to "results"
+  useEffect(() => {
+    if (phase === "results" && prevPhase !== "results") {
+      setShowResultOverlay(true);
+      const timer = setTimeout(() => setShowResultOverlay(false), 2500);
+      return () => clearTimeout(timer);
+    }
+    setPrevPhase(phase);
+  }, [phase, prevPhase]);
 
   const allReady = bjPlayers.every((p) => p.ready);
   const iAmReady = myBJPlayer?.ready ?? false;
@@ -94,7 +108,7 @@ const BlackjackTable = ({
           BLACKJACK • ROUND {roundNumber}
         </span>
         <div className="flex items-center gap-3">
-          {myBJPlayer && <ProfitDisplay profit={myBJPlayer.netProfit} />}
+          <LeaderboardButton players={bjPlayers} myPlayerId={myPlayerId} />
           {isHost && (
             <>
               <Button
@@ -296,7 +310,7 @@ const BlackjackTable = ({
                     active={phase === "dealer_turn" && dealerPlayer.playerId === myPlayerId}
                   />
                 ))}
-                <ProfitDisplay profit={dealerPlayer.netProfit} />
+                <ProfitDisplay profit={dealerPlayer.roundProfit} />
               </motion.div>
             )}
 
@@ -323,7 +337,7 @@ const BlackjackTable = ({
                     }
                   />
                 ))}
-                <ProfitDisplay profit={myBJPlayer.netProfit} />
+                <ProfitDisplay profit={myBJPlayer.roundProfit} />
               </motion.div>
             )}
 
@@ -348,7 +362,7 @@ const BlackjackTable = ({
                       />
                     ))}
                     {(phase === "results" || phase === "dealer_turn") && (
-                      <ProfitDisplay profit={p.netProfit} />
+                      <ProfitDisplay profit={p.roundProfit} />
                     )}
                   </motion.div>
                 ))}
@@ -456,6 +470,10 @@ const BlackjackTable = ({
           )}
         </div>
       </main>
+      <RoundResultOverlay
+        roundProfit={myBJPlayer?.roundProfit ?? 0}
+        visible={showResultOverlay}
+      />
     </div>
   );
 };
