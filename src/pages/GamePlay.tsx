@@ -29,12 +29,16 @@ const GamePlay = () => {
       if (sequence.isHost && players.length > 0 && !sequence.gameState) {
         sequence.initGame(room?.settings as Record<string, unknown> | undefined);
       }
+    } else if (isPoker) {
+      if (poker.isHost && players.length > 0 && !poker.gameState) {
+        poker.initGame(room?.settings as Record<string, unknown> | undefined);
+      }
     } else {
       if (blackjack.isHost && players.length > 0 && !blackjack.gameState) {
         blackjack.initGame();
       }
     }
-  }, [isSequence, sequence.isHost, blackjack.isHost, players.length, sequence.gameState, blackjack.gameState, sequence.initGame, blackjack.initGame, room?.settings]);
+  }, [isSequence, isPoker, sequence.isHost, blackjack.isHost, poker.isHost, players.length, sequence.gameState, blackjack.gameState, poker.gameState, sequence.initGame, blackjack.initGame, poker.initGame, room?.settings]);
 
   const handleLeave = async () => {
     if (myPlayer && roomId) {
