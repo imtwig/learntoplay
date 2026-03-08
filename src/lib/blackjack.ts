@@ -645,8 +645,8 @@ export function getAvailableActions(state: BJGameState, playerId: string): Playe
   if (state.phase === "dealer_turn" && player.isDealer) {
     const hand = player.hands[player.activeHandIndex];
     if (!hand || hand.result !== "pending") {
-      // Dealer has a resolved hand (ban luck/ban ban/bust) — only allow "stand" (Done)
-      if (hand && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust")) {
+      // Dealer has a resolved hand — only allow "stand" (Done)
+      if (hand && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust" || hand.result === "triple_sevens" || hand.result === "five_card")) {
         return ["stand"];
       }
       return [];
