@@ -9,10 +9,10 @@ import {
 
 /* ── Types ──────────────────────────────────────────────── */
 
-export type SeqTeam = "A" | "B";
+export type SeqTeam = "A" | "B" | "C";
 
 export interface SeqChip {
-  owner: string; // team name ("A"|"B") or playerId for individual
+  owner: string; // team name ("A"|"B"|"C") or playerId for individual
   partOfSequence: boolean;
 }
 
@@ -36,7 +36,8 @@ export interface SeqGameState {
   currentPlayerIndex: number;
   phase: "team_setup" | "playing" | "finished";
   isTeamGame: boolean;
-  teams: { A: string[]; B: string[] };
+  teamCount: number; // 2 or 3
+  teams: { A: string[]; B: string[]; C: string[] };
   sequences: SeqSequenceData[];
   winner: string | null;
   lastMove: { row: number; col: number; type: "place" | "remove" } | null;
