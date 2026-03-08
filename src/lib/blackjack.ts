@@ -254,7 +254,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
   if (!hand) return s;
   
   // Allow dealer with resolved hand (ban luck/ban ban/bust) to press "stand" (Done)
-  const dealerHasResolved = player.isDealer && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust");
+  const dealerHasResolved = player.isDealer && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust" || hand.result === "triple_sevens" || hand.result === "five_card");
   if (hand.result !== "pending" && !dealerHasResolved) return s;
 
   switch (action) {
@@ -266,9 +266,9 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
         hand.result = "triple_sevens";
         hand.revealed = true;
         const dealer = s.players.find((p) => p.isDealer);
-        player.netProfit += hand.bet * 3;
-        player.roundProfit += hand.bet * 3;
-        if (dealer) { dealer.netProfit -= hand.bet * 3; dealer.roundProfit -= hand.bet * 3; }
+        player.netProfit += hand.bet * 7;
+        player.roundProfit += hand.bet * 7;
+        if (dealer) { dealer.netProfit -= hand.bet * 7; dealer.roundProfit -= hand.bet * 7; }
         if (!s.revealedPlayerIds.includes(player.playerId)) {
           s.revealedPlayerIds.push(player.playerId);
         }
@@ -290,13 +290,37 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
           player.roundProfit += hand.bet * 2;
           if (dealer) { dealer.netProfit -= hand.bet * 2; dealer.roundProfit -= hand.bet * 2; }
         } else {
-          hand.result = "lose";
+          // Busted at 5 cards — regular bust
+          hand.result = "bust";
           const dealer = s.players.find((p) => p.isDealer);
-          player.netProfit -= hand.bet * 2;
-          player.roundProfit -= hand.bet * 2;
-          if (dealer) { dealer.netProfit += hand.bet * 2; dealer.roundProfit += hand.bet * 2; }
+          player.netProfit -= hand.bet;
+          player.roundProfit -= hand.bet;
+          if (dealer) { dealer.netProfit += hand.bet; dealer.roundProfit += hand.bet; }
         }
         advanceHand(s, player);
+        break;
+      }
+
+      // --- Dealer triple sevens check ---
+      if (player.isDealer && hasTripleSevens(hand.cards)) {
+        hand.result = "triple_sevens";
+        // Dealer wins 7x from all remaining (non-settled) players
+        for (const p of s.players) {
+          if (p.isDealer || s.revealedPlayerIds.includes(p.playerId)) continue;
+          for (const h of p.hands) {
+            if (h.result !== "pending") continue;
+            h.result = "lose";
+            h.revealed = true;
+            p.netProfit -= h.bet * 7;
+            p.roundProfit -= h.bet * 7;
+            player.netProfit += h.bet * 7;
+            player.roundProfit += h.bet * 7;
+          }
+          if (!s.revealedPlayerIds.includes(p.playerId)) {
+            s.revealedPlayerIds.push(p.playerId);
+          }
+        }
+        finishDealerTurn(s);
         break;
       }
 
@@ -305,7 +329,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
         const dealerVal = handValue(hand.cards);
         
         if (dealerVal <= 21) {
-          // Dealer wins x2 from all remaining (unrevealed) players
+          // Dealer ngou leng — wins x2 from all remaining (unsettled) players
           hand.result = "five_card";
           for (const p of s.players) {
             if (p.isDealer || s.revealedPlayerIds.includes(p.playerId)) continue;
@@ -323,7 +347,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
             }
           }
         } else {
-          // Dealer busts with 5 cards - loses x2 to all remaining players (except those who also busted)
+          // Dealer busts with 5 cards - regular bust
           hand.result = "bust";
           for (const p of s.players) {
             if (p.isDealer || s.revealedPlayerIds.includes(p.playerId)) continue;
@@ -332,15 +356,13 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
               const pVal = handValue(h.cards);
               h.revealed = true;
               if (pVal > 21) {
-                // Both busted — push, no money exchanged
                 h.result = "push";
               } else {
-                // Player didn't bust - wins x2
                 h.result = "win";
-                p.netProfit += h.bet * 2;
-                p.roundProfit += h.bet * 2;
-                player.netProfit -= h.bet * 2;
-                player.roundProfit -= h.bet * 2;
+                p.netProfit += h.bet;
+                p.roundProfit += h.bet;
+                player.netProfit -= h.bet;
+                player.roundProfit -= h.bet;
               }
             }
             if (!s.revealedPlayerIds.includes(p.playerId)) {
@@ -623,8 +645,8 @@ export function getAvailableActions(state: BJGameState, playerId: string): Playe
   if (state.phase === "dealer_turn" && player.isDealer) {
     const hand = player.hands[player.activeHandIndex];
     if (!hand || hand.result !== "pending") {
-      // Dealer has a resolved hand (ban luck/ban ban/bust) — only allow "stand" (Done)
-      if (hand && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust")) {
+      // Dealer has a resolved hand — only allow "stand" (Done)
+      if (hand && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust" || hand.result === "triple_sevens" || hand.result === "five_card")) {
         return ["stand"];
       }
       return [];
