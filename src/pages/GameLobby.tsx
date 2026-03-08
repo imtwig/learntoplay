@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { type SeqHouseRules, DEFAULT_HOUSE_RULES } from "@/lib/sequence";
 import { type ADDHouseRules, DEFAULT_ADD_HOUSE_RULES } from "@/lib/assholeDaiDi";
+import { type DDHouseRules, type DDPenaltyMultipliers, DEFAULT_DD_HOUSE_RULES, DEFAULT_DD_PENALTIES } from "@/lib/daiDi";
 import {
   Accordion,
   AccordionContent,
