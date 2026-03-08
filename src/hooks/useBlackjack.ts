@@ -131,6 +131,12 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
     await saveState(next);
   }, [rawGameState, isHost, saveState]);
 
+  const doToggleShowFirstCard = useCallback(async () => {
+    if (!rawGameState || !isHost) return;
+    const next = toggleShowFirstCard(rawGameState);
+    await saveState(next);
+  }, [rawGameState, isHost, saveState]);
+
   const gameState = rawGameState && myPlayer
     ? filterStateForPlayer(rawGameState, myPlayer.id)
     : rawGameState;
@@ -143,6 +149,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
 
   return {
     gameState,
+    rawSettings: rawGameState?.settings,
     myBJPlayer,
     availableActions,
     isHost,
@@ -156,5 +163,6 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
     doRevealPlayer,
     doRevealAll,
     nextRound,
+    doToggleShowFirstCard,
   };
 }
