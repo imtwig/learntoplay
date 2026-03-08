@@ -152,14 +152,7 @@ function dealInitial(state: BJGameState): BJGameState {
   return s;
 }
 
-function revealActivePlayerHand(state: BJGameState) {
-  const player = state.players[state.activePlayerIndex];
-  if (!player) return;
-  const hand = player.hands[player.activeHandIndex];
-  if (hand) {
-    hand.cards = hand.cards.map((c) => ({ ...c, faceUp: true }));
-  }
-}
+// No longer needed — all cards are face-up in raw state, visibility controlled by filter
 
 export function playerAction(state: BJGameState, playerId: string, action: PlayerAction): BJGameState {
   const s = structuredClone(state);
