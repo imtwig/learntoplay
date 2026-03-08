@@ -448,6 +448,7 @@ export function filterSeqStateForPlayer(state: SeqGameState, viewerPlayerId: str
 
 export function newSequenceRound(state: SeqGameState): SeqGameState {
   return initSequenceGame(
-    state.players.map((p) => ({ id: p.playerId, name: p.name }))
+    state.players.map((p) => ({ id: p.playerId, name: p.name })),
+    state.houseRules
   );
 }
