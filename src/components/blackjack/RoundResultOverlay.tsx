@@ -23,6 +23,7 @@ interface HandInfo {
 interface Props {
   roundProfit: number;
   visible: boolean;
+  onDismiss?: () => void;
   myHand?: HandInfo;
   dealerHand?: HandInfo;
 }
