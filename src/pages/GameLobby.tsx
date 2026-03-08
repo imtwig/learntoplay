@@ -82,9 +82,33 @@ const GameLobby = () => {
         return;
       }
       localStorage.setItem("player_name", playerName);
-      // Try to rejoin as existing player, or join fresh
+      // Try to reconnect existing player, or create a new one
       try {
-        await rejoinOrJoin(roomId, playerName.trim());
+        const { data: existing } = await supabase
+          .from("players")
+          .select("id")
+          .eq("room_id", roomId)
+          .eq("session_id", sessionId)
+          .limit(1);
+        if (existing && existing.length > 0) {
+          await supabase
+            .from("players")
+            .update({ connected: true })
+            .eq("id", existing[0].id);
+        } else {
+          // New player joining in-progress game
+          const { count } = await supabase
+            .from("players")
+            .select("*", { count: "exact", head: true })
+            .eq("room_id", roomId);
+          await supabase.from("players").insert({
+            room_id: roomId,
+            display_name: playerName.trim(),
+            session_id: sessionId,
+            is_host: false,
+            join_order: count ?? 0,
+          });
+        }
       } catch (err: any) {
         toast({ title: "Error", description: err.message, variant: "destructive" });
         return;
