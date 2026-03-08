@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Crown, Users, Copy, Play, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRoom, leaveRoom, startGame, sessionId } from "@/hooks/useRoom";
+import { Check } from "lucide-react";
 import { getGame, type GameId } from "@/lib/gameData";
 import { toast } from "@/hooks/use-toast";
 
