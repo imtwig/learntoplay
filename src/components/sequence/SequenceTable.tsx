@@ -18,6 +18,7 @@ interface Props {
   validPlacements: [number, number][];
   selectedCardIsDead: boolean;
   onSelectCard: (idx: number | null) => void;
+  previewPlacements: [number, number][];
   onPlayCard: (cardIndex: number, row: number, col: number) => void;
   onDiscardDead: (cardIndex: number) => void;
   onSetTeam: (playerId: string, team: SeqTeam) => void;
