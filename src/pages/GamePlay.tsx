@@ -4,10 +4,12 @@ import { useRoom, leaveRoom, sessionId, transferHost } from "@/hooks/useRoom";
 import { useBlackjack } from "@/hooks/useBlackjack";
 import { useSequence } from "@/hooks/useSequence";
 import { usePoker } from "@/hooks/usePoker";
+import { useAssholeDaiDi } from "@/hooks/useAssholeDaiDi";
 import { getGame, type GameId } from "@/lib/gameData";
 import BlackjackTable from "@/components/blackjack/BlackjackTable";
 import SequenceTable from "@/components/sequence/SequenceTable";
 import PokerTable from "@/components/poker/PokerTable";
+import AssholeDaiDiTable from "@/components/asshole-daidi/AssholeDaiDiTable";
 
 const GamePlay = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -16,10 +18,12 @@ const GamePlay = () => {
   const game = room ? getGame(room.game_type as GameId) : null;
   const isSequence = room?.game_type === "sequence";
   const isPoker = room?.game_type === "poker";
+  const isADD = room?.game_type === "asshole_daidi";
 
-  const blackjack = useBlackjack(roomId, (isSequence || isPoker) ? [] : players);
+  const blackjack = useBlackjack(roomId, (isSequence || isPoker || isADD) ? [] : players);
   const sequence = useSequence(roomId, isSequence ? players : []);
   const poker = usePoker(roomId, isPoker ? players : []);
+  const add = useAssholeDaiDi(roomId, isADD ? players : []);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
 
@@ -33,12 +37,16 @@ const GamePlay = () => {
       if (poker.isHost && players.length > 0 && !poker.gameState) {
         poker.initGame(room?.settings as Record<string, unknown> | undefined);
       }
+    } else if (isADD) {
+      if (add.isHost && players.length > 0 && !add.gameState) {
+        add.initGame(room?.settings as Record<string, unknown> | undefined);
+      }
     } else {
       if (blackjack.isHost && players.length > 0 && !blackjack.gameState) {
         blackjack.initGame();
       }
     }
-  }, [isSequence, isPoker, sequence.isHost, blackjack.isHost, poker.isHost, players.length, sequence.gameState, blackjack.gameState, poker.gameState, sequence.initGame, blackjack.initGame, poker.initGame, room?.settings]);
+  }, [isSequence, isPoker, isADD, sequence.isHost, blackjack.isHost, poker.isHost, add.isHost, players.length, sequence.gameState, blackjack.gameState, poker.gameState, add.gameState, sequence.initGame, blackjack.initGame, poker.initGame, add.initGame, room?.settings]);
 
   const handleLeave = async () => {
     if (myPlayer && roomId) {
@@ -57,6 +65,40 @@ const GamePlay = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground font-display animate-pulse">Loading game...</p>
       </div>
+    );
+  }
+
+  // Asshole Dai Di game
+  if (isADD) {
+    if (!add.gameState) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-muted-foreground font-display animate-pulse">Setting up game...</p>
+        </div>
+      );
+    }
+
+    return (
+      <AssholeDaiDiTable
+        gameState={add.gameState}
+        myADDPlayer={add.myADDPlayer}
+        isHost={add.isHost}
+        isMyTurn={add.isMyTurn}
+        canPass={add.canPass}
+        selectedCards={add.selectedCards}
+        setSelectedCards={add.setSelectedCards}
+        mySwapPending={add.mySwapPending}
+        onDeal={add.doDeal}
+        onPlay={add.doPlay}
+        onPass={add.doPass}
+        onStartSwap={add.doStartSwap}
+        onSubmitSwapReturn={add.doSubmitSwapReturn}
+        onFinishSwap={add.doFinishSwap}
+        onRematch={add.doRematch}
+        onLeave={handleLeave}
+        players={players}
+        myPlayerId={myPlayer?.id}
+      />
     );
   }
 

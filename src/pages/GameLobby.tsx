@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { type SeqHouseRules, DEFAULT_HOUSE_RULES } from "@/lib/sequence";
+import { type ADDHouseRules, DEFAULT_ADD_HOUSE_RULES } from "@/lib/assholeDaiDi";
 import {
   Accordion,
   AccordionContent,
@@ -41,6 +42,7 @@ const GameLobby = () => {
   const [joinPassword, setJoinPassword] = useState("");
   const [creating, setCreating] = useState(false);
   const [houseRules, setHouseRules] = useState<SeqHouseRules>({ jokers: false, allJacksRemove: false, removeFromSequence: false });
+  const [addHouseRules, setAddHouseRules] = useState<ADDHouseRules>({ allowEndOn2: false });
 
   if (!game) {
     navigate("/");
@@ -59,6 +61,11 @@ const GameLobby = () => {
       const anyActive = houseRules.jokers || houseRules.allJacksRemove || houseRules.removeFromSequence;
       if (game.id === "sequence" && anyActive) {
         settings.houseRules = houseRules;
+      }
+      if (game.id === "asshole_daidi") {
+        if (addHouseRules.allowEndOn2) {
+          settings.houseRules = addHouseRules;
+        }
       }
       const { room } = await createRoom(
         game.id,
@@ -266,6 +273,20 @@ const GameLobby = () => {
                             onCheckedChange={(v) => setHouseRules((prev) => ({ ...prev, removeFromSequence: !!v }))}
                           />
                           <span className="text-[11px] text-muted-foreground">Can remove chips from sequences</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                  {game.id === "asshole_daidi" && (
+                    <div className="rounded-lg border border-border/50 px-3 py-2 space-y-2">
+                      <Label className="text-sm font-medium">House Rules</Label>
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={addHouseRules.allowEndOn2}
+                            onCheckedChange={(v) => setAddHouseRules((prev) => ({ ...prev, allowEndOn2: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Allow ending round on a 2</span>
                         </label>
                       </div>
                     </div>
