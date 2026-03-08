@@ -91,8 +91,9 @@ const SequenceTable = ({
     return set;
   })();
 
-  // Track last move for pop animation
+  // Track last move for hand animation
   const [animatingCell, setAnimatingCell] = useState<string | null>(null);
+  const [settledCell, setSettledCell] = useState<string | null>(null);
   const lastMoveRef = useState<string | null>(null);
 
   useEffect(() => {
@@ -100,7 +101,12 @@ const SequenceTable = ({
     if (key && key !== lastMoveRef[0]) {
       lastMoveRef[0] = key;
       setAnimatingCell(key);
-      const t = setTimeout(() => setAnimatingCell(null), 500);
+      setSettledCell(null);
+      // After drop animation, settle the hand in place
+      const t = setTimeout(() => {
+        setAnimatingCell(null);
+        setSettledCell(key);
+      }, 400);
       return () => clearTimeout(t);
     }
   }, [gameState.lastMove]);
@@ -347,7 +353,6 @@ const SequenceTable = ({
                           <motion.span
                             initial={{ y: -20, opacity: 1, scale: 1.2 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
                             transition={{ duration: 0.4, ease: "easeOut" }}
                             className="absolute inset-0 flex items-center justify-center text-lg z-10 pointer-events-none"
                           >
@@ -355,6 +360,11 @@ const SequenceTable = ({
                           </motion.span>
                         )}
                       </AnimatePresence>
+                      {settledCell === cellKey && (
+                        <span className="absolute inset-0 flex items-center justify-center text-lg z-10 pointer-events-none">
+                          🫳
+                        </span>
+                      )}
                       {/* Free corner chip indicator */}
                       {isFree && (
                         <div className="absolute inset-[20%] rounded-full bg-game-gold/30" />
