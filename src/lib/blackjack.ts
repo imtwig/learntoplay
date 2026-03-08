@@ -254,7 +254,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
   if (!hand) return s;
   
   // Allow dealer with resolved hand (ban luck/ban ban/bust) to press "stand" (Done)
-  const dealerHasResolved = player.isDealer && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust");
+  const dealerHasResolved = player.isDealer && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust" || hand.result === "triple_sevens" || hand.result === "five_card");
   if (hand.result !== "pending" && !dealerHasResolved) return s;
 
   switch (action) {
