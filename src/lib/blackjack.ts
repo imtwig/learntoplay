@@ -494,6 +494,13 @@ function finishDealerTurn(state: BJGameState) {
   if (!state.revealedPlayerIds.includes(dealer.playerId)) {
     state.revealedPlayerIds.push(dealer.playerId);
   }
+  // Ensure all dealer cards are face-up for everyone to see
+  for (const h of dealer.hands) {
+    h.revealed = true;
+    for (const c of h.cards) {
+      c.faceUp = true;
+    }
+  }
 
   const dealerHand = dealer.hands[0];
   const dealerVal = handValue(dealerHand.cards);
