@@ -37,6 +37,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
   const isHost = myPlayer?.is_host ?? false;
+  const isBJDealer = rawGameState?.players.find((p) => p.playerId === myPlayer?.id)?.isDealer ?? false;
 
   // Single effect: load + subscribe + poll fallback
   useEffect(() => {
@@ -149,16 +150,16 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
   }, [rawGameState, myPlayer, saveState]);
 
   const doRevealPlayer = useCallback(async (playerId: string) => {
-    if (!rawGameState || !isHost) return;
+    if (!rawGameState || !isBJDealer) return;
     const next = revealPlayer(rawGameState, playerId);
     await saveState(next);
-  }, [rawGameState, isHost, saveState]);
+  }, [rawGameState, isBJDealer, saveState]);
 
   const doRevealAll = useCallback(async () => {
-    if (!rawGameState || !isHost) return;
+    if (!rawGameState || !isBJDealer) return;
     const next = revealAll(rawGameState);
     await saveState(next);
-  }, [rawGameState, isHost, saveState]);
+  }, [rawGameState, isBJDealer, saveState]);
 
   const nextRound = useCallback(async () => {
     if (!rawGameState || !isHost) return;
