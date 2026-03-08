@@ -43,6 +43,7 @@ export interface SeqGameState {
   lastMove: { row: number; col: number; type: "place" | "remove" } | null;
   message: string | null;
   houseRules: boolean;
+  roundStartIndex: number;
 }
 
 /* ── Helpers ────────────────────────────────────────────── */
@@ -102,7 +103,8 @@ function getTeamCount(playerCount: number): number {
 
 export function initSequenceGame(
   playerNames: { id: string; name: string }[],
-  houseRules: boolean = false
+  houseRules: boolean = false,
+  roundStartIndex: number = 0
 ): SeqGameState {
   const n = playerNames.length;
   const teamCount = getTeamCount(n);
@@ -124,7 +126,7 @@ export function initSequenceGame(
     players,
     deck,
     discardPile: [],
-    currentPlayerIndex: 0,
+    currentPlayerIndex: roundStartIndex % n,
     phase: "team_setup",
     isTeamGame: true,
     teamCount,
@@ -134,6 +136,7 @@ export function initSequenceGame(
     lastMove: null,
     message: null,
     houseRules,
+    roundStartIndex: roundStartIndex % n,
   };
 }
 
@@ -448,8 +451,10 @@ export function filterSeqStateForPlayer(state: SeqGameState, viewerPlayerId: str
 /* ── New round (rematch) ────────────────────────────────── */
 
 export function newSequenceRound(state: SeqGameState): SeqGameState {
+  const nextStart = (state.roundStartIndex + 1) % state.players.length;
   return initSequenceGame(
     state.players.map((p) => ({ id: p.playerId, name: p.name })),
-    state.houseRules
+    state.houseRules,
+    nextStart
   );
 }
