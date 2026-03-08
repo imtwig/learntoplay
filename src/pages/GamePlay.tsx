@@ -3,9 +3,11 @@ import { useEffect, useCallback } from "react";
 import { useRoom, leaveRoom, sessionId, transferHost } from "@/hooks/useRoom";
 import { useBlackjack } from "@/hooks/useBlackjack";
 import { useSequence } from "@/hooks/useSequence";
+import { usePoker } from "@/hooks/usePoker";
 import { getGame, type GameId } from "@/lib/gameData";
 import BlackjackTable from "@/components/blackjack/BlackjackTable";
 import SequenceTable from "@/components/sequence/SequenceTable";
+import PokerTable from "@/components/poker/PokerTable";
 
 const GamePlay = () => {
   const { roomId } = useParams<{ roomId: string }>();
