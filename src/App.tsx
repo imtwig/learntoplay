@@ -8,6 +8,7 @@ import GameLobby from "./pages/GameLobby";
 import WaitingRoom from "./pages/WaitingRoom";
 import GamePlay from "./pages/GamePlay";
 import NotFound from "./pages/NotFound";
+import PRDPage from "./pages/PRDPage";
 
 const queryClient = new QueryClient();
 
