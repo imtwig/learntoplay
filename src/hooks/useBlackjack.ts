@@ -43,7 +43,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
         .select("game_state")
         .eq("id", roomId)
         .single();
-      if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any)) {
+      if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any) && "dealer" in (data.game_state as any)) {
         const gs = normalizeGameState(data.game_state as unknown as BJGameState);
         setRawGameState(gs);
         initialized.current = true;
@@ -67,7 +67,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
         { event: "UPDATE", schema: "public", table: "rooms", filter: `id=eq.${roomId}` },
         (payload) => {
           const gs = payload.new?.game_state;
-          if (gs && typeof gs === "object" && "phase" in (gs as any)) {
+          if (gs && typeof gs === "object" && "phase" in (gs as any) && "dealer" in (gs as any)) {
             setRawGameState(normalizeGameState(gs as unknown as BJGameState));
           }
         }
