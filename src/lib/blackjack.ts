@@ -743,7 +743,13 @@ export function filterStateForPlayer(state: BJGameState, viewerPlayerId: string)
   if (!s.revealedPlayerIds) s.revealedPlayerIds = [];
   if (!s.settings) s.settings = { showFirstCard: false, showFirstCardNextRound: false };
   for (const p of s.players) {
-    if (p.playerId === viewerPlayerId) continue;
+    if (p.playerId === viewerPlayerId) {
+      // Always show own cards face-up
+      for (const h of p.hands) {
+        for (const c of h.cards) c.faceUp = true;
+      }
+      continue;
+    }
     if (s.revealedPlayerIds.includes(p.playerId)) {
       continue;
     }
