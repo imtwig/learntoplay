@@ -4,6 +4,7 @@ import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Chec
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import HandDisplay from "./HandDisplay";
+import DealingAnimation from "./DealingAnimation";
 import LeaderboardButton from "./LeaderboardButton";
 import RoundResultOverlay from "./RoundResultOverlay";
 import type { BJGameState, PlayerAction, BJSettings } from "@/lib/blackjack";
@@ -83,15 +84,19 @@ const BlackjackTable = ({
   const [showSettings, setShowSettings] = useState(false);
   const [showResultOverlay, setShowResultOverlay] = useState(false);
   const [showAllWinnings, setShowAllWinnings] = useState(false);
+  const [showDealingAnim, setShowDealingAnim] = useState(false);
   const [prevPhase, setPrevPhase] = useState(phase);
 
-  // Show result overlay when phase transitions to "results"
+  // Show dealing animation when transitioning from betting, and result overlay for results
   useEffect(() => {
-    if (phase === "results" && prevPhase !== "results") {
+    if (phase !== "betting" && prevPhase === "betting") {
+      setShowDealingAnim(true);
+    }
+    if (phase === "results" && prevPhase !== "results" && !showDealingAnim) {
       setShowResultOverlay(true);
     }
     setPrevPhase(phase);
-  }, [phase, prevPhase]);
+  }, [phase, prevPhase, showDealingAnim]);
 
   const dealerPlayer = bjPlayers.find((p) => p.isDealer);
   const nonDealerPlayers = bjPlayers.filter((p) => !p.isDealer);
@@ -345,16 +350,20 @@ const BlackjackTable = ({
         )}
 
         {/* Dealing animation */}
-        {phase === "dealing" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-            <p className="text-muted-foreground font-display tracking-wider animate-pulse">
-              Dealing cards...
-            </p>
-          </motion.div>
+        {showDealingAnim && (
+          <DealingAnimation
+            players={bjPlayers}
+            onComplete={() => {
+              setShowDealingAnim(false);
+              if (phase === "results") {
+                setShowResultOverlay(true);
+              }
+            }}
+          />
         )}
 
         {/* Active game phases */}
-        {(phase === "player_turns" || phase === "results" || phase === "dealer_turn") && (
+        {(phase === "player_turns" || phase === "results" || phase === "dealer_turn") && !showDealingAnim && (
           <>
             {/* Dealer's hand at the top */}
             {dealerPlayer && dealerPlayer.hands.length > 0 && (
@@ -434,7 +443,7 @@ const BlackjackTable = ({
         )}
 
         {/* Controls */}
-        <div className="w-full max-w-sm space-y-4">
+        {!showDealingAnim && <div className="w-full max-w-sm space-y-4">
           {/* Player turn actions: Draw / Done */}
           {phase === "player_turns" && availableActions.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3 justify-center">
@@ -545,7 +554,7 @@ const BlackjackTable = ({
               Waiting for dealer to start next round...
             </p>
           )}
-        </div>
+        </div>}
       </main>
       <RoundResultOverlay
         roundProfit={myBJPlayer?.roundProfit ?? 0}
