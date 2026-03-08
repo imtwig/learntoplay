@@ -169,6 +169,7 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
     selectedCardIndex,
     setSelectedCardIndex,
     validPlacements,
+    previewPlacements,
     selectedCardIsDead,
     initGame,
     doSetTeam,
