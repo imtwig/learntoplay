@@ -91,8 +91,9 @@ const SequenceTable = ({
     return set;
   })();
 
-  // Track last move for pop animation
+  // Track last move for hand animation
   const [animatingCell, setAnimatingCell] = useState<string | null>(null);
+  const [settledCell, setSettledCell] = useState<string | null>(null);
   const lastMoveRef = useState<string | null>(null);
 
   useEffect(() => {
@@ -100,7 +101,12 @@ const SequenceTable = ({
     if (key && key !== lastMoveRef[0]) {
       lastMoveRef[0] = key;
       setAnimatingCell(key);
-      const t = setTimeout(() => setAnimatingCell(null), 500);
+      setSettledCell(null);
+      // After drop animation, settle the hand in place
+      const t = setTimeout(() => {
+        setAnimatingCell(null);
+        setSettledCell(key);
+      }, 400);
       return () => clearTimeout(t);
     }
   }, [gameState.lastMove]);
