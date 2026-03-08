@@ -362,7 +362,7 @@ const BlackjackTable = ({
                       />
                     ))}
                     {(phase === "results" || phase === "dealer_turn") && (
-                      <ProfitDisplay profit={p.netProfit} />
+                      <ProfitDisplay profit={p.roundProfit} />
                     )}
                   </motion.div>
                 ))}
