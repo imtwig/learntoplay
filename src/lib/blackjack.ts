@@ -449,22 +449,15 @@ function finishDealerTurn(state: BJGameState) {
 
       if (playerBust) {
         h.result = "lose";
-        settleHand(state, p, h, dealer);
       } else if (dealerBust) {
-        // Dealer busted — player wins regardless of their value
         h.result = "win";
-        settleHand(state, p, h, dealer);
       } else if (pVal < 15) {
-        // Player under 15 — can only not lose if dealer busts (already handled above)
-        // Since dealer didn't bust, player loses
+        // Player under 15 and dealer didn't bust — player loses
         h.result = "lose";
-        settleHand(state, p, h, dealer);
       } else if (pVal > dealerVal) {
         h.result = "win";
-        settleHand(state, p, h, dealer);
       } else if (pVal < dealerVal) {
         h.result = "lose";
-        settleHand(state, p, h, dealer);
       } else {
         h.result = "push";
       }
