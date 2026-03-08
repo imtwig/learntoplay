@@ -14,10 +14,11 @@ export interface BJHand {
 export interface BJPlayerState {
   playerId: string;
   name: string;
-  chips: number;
+  netProfit: number; // cumulative profit/loss
   hands: BJHand[];
   activeHandIndex: number;
   done: boolean;
+  currentBet: number; // what they chose to bet this round
 }
 
 export interface BJGameState {
@@ -29,17 +30,18 @@ export interface BJGameState {
   roundNumber: number;
 }
 
-export function initGameState(playerNames: { id: string; name: string }[], startingChips = 1000): BJGameState {
+export function initGameState(playerNames: { id: string; name: string }[]): BJGameState {
   return {
     deck: createDeck(6),
     dealer: [],
     players: playerNames.map((p) => ({
       playerId: p.id,
       name: p.name,
-      chips: startingChips,
+      netProfit: 0,
       hands: [],
       activeHandIndex: 0,
       done: false,
+      currentBet: 0,
     })),
     activePlayerIndex: 0,
     phase: "betting",
@@ -56,13 +58,13 @@ function draw(state: BJGameState, faceUp = true): Card {
   return card;
 }
 
+/** Each player sets their own bet */
 export function placeBets(state: BJGameState, bets: Record<string, number>): BJGameState {
   const s = structuredClone(state);
   for (const p of s.players) {
-    const bet = bets[p.playerId] ?? 50;
-    const actualBet = Math.min(bet, p.chips);
-    p.chips -= actualBet;
-    p.hands = [{ cards: [], bet: actualBet, result: "pending", doubled: false, stood: false }];
+    const bet = Math.max(bets[p.playerId] ?? 0, 0);
+    p.currentBet = bet;
+    p.hands = [{ cards: [], bet, result: "pending", doubled: false, stood: false }];
     p.activeHandIndex = 0;
     p.done = false;
   }
@@ -70,23 +72,34 @@ export function placeBets(state: BJGameState, bets: Record<string, number>): BJG
   return dealInitial(s);
 }
 
+/**
+ * Deal cards clockwise: first card face-up to each player, then second card face-down.
+ * Dealer also gets 1 up, 1 down.
+ */
 function dealInitial(state: BJGameState): BJGameState {
   const s = state;
-  // Deal 2 cards to each player
-  for (let round = 0; round < 2; round++) {
-    for (const p of s.players) {
-      p.hands[0].cards.push(draw(s));
-    }
+
+  // Round 1: first card face-up to each player clockwise
+  for (const p of s.players) {
+    p.hands[0].cards.push(draw(s, true));
   }
-  // Dealer gets 2 cards (second face down)
-  s.dealer = [draw(s), draw(s, false)];
-  
+
+  // Round 2: second card face-down to each player clockwise
+  for (const p of s.players) {
+    p.hands[0].cards.push(draw(s, false));
+  }
+
+  // Dealer gets 1 face-up, 1 face-down
+  s.dealer = [draw(s, true), draw(s, false)];
+
   // Check for dealer blackjack
-  const dealerFull = s.dealer.map(c => ({ ...c, faceUp: true }));
+  const dealerFull = s.dealer.map((c) => ({ ...c, faceUp: true }));
   if (isBlackjack(dealerFull)) {
     s.dealer[1].faceUp = true;
     for (const p of s.players) {
+      // Reveal player cards for results
       for (const h of p.hands) {
+        h.cards = h.cards.map((c) => ({ ...c, faceUp: true }));
         h.result = isBlackjack(h.cards) ? "push" : "lose";
       }
       p.done = true;
@@ -95,29 +108,45 @@ function dealInitial(state: BJGameState): BJGameState {
     return settleRound(s);
   }
 
-  // Check for player blackjacks
+  // Check for player blackjacks (need to check with both cards visible)
   for (const p of s.players) {
-    if (isBlackjack(p.hands[0].cards)) {
+    const fullHand = p.hands[0].cards.map((c) => ({ ...c, faceUp: true }));
+    if (isBlackjack(fullHand)) {
+      p.hands[0].cards = fullHand; // reveal both cards
       p.hands[0].result = "blackjack";
       p.done = true;
     }
   }
 
   s.phase = "player_turns";
-  s.activePlayerIndex = s.players.findIndex(p => !p.done);
+  s.activePlayerIndex = s.players.findIndex((p) => !p.done);
   if (s.activePlayerIndex === -1) {
     return startDealerTurn(s);
   }
+
+  // Reveal the active player's own hand (face-down card) so they can play
+  revealActivePlayerHand(s);
+
   return s;
+}
+
+/** Reveal the current active player's face-down cards so they can see their hand */
+function revealActivePlayerHand(state: BJGameState) {
+  const player = state.players[state.activePlayerIndex];
+  if (!player) return;
+  const hand = player.hands[player.activeHandIndex];
+  if (hand) {
+    hand.cards = hand.cards.map((c) => ({ ...c, faceUp: true }));
+  }
 }
 
 export function playerAction(state: BJGameState, playerId: string, action: PlayerAction): BJGameState {
   const s = structuredClone(state);
   if (s.phase !== "player_turns") return s;
-  
-  const player = s.players.find(p => p.playerId === playerId);
+
+  const player = s.players.find((p) => p.playerId === playerId);
   if (!player || player.done) return s;
-  
+
   const hand = player.hands[player.activeHandIndex];
   if (!hand || hand.result !== "pending") return s;
 
@@ -136,8 +165,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
       break;
     }
     case "double": {
-      if (hand.cards.length === 2 && player.chips >= hand.bet) {
-        player.chips -= hand.bet;
+      if (hand.cards.length === 2) {
         hand.bet *= 2;
         hand.doubled = true;
         hand.cards.push(draw(s));
@@ -150,8 +178,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
       break;
     }
     case "split": {
-      if (hand.cards.length === 2 && hand.cards[0].rank === hand.cards[1].rank && player.chips >= hand.bet) {
-        player.chips -= hand.bet;
+      if (hand.cards.length === 2 && hand.cards[0].rank === hand.cards[1].rank) {
         const secondCard = hand.cards.pop()!;
         hand.cards.push(draw(s));
         player.hands.splice(player.activeHandIndex + 1, 0, {
@@ -170,20 +197,21 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
 }
 
 function advanceHand(state: BJGameState, player: BJPlayerState) {
-  // Move to next hand or next player
-  const nextHand = player.hands.findIndex((h, i) => i > player.activeHandIndex && h.result === "pending" && !h.stood);
+  const nextHand = player.hands.findIndex(
+    (h, i) => i > player.activeHandIndex && h.result === "pending" && !h.stood
+  );
   if (nextHand !== -1) {
     player.activeHandIndex = nextHand;
     return;
   }
   player.done = true;
-  
-  // Find next active player
+
   const nextPlayer = state.players.findIndex((p, i) => i > state.activePlayerIndex && !p.done);
   if (nextPlayer !== -1) {
     state.activePlayerIndex = nextPlayer;
+    // Reveal next player's hand
+    revealActivePlayerHand(state);
   } else {
-    // All players done, dealer's turn
     startDealerTurn(state);
   }
 }
@@ -191,18 +219,22 @@ function advanceHand(state: BJGameState, player: BJPlayerState) {
 function startDealerTurn(state: BJGameState): BJGameState {
   state.phase = "dealer_turn";
   state.dealer[1].faceUp = true;
-  
-  // Check if any hands are still pending (not busted/blackjack)
-  const anyPending = state.players.some(p => p.hands.some(h => h.result === "pending"));
-  
+
+  // Reveal all remaining face-down player cards
+  for (const p of state.players) {
+    for (const h of p.hands) {
+      h.cards = h.cards.map((c) => ({ ...c, faceUp: true }));
+    }
+  }
+
+  const anyPending = state.players.some((p) => p.hands.some((h) => h.result === "pending"));
+
   if (anyPending) {
-    // Dealer hits until 17+
     while (handValue(state.dealer) < 17) {
       state.dealer.push(draw(state));
     }
   }
 
-  // Resolve hands
   const dealerVal = handValue(state.dealer);
   const dealerBust = dealerVal > 21;
 
@@ -231,15 +263,17 @@ function settleRound(state: BJGameState): BJGameState {
     for (const h of p.hands) {
       switch (h.result) {
         case "blackjack":
-          p.chips += Math.floor(h.bet * 2.5); // 3:2 payout
+          p.netProfit += Math.floor(h.bet * 1.5); // 3:2 payout (profit only)
           break;
         case "win":
-          p.chips += h.bet * 2;
+          p.netProfit += h.bet;
           break;
         case "push":
-          p.chips += h.bet;
+          // no change
           break;
-        // lose: chips already deducted
+        case "lose":
+          p.netProfit -= h.bet;
+          break;
       }
     }
   }
@@ -248,8 +282,6 @@ function settleRound(state: BJGameState): BJGameState {
 
 export function newRound(state: BJGameState): BJGameState {
   const s = structuredClone(state);
-  // Remove players with 0 chips
-  s.players = s.players.filter(p => p.chips > 0);
   s.dealer = [];
   s.activePlayerIndex = 0;
   s.phase = "betting";
@@ -258,27 +290,43 @@ export function newRound(state: BJGameState): BJGameState {
     p.hands = [];
     p.activeHandIndex = 0;
     p.done = false;
+    p.currentBet = 0;
   }
   return s;
 }
 
 export function getAvailableActions(state: BJGameState, playerId: string): PlayerAction[] {
   if (state.phase !== "player_turns") return [];
-  const player = state.players.find(p => p.playerId === playerId);
+  const player = state.players.find((p) => p.playerId === playerId);
   if (!player || player.done) return [];
   const hand = player.hands[player.activeHandIndex];
   if (!hand || hand.result !== "pending") return [];
 
   const actions: PlayerAction[] = ["hit", "stand"];
-  
+
   if (hand.cards.length === 2 && !hand.doubled) {
-    if (player.chips >= hand.bet) {
-      actions.push("double");
-    }
-    if (hand.cards[0].rank === hand.cards[1].rank && player.chips >= hand.bet) {
+    actions.push("double");
+    if (hand.cards[0].rank === hand.cards[1].rank) {
       actions.push("split");
     }
   }
-  
+
   return actions;
+}
+
+/**
+ * Filter game state for a specific viewer — hides other players' face-down cards.
+ * The viewer can see their own full hand, dealer cards as-is, and only face-up cards of others.
+ */
+export function filterStateForPlayer(state: BJGameState, viewerPlayerId: string): BJGameState {
+  const s = structuredClone(state);
+  for (const p of s.players) {
+    if (p.playerId === viewerPlayerId) continue;
+    for (const h of p.hands) {
+      h.cards = h.cards.map((c) =>
+        c.faceUp ? c : { ...c, rank: "A" as any, suit: "spades" as any, faceUp: false }
+      );
+    }
+  }
+  return s;
 }
