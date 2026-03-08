@@ -42,6 +42,7 @@ const GameLobby = () => {
   const [joinPassword, setJoinPassword] = useState("");
   const [creating, setCreating] = useState(false);
   const [houseRules, setHouseRules] = useState<SeqHouseRules>({ jokers: false, allJacksRemove: false, removeFromSequence: false });
+  const [addHouseRules, setAddHouseRules] = useState<ADDHouseRules>({ allowEndOn2: false });
 
   if (!game) {
     navigate("/");
