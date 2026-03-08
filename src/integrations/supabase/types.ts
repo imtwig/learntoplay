@@ -14,7 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      players: {
+        Row: {
+          connected: boolean
+          created_at: string
+          display_name: string
+          id: string
+          is_host: boolean
+          join_order: number
+          player_state: Json
+          room_id: string
+          session_id: string
+        }
+        Insert: {
+          connected?: boolean
+          created_at?: string
+          display_name: string
+          id?: string
+          is_host?: boolean
+          join_order?: number
+          player_state?: Json
+          room_id: string
+          session_id: string
+        }
+        Update: {
+          connected?: boolean
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_host?: boolean
+          join_order?: number
+          player_state?: Json
+          room_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          game_state: Json
+          game_type: Database["public"]["Enums"]["game_type"]
+          host_player_id: string | null
+          id: string
+          max_players: number
+          password_hash: string | null
+          room_name: string
+          settings: Json
+          status: Database["public"]["Enums"]["room_status"]
+        }
+        Insert: {
+          created_at?: string
+          game_state?: Json
+          game_type: Database["public"]["Enums"]["game_type"]
+          host_player_id?: string | null
+          id?: string
+          max_players?: number
+          password_hash?: string | null
+          room_name: string
+          settings?: Json
+          status?: Database["public"]["Enums"]["room_status"]
+        }
+        Update: {
+          created_at?: string
+          game_state?: Json
+          game_type?: Database["public"]["Enums"]["game_type"]
+          host_player_id?: string | null
+          id?: string
+          max_players?: number
+          password_hash?: string | null
+          room_name?: string
+          settings?: Json
+          status?: Database["public"]["Enums"]["room_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_host_player"
+            columns: ["host_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +113,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      game_type: "poker" | "sequence" | "blackjack"
+      room_status: "waiting" | "in_progress" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +241,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      game_type: ["poker", "sequence", "blackjack"],
+      room_status: ["waiting", "in_progress", "closed"],
+    },
   },
 } as const
