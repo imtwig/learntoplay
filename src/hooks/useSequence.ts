@@ -58,6 +58,7 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
           const gs = payload.new?.game_state;
           if (gs && typeof gs === "object" && "board" in (gs as any)) {
             setRawGameState(gs as unknown as SeqGameState);
+            setSelectedCardIndex(null);
           }
         }
       )
