@@ -1,7 +1,7 @@
 import { type Card, createDeck, handValue, isBlackjack, isBust } from "./cards";
 
 export type PlayerAction = "hit" | "stand";
-export type HandResult = "win" | "lose" | "push" | "blackjack" | "double_aces" | "five_card" | "triple_sevens" | "pending";
+export type HandResult = "win" | "lose" | "bust" | "fail" | "push" | "blackjack" | "double_aces" | "five_card" | "triple_sevens" | "pending";
 
 export interface BJHand {
   cards: Card[];
@@ -254,7 +254,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
   if (!hand) return s;
   
   // Allow dealer with resolved hand (ban luck/ban ban/bust) to press "stand" (Done)
-  const dealerHasResolved = player.isDealer && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "lose");
+  const dealerHasResolved = player.isDealer && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust");
   if (hand.result !== "pending" && !dealerHasResolved) return s;
 
   switch (action) {
@@ -324,7 +324,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
           }
         } else {
           // Dealer busts with 5 cards - loses x2 to all remaining players (except those who also busted)
-          hand.result = "lose";
+          hand.result = "bust";
           for (const p of s.players) {
             if (p.isDealer || s.revealedPlayerIds.includes(p.playerId)) continue;
             for (const h of p.hands) {
@@ -354,7 +354,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
 
       // Dealer auto-busts — mark result but don't finish yet; dealer presses "Done"
       if (player.isDealer && isBust(hand.cards)) {
-        hand.result = "lose";
+        hand.result = "bust";
       }
       break;
     }
@@ -413,7 +413,7 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
 
   // Dealer must have at least 15 points to reveal hands (unless they have a natural)
   const dealerHasNatural = dealer?.hands[0] && (dealer.hands[0].result === "blackjack" || dealer.hands[0].result === "double_aces");
-  if (dealerVal < 15 && !dealerHasNatural) return s;
+  if (dealerVal < 16 && !dealerHasNatural) return s;
 
   s.revealedPlayerIds.push(playerId);
   const player = s.players.find((p) => p.playerId === playerId);
@@ -427,7 +427,7 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
     const playerBust = isBust(h.cards);
 
     if (playerBust) {
-      h.result = "lose";
+      h.result = "bust";
       settleHand(s, player, h, dealer);
     } else if (playerVal > dealerVal) {
       h.result = "win";
@@ -446,7 +446,7 @@ export function revealAll(state: BJGameState): BJGameState {
   const dealerCheck = s.players.find((p) => p.isDealer);
   const dealerCheckVal = dealerCheck ? handValue(dealerCheck.hands[0]?.cards ?? []) : 0;
   const dealerCheckNatural = dealerCheck?.hands[0] && (dealerCheck.hands[0].result === "blackjack" || dealerCheck.hands[0].result === "double_aces");
-  if (dealerCheckVal < 15 && !dealerCheckNatural) return s;
+  if (dealerCheckVal < 16 && !dealerCheckNatural) return s;
 
   const dealer = s.players.find((p) => p.isDealer);
   const dealerVal = dealer ? handValue(dealer.hands[0]?.cards ?? []) : 0;
@@ -464,7 +464,7 @@ export function revealAll(state: BJGameState): BJGameState {
       const playerBust = isBust(h.cards);
 
       if (playerBust) {
-        h.result = "lose";
+        h.result = "bust";
         settleHand(s, p, h, dealer);
       } else if (playerVal > dealerVal) {
         h.result = "win";
@@ -498,6 +498,8 @@ function settleHand(state: BJGameState, player: BJPlayerState, hand: BJHand, dea
       if (dealer) { dealer.netProfit -= hand.bet; dealer.roundProfit -= hand.bet; }
       break;
     case "lose":
+    case "bust":
+    case "fail":
       player.netProfit -= hand.bet;
       player.roundProfit -= hand.bet;
       if (dealer) { dealer.netProfit += hand.bet; dealer.roundProfit += hand.bet; }
@@ -528,7 +530,7 @@ function finishDealerTurn(state: BJGameState) {
   const dealerBust = isBust(dealerHand.cards);
 
   if (dealerBust) {
-    dealerHand.result = "lose";
+    dealerHand.result = "bust";
   }
 
   for (const p of state.players) {
@@ -546,12 +548,12 @@ function finishDealerTurn(state: BJGameState) {
         // Both busted — push, no money exchanged
         h.result = "push";
       } else if (playerBust) {
-        h.result = "lose";
+        h.result = "bust";
       } else if (dealerBust) {
         h.result = "win";
       } else if (pVal < 15) {
-        // Player under 15 and dealer didn't bust — player loses
-        h.result = "lose";
+        // Player under 15 and dealer didn't bust — player fails
+        h.result = "fail";
       } else if (pVal > dealerVal) {
         h.result = "win";
       } else if (pVal < dealerVal) {
@@ -564,8 +566,10 @@ function finishDealerTurn(state: BJGameState) {
   }
 
   if (!dealerBust) {
-    // Set dealer hand result based on net outcome
-    if (dealer.roundProfit > 0) {
+    // Dealer under 16 = fail
+    if (dealerVal < 16) {
+      dealerHand.result = "fail";
+    } else if (dealer.roundProfit > 0) {
       dealerHand.result = "win";
     } else if (dealer.roundProfit < 0) {
       dealerHand.result = "lose";
@@ -620,7 +624,7 @@ export function getAvailableActions(state: BJGameState, playerId: string): Playe
     const hand = player.hands[player.activeHandIndex];
     if (!hand || hand.result !== "pending") {
       // Dealer has a resolved hand (ban luck/ban ban/bust) — only allow "stand" (Done)
-      if (hand && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "lose")) {
+      if (hand && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "bust")) {
         return ["stand"];
       }
       return [];
