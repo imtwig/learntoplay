@@ -7,7 +7,8 @@ import HandDisplay from "./HandDisplay";
 import DealingAnimation from "./DealingAnimation";
 import LeaderboardButton from "./LeaderboardButton";
 import RoundResultOverlay from "./RoundResultOverlay";
-import type { BJGameState, PlayerAction, BJSettings } from "@/lib/blackjack";
+import DebugPanel from "./DebugPanel";
+import type { BJGameState, PlayerAction, BJSettings, DealOverrides } from "@/lib/blackjack";
 import type { BJPlayerState } from "@/lib/blackjack";
 import type { Player } from "@/hooks/useRoom";
 import { Switch } from "@/components/ui/switch";
@@ -23,7 +24,7 @@ interface Props {
   onAction: (a: PlayerAction) => void;
   onMarkReady: () => void;
   onMarkUnready: () => void;
-  onStartRound: () => void;
+  onStartRound: (overrides?: DealOverrides) => void;
   onNextRound: () => void;
   onRevealPlayer: (playerId: string) => void;
   onRevealAll: () => void;
@@ -86,6 +87,7 @@ const BlackjackTable = ({
   const [showAllWinnings, setShowAllWinnings] = useState(false);
   const [showDealingAnim, setShowDealingAnim] = useState(false);
   const [prevPhase, setPrevPhase] = useState(phase);
+  const [debugOverrides, setDebugOverrides] = useState<DealOverrides>({});
 
   // Show dealing animation when transitioning from betting, and result overlay for results
   useEffect(() => {
@@ -341,8 +343,11 @@ const BlackjackTable = ({
               ))}
             </div>
 
+            {/* Debug playtest panel */}
+            <DebugPanel onGetOverrides={setDebugOverrides} />
+
             {allReady && (
-              <Button onClick={onStartRound} className="w-full gap-2 font-display tracking-wider">
+              <Button onClick={() => onStartRound(debugOverrides)} className="w-full gap-2 font-display tracking-wider">
                 Deal Cards
               </Button>
             )}

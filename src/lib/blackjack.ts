@@ -1,4 +1,4 @@
-import { type Card, createDeck, handValue, isBlackjack, isBust } from "./cards";
+import { type Card, type Rank, type Suit, createDeck, handValue, isBlackjack, isBust } from "./cards";
 
 export type PlayerAction = "hit" | "stand";
 export type HandResult = "win" | "lose" | "bust" | "fail" | "push" | "blackjack" | "double_aces" | "five_card" | "triple_sevens" | "pending";
@@ -120,7 +120,41 @@ export function toggleShowFirstCard(state: BJGameState): BJGameState {
   return s;
 }
 
-export function startDeal(state: BJGameState): BJGameState {
+export type TestScenario = "none" | "ban_luck" | "ban_ban" | "triple_sevens" | "ngou_leng" | "bust" | "fail" | "normal";
+
+export interface DealOverrides {
+  dealerScenario?: TestScenario;
+  playerScenario?: TestScenario;
+  targetPlayerId?: string;
+}
+
+/** Pre-built card sets for each scenario */
+function getScenarioCards(scenario: TestScenario, isDealer: boolean): Card[] | null {
+  const c = (rank: Rank, suit: Suit = "spades"): Card => ({ rank, suit, faceUp: true });
+  switch (scenario) {
+    case "ban_luck": return [c("A", "spades"), c("K", "hearts")];
+    case "ban_ban": return [c("A", "spades"), c("A", "hearts")];
+    case "triple_sevens": return [c("7", "spades"), c("7", "hearts")]; // third 7 dealt on hit
+    case "ngou_leng": return [c("2", "spades"), c("3", "hearts")]; // need 3 more hits without busting
+    case "bust": return [c("K", "spades"), c("6", "hearts")]; // likely bust on hit
+    case "fail": return isDealer ? [c("5", "spades"), c("10", "hearts")] : [c("4", "spades"), c("9", "hearts")]; // dealer <16, player <15
+    case "normal": return [c("10", "spades"), c("7", "hearts")]; // 17
+    default: return null;
+  }
+}
+
+/** Get rigged deck additions for scenarios that need specific hits */
+function getScenarioRiggedDeck(scenario: TestScenario): Card[] {
+  const c = (rank: Rank, suit: Suit = "clubs"): Card => ({ rank, suit, faceUp: true });
+  switch (scenario) {
+    case "triple_sevens": return [c("7", "clubs")]; // the third 7 to draw
+    case "ngou_leng": return [c("2", "clubs"), c("3", "diamonds"), c("2", "diamonds")]; // low cards to reach 5 cards
+    case "bust": return [c("K", "clubs")]; // force bust
+    default: return [];
+  }
+}
+
+export function startDeal(state: BJGameState, overrides?: DealOverrides): BJGameState {
   const s = structuredClone(state);
   for (const p of s.players) {
     p.hands = [{ cards: [], bet: p.currentBet, result: "pending", stood: false, revealed: false }];
@@ -129,23 +163,70 @@ export function startDeal(state: BJGameState): BJGameState {
     p.roundProfit = 0;
   }
   s.phase = "dealing";
+
+  if (overrides && (overrides.dealerScenario !== "none" || overrides.playerScenario !== "none")) {
+    return dealInitialRigged(s, overrides);
+  }
   return dealInitial(s);
+}
+
+function dealInitialRigged(state: BJGameState, overrides: DealOverrides): BJGameState {
+  const s = state;
+  const showFirst = s.settings.showFirstCard;
+  const dealer = s.players.find((p) => p.isDealer);
+  // Pick a random non-dealer player if no target specified
+  const nonDealers = s.players.filter((p) => !p.isDealer);
+  const targetId = overrides.targetPlayerId || nonDealers[Math.floor(Math.random() * nonDealers.length)]?.playerId;
+  const targetPlayer = s.players.find((p) => p.playerId === targetId);
+
+  // Deal rigged cards for dealer
+  if (dealer && overrides.dealerScenario && overrides.dealerScenario !== "none") {
+    const cards = getScenarioCards(overrides.dealerScenario, true);
+    if (cards) {
+      dealer.hands[0].cards = cards.map((c, i) => ({ ...c, faceUp: i === 0 ? true : !showFirst }));
+    }
+    // Prepend rigged hit cards to deck (they'll be popped from end)
+    const riggedHits = getScenarioRiggedDeck(overrides.dealerScenario);
+    s.deck.push(...riggedHits);
+  }
+
+  // Deal rigged cards for target player
+  if (targetPlayer && overrides.playerScenario && overrides.playerScenario !== "none") {
+    const cards = getScenarioCards(overrides.playerScenario, false);
+    if (cards) {
+      targetPlayer.hands[0].cards = cards.map((c, i) => ({ ...c, faceUp: i === 0 ? true : !showFirst }));
+    }
+    // Prepend rigged hit cards to deck
+    const riggedHits = getScenarioRiggedDeck(overrides.playerScenario);
+    s.deck.push(...riggedHits);
+  }
+
+  // Deal normal cards for everyone else
+  for (const p of s.players) {
+    if (p.hands[0].cards.length > 0) continue; // already rigged
+    p.hands[0].cards.push(draw(s, true));
+    p.hands[0].cards.push(draw(s, !showFirst));
+  }
+
+  // Now run opening hand rules (same as dealInitial)
+  return applyOpeningRules(s);
 }
 
 function dealInitial(state: BJGameState): BJGameState {
   const s = state;
   const showFirst = s.settings.showFirstCard;
 
-  // Round 1: first card (face-up if showFirstCard enabled)
   for (const p of s.players) {
     p.hands[0].cards.push(draw(s, true));
   }
-  // Round 2: second card (face-down if showFirstCard enabled, face-up otherwise)
   for (const p of s.players) {
     p.hands[0].cards.push(draw(s, !showFirst));
   }
 
-  // --- Opening hand rules ---
+  return applyOpeningRules(s);
+}
+
+function applyOpeningRules(s: BJGameState): BJGameState {
   const dealer = s.players.find((p) => p.isDealer);
   const dealerStrength = dealer ? openingStrength(dealer.hands[0].cards) : 0;
 

@@ -4,6 +4,7 @@ import { sessionId, type Player } from "./useRoom";
 import {
   type BJGameState,
   type PlayerAction,
+  type DealOverrides,
   initGameState,
   startDeal,
   setPlayerReady,
@@ -134,10 +135,10 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
     await saveState(next);
   }, [rawGameState, myPlayer, saveState]);
 
-  const startRound = useCallback(async () => {
+  const startRound = useCallback(async (overrides?: DealOverrides) => {
     if (!rawGameState) return;
     if (!allPlayersReady(rawGameState)) return;
-    const next = startDeal(rawGameState);
+    const next = startDeal(rawGameState, overrides);
     await saveState(next);
   }, [rawGameState, saveState]);
 
