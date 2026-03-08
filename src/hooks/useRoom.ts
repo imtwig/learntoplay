@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { GameId } from "@/lib/gameData";
 
@@ -91,6 +91,7 @@ export function useRoom(roomId: string | undefined) {
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
+  const reconnected = useRef(false);
 
   useEffect(() => {
     if (!roomId) return;
@@ -115,8 +116,29 @@ export function useRoom(roomId: string | undefined) {
       setLoading(false);
     };
 
-    fetchRoom();
-    fetchPlayers();
+    // Attempt to reconnect a disconnected player with the same session_id
+    const tryReconnect = async () => {
+      if (reconnected.current) return;
+      reconnected.current = true;
+      const { data: existing } = await supabase
+        .from("players")
+        .select("id")
+        .eq("room_id", roomId)
+        .eq("session_id", sessionId)
+        .eq("connected", false)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        await supabase
+          .from("players")
+          .update({ connected: true })
+          .eq("id", existing[0].id);
+      }
+    };
+
+    tryReconnect().then(() => {
+      fetchRoom();
+      fetchPlayers();
+    });
 
     const roomChannel = supabase
       .channel(`room-${roomId}`)
