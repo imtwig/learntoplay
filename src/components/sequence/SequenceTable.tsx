@@ -58,6 +58,7 @@ const SequenceTable = ({
   isMyTurn,
   selectedCardIndex,
   validPlacements,
+  previewPlacements,
   selectedCardIsDead,
   onSelectCard,
   onPlayCard,
