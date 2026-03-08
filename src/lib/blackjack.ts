@@ -546,12 +546,12 @@ function finishDealerTurn(state: BJGameState) {
         // Both busted — push, no money exchanged
         h.result = "push";
       } else if (playerBust) {
-        h.result = "lose";
+        h.result = "bust";
       } else if (dealerBust) {
         h.result = "win";
       } else if (pVal < 15) {
-        // Player under 15 and dealer didn't bust — player loses
-        h.result = "lose";
+        // Player under 15 and dealer didn't bust — player fails
+        h.result = "fail";
       } else if (pVal > dealerVal) {
         h.result = "win";
       } else if (pVal < dealerVal) {
