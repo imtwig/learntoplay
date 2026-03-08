@@ -67,6 +67,7 @@ const SequenceTable = ({
   onSetTeam,
   onStartGame,
   onRematch,
+  onKickPlayer,
   onLeave,
   players,
   myPlayerId,
