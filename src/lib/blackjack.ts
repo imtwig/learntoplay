@@ -201,17 +201,29 @@ function dealInitial(state: BJGameState): BJGameState {
     }
   }
 
-  // If dealer had a special, mark dealer hand result too
+  // If dealer had a special, mark dealer hand result but DON'T auto-end
+  // Instead, go to dealer_turn so dealer can press "Done" and reveal/settle
   if (dealer && dealerStrength > 0) {
     dealer.hands[0].result = dealerStrength === 3 ? "double_aces" : "blackjack";
-    dealer.done = true;
+    // Auto-reveal dealer's cards
+    dealer.hands[0].revealed = true;
+    for (const c of dealer.hands[0].cards) c.faceUp = true;
+    if (!s.revealedPlayerIds.includes(dealer.playerId)) {
+      s.revealedPlayerIds.push(dealer.playerId);
+    }
+    // Don't mark dealer as done — go to dealer_turn so they press "Done"
+    // But first settle any non-dealer players that already have specials
+    // (those are already settled above)
+    s.phase = "dealer_turn";
+    s.activePlayerIndex = s.players.indexOf(dealer);
+    dealer.done = false;
+    return s;
   }
 
   // Check if all players are done (all had opening specials)
   const allNonDealerDone = s.players.filter((p) => !p.isDealer).every((p) => p.done);
-  if (allNonDealerDone || (dealer && dealer.done)) {
+  if (allNonDealerDone) {
     s.phase = "results";
-    // Mark any remaining pending as done
     for (const p of s.players) {
       p.done = true;
     }
