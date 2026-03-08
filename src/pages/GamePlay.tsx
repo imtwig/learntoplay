@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { useRoom, leaveRoom, sessionId } from "@/hooks/useRoom";
+import { useEffect, useCallback } from "react";
+import { useRoom, leaveRoom, sessionId, transferHost } from "@/hooks/useRoom";
 import { useBlackjack } from "@/hooks/useBlackjack";
 import { getGame, type GameId } from "@/lib/gameData";
 import BlackjackTable from "@/components/blackjack/BlackjackTable";
@@ -24,6 +24,8 @@ const GamePlay = () => {
     nextRound,
   } = useBlackjack(roomId, players);
 
+  const myPlayer = players.find((p) => p.session_id === sessionId);
+
   // Host initializes the game on first load
   useEffect(() => {
     if (isHost && players.length > 0 && !gameState) {
@@ -32,12 +34,16 @@ const GamePlay = () => {
   }, [isHost, players.length, gameState, initGame]);
 
   const handleLeave = async () => {
-    const me = players.find((p) => p.session_id === sessionId);
-    if (me && roomId) {
-      await leaveRoom(me.id, roomId);
+    if (myPlayer && roomId) {
+      await leaveRoom(myPlayer.id, roomId);
     }
     navigate(game ? `/game/${game.id}` : "/");
   };
+
+  const handleTransferHost = useCallback(async (targetPlayerId: string) => {
+    if (!roomId || !myPlayer) return;
+    await transferHost(roomId, myPlayer.id, targetPlayerId);
+  }, [roomId, myPlayer]);
 
   if (loading || !room || !game) {
     return (
@@ -68,17 +74,18 @@ const GamePlay = () => {
         onStartRound={startRound}
         onNextRound={nextRound}
         onLeave={handleLeave}
+        onTransferHost={handleTransferHost}
+        players={players}
+        myPlayerId={myPlayer?.id}
       />
     );
   }
 
-  // Fallback for other games
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center space-y-4">
         <h1 className="text-2xl font-display font-bold tracking-wider">{game.name}</h1>
         <p className="text-muted-foreground">Game in progress — {players.length} players</p>
-        <p className="text-sm text-muted-foreground">Game UI coming next! 🎮</p>
       </div>
     </div>
   );

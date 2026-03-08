@@ -9,11 +9,12 @@ import {
   playerAction,
   newRound,
   getAvailableActions,
+  filterStateForPlayer,
 } from "@/lib/blackjack";
 
 export function useBlackjack(roomId: string | undefined, players: Player[]) {
-  const [gameState, setGameState] = useState<BJGameState | null>(null);
-  const [myBet, setMyBet] = useState(50);
+  const [rawGameState, setRawGameState] = useState<BJGameState | null>(null);
+  const [myBet, setMyBet] = useState(0);
   const initialized = useRef(false);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
@@ -29,7 +30,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
         .eq("id", roomId)
         .single();
       if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any)) {
-        setGameState(data.game_state as unknown as BJGameState);
+        setRawGameState(data.game_state as unknown as BJGameState);
         initialized.current = true;
       }
     };
@@ -47,7 +48,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
         (payload) => {
           const gs = payload.new?.game_state;
           if (gs && typeof gs === "object" && "phase" in (gs as any)) {
-            setGameState(gs as unknown as BJGameState);
+            setRawGameState(gs as unknown as BJGameState);
           }
         }
       )
@@ -57,7 +58,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
 
   const saveState = useCallback(async (state: BJGameState) => {
     if (!roomId) return;
-    setGameState(state);
+    setRawGameState(state);
     await supabase
       .from("rooms")
       .update({ game_state: state as any })
@@ -68,38 +69,37 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
   const initGame = useCallback(async () => {
     if (!roomId || !isHost || initialized.current) return;
     const state = initGameState(
-      players.map((p) => ({ id: p.id, name: p.display_name })),
-      1000
+      players.map((p) => ({ id: p.id, name: p.display_name }))
     );
     initialized.current = true;
     await saveState(state);
   }, [roomId, isHost, players, saveState]);
 
-  // Place bet and start round
-  const startRound = useCallback(async () => {
-    if (!gameState || !isHost) return;
-    // Collect bets — for now all players bet 50
-    const bets: Record<string, number> = {};
-    for (const p of gameState.players) {
-      bets[p.playerId] = myBet;
-    }
-    const next = placeBets(gameState, bets);
+  // Place bets and start round (host triggers, uses collected bets)
+  const startRound = useCallback(async (allBets: Record<string, number>) => {
+    if (!rawGameState || !isHost) return;
+    const next = placeBets(rawGameState, allBets);
     await saveState(next);
-  }, [gameState, isHost, myBet, saveState]);
+  }, [rawGameState, isHost, saveState]);
 
   // Player action
   const doAction = useCallback(async (action: PlayerAction) => {
-    if (!gameState || !myPlayer) return;
-    const next = playerAction(gameState, myPlayer.id, action);
+    if (!rawGameState || !myPlayer) return;
+    const next = playerAction(rawGameState, myPlayer.id, action);
     await saveState(next);
-  }, [gameState, myPlayer, saveState]);
+  }, [rawGameState, myPlayer, saveState]);
 
   // New round
   const nextRound = useCallback(async () => {
-    if (!gameState || !isHost) return;
-    const next = newRound(gameState);
+    if (!rawGameState || !isHost) return;
+    const next = newRound(rawGameState);
     await saveState(next);
-  }, [gameState, isHost, saveState]);
+  }, [rawGameState, isHost, saveState]);
+
+  // Filter state for current viewer
+  const gameState = rawGameState && myPlayer
+    ? filterStateForPlayer(rawGameState, myPlayer.id)
+    : rawGameState;
 
   const availableActions = gameState && myPlayer
     ? getAvailableActions(gameState, myPlayer.id)
