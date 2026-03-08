@@ -112,9 +112,9 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
   const doPlayCard = useCallback(
     async (cardIndex: number, row: number, col: number) => {
       if (!rawGameState || !myPlayer) return;
+      setSelectedCardIndex(null);
       const next = playCard(rawGameState, myPlayer.id, cardIndex, row, col);
       await saveState(next);
-      setSelectedCardIndex(null);
     },
     [rawGameState, myPlayer, saveState]
   );
