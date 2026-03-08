@@ -23,6 +23,7 @@ interface Props {
   onFinishSwap: () => void;
   onRematch: () => void;
   onLeave: () => void;
+  onKickPlayer: (playerId: string) => void;
   players: Player[];
   myPlayerId: string | undefined;
 }
