@@ -174,7 +174,7 @@ const SequenceTable = ({
           {/* Board */}
           <div className="flex-1 flex items-center justify-center p-2 overflow-auto">
             <div
-              className="grid gap-[1px] w-full max-w-[400px] aspect-square"
+              className="grid gap-[1px] w-full max-w-[520px] aspect-square bg-white rounded-lg p-1"
               style={{ gridTemplateColumns: "repeat(10, 1fr)" }}
             >
               {SEQUENCE_BOARD.map((row, r) =>
@@ -196,30 +196,30 @@ const SequenceTable = ({
                         }
                       }}
                       className={`
-                        relative flex flex-col items-center justify-center rounded-[3px] text-[8px] leading-tight
+                        relative flex flex-col items-center justify-center rounded-[3px] leading-tight
                         transition-all duration-150 aspect-square
                         ${isFree
                           ? "bg-game-gold/20 border border-game-gold/30"
-                          : "bg-card border border-border/30"
+                          : "bg-white border border-gray-200"
                         }
-                        ${isValid ? "ring-2 ring-primary/70 bg-primary/10 cursor-pointer" : ""}
+                        ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
                         ${isLastMove ? "ring-2 ring-accent" : ""}
                         ${isSeqCell ? "ring-1 ring-game-gold" : ""}
                       `}
                     >
                       {isFree ? (
-                        <span className="text-game-gold font-bold text-[10px]">★</span>
+                        <span className="text-game-gold font-bold text-sm">★</span>
                       ) : (
                         <>
                           <span
-                            className="font-display font-bold leading-none"
-                            style={{ color: suitColor === "red" ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}
+                            className="font-display font-bold leading-none text-[11px]"
+                            style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
                           >
                             {rank}
                           </span>
                           <span
-                            className="leading-none"
-                            style={{ color: suitColor === "red" ? "hsl(var(--destructive))" : "hsl(var(--foreground))", fontSize: "7px" }}
+                            className="leading-none text-[9px]"
+                            style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
                           >
                             {suitSymbol}
                           </span>
