@@ -38,6 +38,25 @@ export interface BJGameState {
   settings: BJSettings;
 }
 
+/** Check if a hand is exactly two aces */
+function hasDoubleAces(cards: Card[]): boolean {
+  return cards.length === 2 && cards[0].rank === "A" && cards[1].rank === "A";
+}
+
+/** Check if a hand is three 7s */
+function hasTripleSevens(cards: Card[]): boolean {
+  return cards.length === 3 && cards.every((c) => c.rank === "7");
+}
+
+/**
+ * Opening hand strength: double_aces (3x) > blackjack (2x) > normal (0)
+ */
+function openingStrength(cards: Card[]): number {
+  if (hasDoubleAces(cards)) return 3;
+  if (isBlackjack(cards)) return 2;
+  return 0;
+}
+
 export function initGameState(
   playerNames: { id: string; name: string }[],
   hostId: string
@@ -120,6 +139,80 @@ function dealInitial(state: BJGameState): BJGameState {
     p.hands[0].cards.push(draw(s, true));
   }
 
+  // --- Opening hand rules ---
+  const dealer = s.players.find((p) => p.isDealer);
+  const dealerStrength = dealer ? openingStrength(dealer.hands[0].cards) : 0;
+
+  // Check each non-dealer player for opening specials
+  for (const p of s.players) {
+    if (p.isDealer) continue;
+    const playerStrength = openingStrength(p.hands[0].cards);
+
+    if (dealerStrength > 0 && playerStrength > 0) {
+      // Both have specials — higher strength wins, equal = push
+      if (playerStrength > dealerStrength) {
+        // Player's hand beats dealer's
+        p.hands[0].result = playerStrength === 3 ? "double_aces" : "blackjack";
+        p.hands[0].revealed = true;
+        settleHand(s, p, p.hands[0], dealer);
+        p.done = true;
+      } else if (playerStrength < dealerStrength) {
+        // Dealer's hand beats player's
+        p.hands[0].result = "lose";
+        p.hands[0].revealed = true;
+        const mult = dealerStrength; // 2 for blackjack, 3 for double aces
+        p.netProfit -= p.hands[0].bet * mult;
+        if (dealer) dealer.netProfit += p.hands[0].bet * mult;
+        p.done = true;
+      } else {
+        // Equal — push
+        p.hands[0].result = "push";
+        p.hands[0].revealed = true;
+        p.done = true;
+      }
+      if (!s.revealedPlayerIds.includes(p.playerId)) {
+        s.revealedPlayerIds.push(p.playerId);
+      }
+    } else if (dealerStrength > 0 && playerStrength === 0) {
+      // Dealer has special, player doesn't — player loses
+      p.hands[0].result = "lose";
+      p.hands[0].revealed = true;
+      const mult = dealerStrength;
+      p.netProfit -= p.hands[0].bet * mult;
+      if (dealer) dealer.netProfit += p.hands[0].bet * mult;
+      p.done = true;
+      if (!s.revealedPlayerIds.includes(p.playerId)) {
+        s.revealedPlayerIds.push(p.playerId);
+      }
+    } else if (playerStrength > 0) {
+      // Player has special, dealer doesn't — player wins immediately
+      p.hands[0].result = playerStrength === 3 ? "double_aces" : "blackjack";
+      p.hands[0].revealed = true;
+      settleHand(s, p, p.hands[0], dealer);
+      p.done = true;
+      if (!s.revealedPlayerIds.includes(p.playerId)) {
+        s.revealedPlayerIds.push(p.playerId);
+      }
+    }
+  }
+
+  // If dealer had a special, mark dealer hand result too
+  if (dealer && dealerStrength > 0) {
+    dealer.hands[0].result = dealerStrength === 3 ? "double_aces" : "blackjack";
+    dealer.done = true;
+  }
+
+  // Check if all players are done (all had opening specials)
+  const allNonDealerDone = s.players.filter((p) => !p.isDealer).every((p) => p.done);
+  if (allNonDealerDone || (dealer && dealer.done)) {
+    s.phase = "results";
+    // Mark any remaining pending as done
+    for (const p of s.players) {
+      p.done = true;
+    }
+    return s;
+  }
+
   s.phase = "player_turns";
   s.activePlayerIndex = s.players.findIndex((p) => !p.isDealer && !p.done);
   if (s.activePlayerIndex === -1) {
@@ -146,7 +239,44 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
   switch (action) {
     case "hit": {
       hand.cards.push(draw(s));
-      // Dealer auto-busts, but players must manually press Done
+
+      // --- Triple sevens check (non-dealer only) ---
+      if (!player.isDealer && hasTripleSevens(hand.cards)) {
+        hand.result = "triple_sevens";
+        hand.revealed = true;
+        const dealer = s.players.find((p) => p.isDealer);
+        player.netProfit += hand.bet * 3;
+        if (dealer) dealer.netProfit -= hand.bet * 3;
+        if (!s.revealedPlayerIds.includes(player.playerId)) {
+          s.revealedPlayerIds.push(player.playerId);
+        }
+        advanceHand(s, player);
+        break;
+      }
+
+      // --- 5-card rule (non-dealer only) ---
+      if (!player.isDealer && hand.cards.length >= 5) {
+        hand.revealed = true;
+        if (!s.revealedPlayerIds.includes(player.playerId)) {
+          s.revealedPlayerIds.push(player.playerId);
+        }
+        const val = handValue(hand.cards);
+        if (val <= 21) {
+          hand.result = "five_card";
+          const dealer = s.players.find((p) => p.isDealer);
+          player.netProfit += hand.bet * 2;
+          if (dealer) dealer.netProfit -= hand.bet * 2;
+        } else {
+          hand.result = "lose";
+          const dealer = s.players.find((p) => p.isDealer);
+          player.netProfit -= hand.bet * 2;
+          if (dealer) dealer.netProfit += hand.bet * 2;
+        }
+        advanceHand(s, player);
+        break;
+      }
+
+      // Dealer auto-busts
       if (player.isDealer && isBust(hand.cards)) {
         hand.result = "lose";
         finishDealerTurn(s);
@@ -183,17 +313,13 @@ function advanceHand(state: BJGameState, player: BJPlayerState) {
   if (nextPlayer !== -1) {
     state.activePlayerIndex = nextPlayer;
   } else {
-    // All non-dealer players done — dealer's turn (draw + reveal combined)
     enterDealerTurn(state);
   }
 }
 
-/**
- * Enter dealer turn phase. Dealer can draw/done AND reveal players simultaneously.
- */
 function enterDealerTurn(state: BJGameState): BJGameState {
   state.phase = "dealer_turn";
-  state.revealedPlayerIds = [];
+  // Don't reset revealedPlayerIds — keep opening reveals
   const dealer = state.players.find((p) => p.isDealer);
   if (dealer) {
     state.activePlayerIndex = state.players.indexOf(dealer);
@@ -202,11 +328,6 @@ function enterDealerTurn(state: BJGameState): BJGameState {
   return state;
 }
 
-/**
- * Dealer reveals a specific player's hand.
- * If the revealed player's hand beats the dealer's current hand, the player wins immediately.
- * If the player busted, they lose immediately.
- */
 export function revealPlayer(state: BJGameState, playerId: string): BJGameState {
   const s = structuredClone(state);
   if (s.phase !== "dealer_turn") return s;
@@ -233,13 +354,11 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
       h.result = "win";
       settleHand(s, player, h, dealer);
     }
-    // If dealer >= player, stays pending until dealer finishes
   }
 
   return s;
 }
 
-/** Reveal all players' hands */
 export function revealAll(state: BJGameState): BJGameState {
   const s = structuredClone(state);
   if (s.phase !== "dealer_turn") return s;
@@ -275,8 +394,20 @@ export function revealAll(state: BJGameState): BJGameState {
 function settleHand(state: BJGameState, player: BJPlayerState, hand: BJHand, dealer: BJPlayerState | undefined) {
   switch (hand.result) {
     case "blackjack":
-      player.netProfit += Math.floor(hand.bet * 1.5);
-      if (dealer) dealer.netProfit -= Math.floor(hand.bet * 1.5);
+      // Opening blackjack = x2
+      player.netProfit += hand.bet * 2;
+      if (dealer) dealer.netProfit -= hand.bet * 2;
+      break;
+    case "double_aces":
+      // Opening double aces = x3
+      player.netProfit += hand.bet * 3;
+      if (dealer) dealer.netProfit -= hand.bet * 3;
+      break;
+    case "triple_sevens":
+      // Already settled inline (x3)
+      break;
+    case "five_card":
+      // Already settled inline (x2)
       break;
     case "win":
       player.netProfit += hand.bet;
@@ -305,7 +436,6 @@ function finishDealerTurn(state: BJGameState) {
     dealerHand.result = "lose";
   }
 
-  // Reveal and settle all remaining
   for (const p of state.players) {
     if (p.isDealer) continue;
     if (!state.revealedPlayerIds.includes(p.playerId)) {
@@ -315,12 +445,26 @@ function finishDealerTurn(state: BJGameState) {
       h.revealed = true;
       if (h.result !== "pending") continue;
       const pVal = handValue(h.cards);
-      if (dealerBust) {
+      const playerBust = isBust(h.cards);
+
+      if (playerBust) {
+        h.result = "lose";
+        settleHand(state, p, h, dealer);
+      } else if (dealerBust) {
+        // Dealer busted — player wins regardless of their value
         h.result = "win";
+        settleHand(state, p, h, dealer);
+      } else if (pVal < 15) {
+        // Player under 15 — can only not lose if dealer busts (already handled above)
+        // Since dealer didn't bust, player loses
+        h.result = "lose";
+        settleHand(state, p, h, dealer);
       } else if (pVal > dealerVal) {
         h.result = "win";
+        settleHand(state, p, h, dealer);
       } else if (pVal < dealerVal) {
         h.result = "lose";
+        settleHand(state, p, h, dealer);
       } else {
         h.result = "push";
       }
@@ -377,12 +521,10 @@ export function filterStateForPlayer(state: BJGameState, viewerPlayerId: string)
   if (!s.settings) s.settings = { showFirstCard: false, showFirstCardNextRound: false };
   for (const p of s.players) {
     if (p.playerId === viewerPlayerId) continue;
-    // Show revealed players fully
     if ((s.phase === "dealer_turn" || s.phase === "results") && 
         s.revealedPlayerIds.includes(p.playerId)) {
       continue;
     }
-    // Show first card if setting is on, hide the rest
     for (const h of p.hands) {
       h.cards = h.cards.map((c, i) => {
         if (i === 0 && s.settings.showFirstCard) {
