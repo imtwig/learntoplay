@@ -226,7 +226,6 @@ const SequenceTable = ({
           >
             Start Game
           </Button>
-          )}
         </div>
       )}
 
