@@ -59,6 +59,17 @@ export const games: GameInfo[] = [
     color: "text-game-red",
     gradient: "from-game-red/20 to-game-gold/10",
   },
+  {
+    id: "dai_di",
+    name: "Dai Di (Big 2)",
+    tagline: "Classic Shedding Game",
+    description: "The classic 4-player shedding card game. Be the first to play all your cards using singles, pairs, and powerful 5-card combos.",
+    icon: Diamond,
+    minPlayers: 4,
+    maxPlayers: 4,
+    color: "text-game-blue",
+    gradient: "from-game-blue/20 to-primary/10",
+  },
 ];
 
 export const getGame = (id: GameId) => games.find((g) => g.id === id);

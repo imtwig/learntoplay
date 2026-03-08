@@ -21,11 +21,13 @@ const GamePlay = () => {
   const isSequence = room?.game_type === "sequence";
   const isPoker = room?.game_type === "poker";
   const isADD = room?.game_type === "asshole_daidi";
+  const isDD = room?.game_type === "dai_di";
 
-  const blackjack = useBlackjack(roomId, (isSequence || isPoker || isADD) ? [] : players);
+  const blackjack = useBlackjack(roomId, (isSequence || isPoker || isADD || isDD) ? [] : players);
   const sequence = useSequence(roomId, isSequence ? players : []);
   const poker = usePoker(roomId, isPoker ? players : []);
   const add = useAssholeDaiDi(roomId, isADD ? players : []);
+  const dd = useDaiDi(roomId, isDD ? players : []);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
 
