@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Gamepad2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import GameCard from "@/components/GameCard";
 import { games } from "@/lib/gameData";
 
