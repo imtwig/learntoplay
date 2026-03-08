@@ -51,6 +51,7 @@ const ProfitDisplay = ({ profit }: { profit: number }) => {
 
 const BlackjackTable = ({
   gameState,
+  rawSettings,
   myBJPlayer,
   availableActions,
   isHost,
@@ -65,11 +66,13 @@ const BlackjackTable = ({
   onRevealAll,
   onLeave,
   onTransferHost,
+  onToggleShowFirstCard,
   players,
   myPlayerId,
 }: Props) => {
   const { phase, players: bjPlayers, roundNumber, revealedPlayerIds } = gameState;
   const [showTransfer, setShowTransfer] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const allReady = bjPlayers.every((p) => p.ready);
   const iAmReady = myBJPlayer?.ready ?? false;
