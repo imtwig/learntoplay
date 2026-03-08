@@ -44,6 +44,8 @@ const GameLobby = () => {
   const [creating, setCreating] = useState(false);
   const [houseRules, setHouseRules] = useState<SeqHouseRules>({ jokers: false, allJacksRemove: false, removeFromSequence: false });
   const [addHouseRules, setAddHouseRules] = useState<ADDHouseRules>({ allowEndOn2: false });
+  const [ddHouseRules, setDdHouseRules] = useState<DDHouseRules>({ ...DEFAULT_DD_HOUSE_RULES });
+  const [ddPenalties, setDdPenalties] = useState<DDPenaltyMultipliers>({ ...DEFAULT_DD_PENALTIES });
 
   if (!game) {
     navigate("/");
