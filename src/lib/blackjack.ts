@@ -174,10 +174,7 @@ function dealInitialRigged(state: BJGameState, overrides: DealOverrides): BJGame
   const s = state;
   const showFirst = s.settings.showFirstCard;
   const dealer = s.players.find((p) => p.isDealer);
-  // Pick a random non-dealer player if no target specified
   const nonDealers = s.players.filter((p) => !p.isDealer);
-  const targetId = overrides.targetPlayerId || nonDealers[Math.floor(Math.random() * nonDealers.length)]?.playerId;
-  const targetPlayer = s.players.find((p) => p.playerId === targetId);
 
   // Deal rigged cards for dealer
   if (dealer && overrides.dealerScenario && overrides.dealerScenario !== "none") {
@@ -190,25 +187,31 @@ function dealInitialRigged(state: BJGameState, overrides: DealOverrides): BJGame
     s.deck.push(...riggedHits);
   }
 
-  // Deal rigged cards for target player
-  if (targetPlayer && overrides.playerScenario && overrides.playerScenario !== "none") {
-    const cards = getScenarioCards(overrides.playerScenario, false);
-    if (cards) {
-      targetPlayer.hands[0].cards = cards.map((c, i) => ({ ...c, faceUp: i === 0 ? true : !showFirst }));
+  // Deal rigged cards for ALL non-dealer players
+  if (overrides.playerScenario && overrides.playerScenario !== "none") {
+    for (const p of nonDealers) {
+      const cards = getScenarioCards(overrides.playerScenario, false);
+      if (cards) {
+        // Use different suits per player to visually distinguish, but same ranks
+        const suitSets: Array<[Suit, Suit]> = [["spades", "hearts"], ["clubs", "diamonds"], ["spades", "diamonds"], ["clubs", "hearts"]];
+        const suitPair = suitSets[nonDealers.indexOf(p) % suitSets.length];
+        p.hands[0].cards = cards.map((c, i) => ({ ...c, suit: suitPair[i % suitPair.length], faceUp: i === 0 ? true : !showFirst }));
+      }
     }
-    // Prepend rigged hit cards to deck
-    const riggedHits = getScenarioRiggedDeck(overrides.playerScenario);
-    s.deck.push(...riggedHits);
+    // Stack deck with rigged hit cards (enough for all players)
+    for (const _p of nonDealers) {
+      const riggedHits = getScenarioRiggedDeck(overrides.playerScenario);
+      s.deck.push(...riggedHits);
+    }
   }
 
-  // Deal normal cards for everyone else
+  // Deal normal cards for anyone not yet dealt (dealer with no scenario)
   for (const p of s.players) {
-    if (p.hands[0].cards.length > 0) continue; // already rigged
+    if (p.hands[0].cards.length > 0) continue;
     p.hands[0].cards.push(draw(s, true));
     p.hands[0].cards.push(draw(s, !showFirst));
   }
 
-  // Now run opening hand rules (same as dealInitial)
   return applyOpeningRules(s);
 }
 
