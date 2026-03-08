@@ -105,6 +105,7 @@ const GamePlay = () => {
         onPass={dd.doPass}
         onRematch={dd.doRematch}
         onLeave={handleLeave}
+        onKickPlayer={handleKickPlayer}
         players={players}
         myPlayerId={myPlayer?.id}
       />
