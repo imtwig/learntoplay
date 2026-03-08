@@ -75,6 +75,18 @@ const BlackjackTable = ({
   const { phase, players: bjPlayers, roundNumber, revealedPlayerIds = [] } = gameState;
   const [showTransfer, setShowTransfer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showResultOverlay, setShowResultOverlay] = useState(false);
+  const [prevPhase, setPrevPhase] = useState(phase);
+
+  // Show result overlay when phase transitions to "results"
+  useEffect(() => {
+    if (phase === "results" && prevPhase !== "results") {
+      setShowResultOverlay(true);
+      const timer = setTimeout(() => setShowResultOverlay(false), 2500);
+      return () => clearTimeout(timer);
+    }
+    setPrevPhase(phase);
+  }, [phase, prevPhase]);
 
   const allReady = bjPlayers.every((p) => p.ready);
   const iAmReady = myBJPlayer?.ready ?? false;
