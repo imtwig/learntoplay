@@ -313,7 +313,7 @@ const SequenceTable = ({
                           : "bg-white border border-gray-200"
                         }
                         ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
-                        ${isPreview ? "ring-1 ring-green-400/50 bg-green-50/50" : ""}
+                        ${isPreview ? "ring-2 ring-green-500 bg-green-50" : ""}
                         ${isOccupiedMatch ? "ring-2 ring-orange-400 bg-orange-50/50" : ""}
                         ${isSeqCell ? "ring-1 ring-game-gold" : ""}
                       `}
