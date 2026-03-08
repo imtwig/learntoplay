@@ -1,4 +1,4 @@
-import { type Card, createDeck, handValue, isBlackjack, isBust } from "./cards";
+import { type Card, type Rank, type Suit, createDeck, handValue, isBlackjack, isBust } from "./cards";
 
 export type PlayerAction = "hit" | "stand";
 export type HandResult = "win" | "lose" | "bust" | "fail" | "push" | "blackjack" | "double_aces" | "five_card" | "triple_sevens" | "pending";
