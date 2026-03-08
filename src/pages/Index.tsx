@@ -40,6 +40,22 @@ const Index = () => {
           ))}
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border/30 bg-card/30">
+        <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Gamepad2 className="h-5 w-5 text-primary" />
+            <span className="font-display font-bold tracking-wider text-sm">GAME NIGHT</span>
+          </div>
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <Link to="/prd" className="hover:text-foreground transition-colors">
+              PRDs
+            </Link>
+            <span>© {new Date().getFullYear()} Game Night</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
