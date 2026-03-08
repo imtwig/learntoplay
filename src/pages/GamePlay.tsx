@@ -209,6 +209,7 @@ const GamePlay = () => {
         onRevealAll={blackjack.doRevealAll}
         onLeave={handleLeave}
         onTransferHost={handleTransferHost}
+        onKickPlayer={handleKickPlayer}
         onToggleShowFirstCard={blackjack.doToggleShowFirstCard}
         players={players}
         myPlayerId={myPlayer?.id}

@@ -345,6 +345,14 @@ export async function leaveRoom(playerId: string, roomId: string) {
     .eq("id", playerId);
 }
 
+export async function kickPlayer(roomId: string, playerId: string) {
+  await supabase
+    .from("players")
+    .update({ connected: false })
+    .eq("id", playerId)
+    .eq("room_id", roomId);
+}
+
 export async function toggleReady(playerId: string, ready: boolean) {
   await supabase
     .from("players")
