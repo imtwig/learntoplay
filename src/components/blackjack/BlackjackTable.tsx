@@ -479,10 +479,14 @@ const BlackjackTable = ({
           {phase === "dealer_turn" && iAmDealer && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               {/* Dealer has resolved hand (ban luck/ban ban/bust) — show message + Done only */}
-              {myBJPlayer && myBJPlayer.hands[0] && (myBJPlayer.hands[0].result === "blackjack" || myBJPlayer.hands[0].result === "double_aces" || myBJPlayer.hands[0].result === "bust") ? (
-                <div className="space-y-2">
-                  <p className="text-center text-sm font-display text-game-gold tracking-wider">
-                    {myBJPlayer.hands[0].result === "bust" ? "💥 BUST!" : `🎉 You have ${myBJPlayer.hands[0].result === "double_aces" ? "Ban Ban!" : "Ban Luck!"}`}
+              {myBJPlayer && myBJPlayer.hands[0] && (myBJPlayer.hands[0].result === "blackjack" || myBJPlayer.hands[0].result === "double_aces" || myBJPlayer.hands[0].result === "bust" || myBJPlayer.hands[0].result === "triple_sevens" || myBJPlayer.hands[0].result === "five_card") ? (
+                <div className="space-y-3">
+                  <p className="text-center text-lg font-display text-game-gold tracking-wider font-bold">
+                    {myBJPlayer.hands[0].result === "bust" && "💥 BUST!"}
+                    {myBJPlayer.hands[0].result === "blackjack" && "🎉 Ban Luck!"}
+                    {myBJPlayer.hands[0].result === "double_aces" && "🎉 Ban Ban!"}
+                    {myBJPlayer.hands[0].result === "triple_sevens" && "🎉 7-7-7!"}
+                    {myBJPlayer.hands[0].result === "five_card" && "🎉 Ngou Leng!"}
                   </p>
                   <div className="flex justify-center">
                     <Button
