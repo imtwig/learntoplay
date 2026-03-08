@@ -53,7 +53,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
         }
       }
     }
-  }, [roomId, myPlayer]);
+  }, [roomId, myPlayer?.id]);
 
   useEffect(() => {
     loadGameState();
