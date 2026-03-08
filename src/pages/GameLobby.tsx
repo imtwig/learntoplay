@@ -70,6 +70,10 @@ const GameLobby = () => {
           settings.houseRules = addHouseRules;
         }
       }
+      if (game.id === "dai_di") {
+        settings.houseRules = ddHouseRules;
+        settings.penalties = ddPenalties;
+      }
       const { room } = await createRoom(
         game.id,
         roomName.trim(),
