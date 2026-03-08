@@ -82,10 +82,10 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
 
   const initGame = useCallback(async (settings?: Record<string, unknown>) => {
     if (!roomId || !isHost || initialized.current) return;
-    const houseRules = settings?.houseRules === true;
+    const houseRules = settings?.houseRules ?? false;
     const state = initSequenceGame(
       players.map((p) => ({ id: p.id, name: p.display_name })),
-      houseRules
+      houseRules as boolean | import("@/lib/sequence").SeqHouseRules
     );
     initialized.current = true;
     await saveState(state);
