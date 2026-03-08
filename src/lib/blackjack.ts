@@ -420,7 +420,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
               if (h.result !== "pending") continue;
               h.result = "lose";
               h.revealed = true;
-              p.netProfit -= h.bet * 2;
+              for (const c of h.cards) c.faceUp = true;
               p.roundProfit -= h.bet * 2;
               player.netProfit += h.bet * 2;
               player.roundProfit += h.bet * 2;
