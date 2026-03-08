@@ -462,11 +462,11 @@ const BlackjackTable = ({
           {/* Dealer turn: draw/done + reveal controls combined */}
           {phase === "dealer_turn" && iAmDealer && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              {/* Dealer has ban luck/ban ban — show winning message + Done only */}
-              {myBJPlayer && myBJPlayer.hands[0] && (myBJPlayer.hands[0].result === "blackjack" || myBJPlayer.hands[0].result === "double_aces") ? (
+              {/* Dealer has resolved hand (ban luck/ban ban/bust) — show message + Done only */}
+              {myBJPlayer && myBJPlayer.hands[0] && (myBJPlayer.hands[0].result === "blackjack" || myBJPlayer.hands[0].result === "double_aces" || myBJPlayer.hands[0].result === "lose") ? (
                 <div className="space-y-2">
                   <p className="text-center text-sm font-display text-game-gold tracking-wider">
-                    🎉 You have {myBJPlayer.hands[0].result === "double_aces" ? "BAN BAN!" : "BAN LUCK!"}
+                    {myBJPlayer.hands[0].result === "lose" ? "💥 BUST!" : `🎉 You have ${myBJPlayer.hands[0].result === "double_aces" ? "BAN BAN!" : "BAN LUCK!"}`}
                   </p>
                   <div className="flex justify-center">
                     <Button
