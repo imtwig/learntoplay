@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { getGame, type GameId } from "@/lib/gameData";
 import { gameRules } from "@/lib/gameRules";
-import { useRooms, createRoom, joinRoom } from "@/hooks/useRoom";
+import { useRooms, createRoom, joinRoom, sessionId } from "@/hooks/useRoom";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const GameLobby = () => {
