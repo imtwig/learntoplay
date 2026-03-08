@@ -118,7 +118,8 @@ const DealingAnimation = ({ players, showFirstCard = false, myPlayerId, onComple
                 </span>
                 <div className="flex -space-x-3 h-[96px] items-center">
                   {Array.from({ length: count }).map((_, ci) => {
-                    const isFaceUp = showFirstCard && ci === 0;
+                    const isMe = p.playerId === myPlayerId;
+                    const isFaceUp = isMe || (showFirstCard && ci === 0);
                     const actualCard = p.hands[0]?.cards[ci];
                     return (
                       <motion.div
