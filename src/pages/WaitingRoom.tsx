@@ -33,6 +33,7 @@ const WaitingRoom = () => {
   const minPlayers = game?.minPlayers ?? 2;
   const canStart = players.length >= minPlayers;
   const myPlayer = players.find((p) => p.session_id === sessionId);
+  const isHost = myPlayer?.is_host ?? false;
   const iAmReady = (myPlayer?.player_state as any)?.ready === true;
   const allReady = players.length > 0 && players.every((p) => (p.player_state as any)?.ready === true);
 
