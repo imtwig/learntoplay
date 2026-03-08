@@ -564,7 +564,7 @@ const BlackjackTable = ({
         } : undefined}
         playerBreakdown={iAmDealer ? nonDealerPlayers.map((p) => ({
           name: p.name,
-          profit: p.roundProfit,
+          profit: -p.roundProfit,
         })) : undefined}
       />
     </div>
