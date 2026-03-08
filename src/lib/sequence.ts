@@ -491,6 +491,47 @@ export function newSequenceRound(state: SeqGameState): SeqGameState {
   return fresh;
 }
 
+/* ── Add player (when they join/rejoin) ───────────────────── */
+
+export function addSeqPlayer(state: SeqGameState, playerId: string, name: string): SeqGameState {
+  const s = structuredClone(state);
+  // Already in game
+  if (s.players.find((p) => p.playerId === playerId)) return s;
+  const hs = handSize(s.players.length + 1);
+  const hand = s.deck.splice(0, Math.min(hs, s.deck.length));
+  s.players.push({ playerId, name, hand, team: null });
+  // Update teamCount based on new player count
+  s.teamCount = s.players.length % 3 === 0 ? 3 : 2;
+  return s;
+}
+
+/* ── Sync players list with room players ─────────────────── */
+
+export function syncSeqPlayers(
+  state: SeqGameState,
+  roomPlayers: { id: string; name: string }[]
+): SeqGameState {
+  let s = structuredClone(state);
+  const roomIds = new Set(roomPlayers.map((p) => p.id));
+  const stateIds = new Set(s.players.map((p) => p.playerId));
+
+  // Add missing players
+  for (const rp of roomPlayers) {
+    if (!stateIds.has(rp.id)) {
+      s = addSeqPlayer(s, rp.id, rp.name);
+    }
+  }
+
+  // Remove players no longer in room
+  for (const sp of [...s.players]) {
+    if (!roomIds.has(sp.playerId)) {
+      s = removeSeqPlayer(s, sp.playerId);
+    }
+  }
+
+  return s;
+}
+
 /* ── Remove player (when they leave) ─────────────────────── */
 
 export function removeSeqPlayer(state: SeqGameState, playerId: string): SeqGameState {
@@ -510,6 +551,11 @@ export function removeSeqPlayer(state: SeqGameState, playerId: string): SeqGameS
 
   // Remove player
   s.players.splice(playerIndex, 1);
+
+  // Update teamCount
+  if (s.players.length > 0) {
+    s.teamCount = s.players.length % 3 === 0 ? 3 : 2;
+  }
 
   // Fix currentPlayerIndex
   if (s.players.length === 0) {
