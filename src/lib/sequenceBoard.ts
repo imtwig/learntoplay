@@ -40,7 +40,7 @@ export function isOneEyedJack(card: string): boolean {
 }
 
 export function isJack(card: string): boolean {
-  return card.startsWith("J");
+  return (card === "JD" || card === "JC" || card === "JH" || card === "JS");
 }
 
 const SUIT_SYMBOLS: Record<string, string> = { S: "♠", C: "♣", D: "♦", H: "♥" };
