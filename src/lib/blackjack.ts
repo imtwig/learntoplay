@@ -352,10 +352,9 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
         break;
       }
 
-      // Dealer auto-busts
+      // Dealer auto-busts — mark result but don't finish yet; dealer presses "Done"
       if (player.isDealer && isBust(hand.cards)) {
         hand.result = "lose";
-        finishDealerTurn(s);
       }
       break;
     }
@@ -613,8 +612,8 @@ export function getAvailableActions(state: BJGameState, playerId: string): Playe
   if (state.phase === "dealer_turn" && player.isDealer) {
     const hand = player.hands[player.activeHandIndex];
     if (!hand || hand.result !== "pending") {
-      // Dealer has a winning hand (ban luck/ban ban) — only allow "stand" (Done)
-      if (hand && (hand.result === "blackjack" || hand.result === "double_aces")) {
+      // Dealer has a resolved hand (ban luck/ban ban/bust) — only allow "stand" (Done)
+      if (hand && (hand.result === "blackjack" || hand.result === "double_aces" || hand.result === "lose")) {
         return ["stand"];
       }
       return [];
