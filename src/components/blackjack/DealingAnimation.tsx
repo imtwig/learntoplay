@@ -5,10 +5,11 @@ import type { BJPlayerState } from "@/lib/blackjack";
 
 interface Props {
   players: BJPlayerState[];
+  showFirstCard?: boolean;
   onComplete: () => void;
 }
 
-const DealingAnimation = ({ players, onComplete }: Props) => {
+const DealingAnimation = ({ players, showFirstCard = false, onComplete }: Props) => {
   const [phase, setPhase] = useState<"shuffle" | "deal">("shuffle");
   // Each deal step: [roundIndex, playerIndex] — deal 2 rounds, each round goes through all players
   const [dealStep, setDealStep] = useState(-1);
