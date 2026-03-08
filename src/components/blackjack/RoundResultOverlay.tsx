@@ -60,7 +60,7 @@ const MiniHand = ({ cards, label, result }: { cards: Card[]; label: string; resu
   );
 };
 
-const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHand }: Props) => {
+const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHand, isDealer, playerBreakdown }: Props) => {
   if (!visible) return null;
 
   const isWin = roundProfit > 0;
