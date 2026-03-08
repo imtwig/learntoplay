@@ -456,17 +456,17 @@ const SequenceTable = ({
                   const isSelected = selectedCardIndex === i;
                   const isJokerCard = card.startsWith("JKR");
                   const isSpecial = isJack(card) || isJokerCard;
-                  const hr = gameState.houseRules;
+                  const hr = normalizeHouseRules(gameState.houseRules);
 
                   // Label logic
                   let label: { text: string; color: string } | null = null;
                   if (isJokerCard) {
                     label = { text: "WILD", color: "text-primary" };
-                  } else if (hr && isJack(card)) {
+                  } else if (hr.allJacksRemove && isJack(card)) {
                     label = { text: "REM", color: "text-destructive" };
-                  } else if (!hr && isTwoEyedJack(card)) {
+                  } else if (!hr.allJacksRemove && isTwoEyedJack(card)) {
                     label = { text: "WILD", color: "text-primary" };
-                  } else if (!hr && isOneEyedJack(card)) {
+                  } else if (!hr.allJacksRemove && isOneEyedJack(card)) {
                     label = { text: "REM", color: "text-destructive" };
                   }
 
