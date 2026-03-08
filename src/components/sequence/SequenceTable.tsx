@@ -375,9 +375,14 @@ const SequenceTable = ({
           {mySeqPlayer && phase === "playing" && (
             <div className="border-t border-border/30 px-3 py-3 bg-card/30">
               <div className="flex items-center gap-2 mb-2">
-                <p className="text-[10px] font-display tracking-widest text-muted-foreground flex-1">
-                  YOUR HAND ({mySeqPlayer.hand.length} cards)
-                </p>
+                <div className="flex items-center gap-1.5 flex-1">
+                  {mySeqPlayer.team && (
+                    <span className={`w-2.5 h-2.5 rounded-full ${TEAM_COLORS[mySeqPlayer.team]}`} />
+                  )}
+                  <p className="text-[10px] font-display tracking-widest text-muted-foreground">
+                    YOUR HAND ({mySeqPlayer.hand.length} cards)
+                  </p>
+                </div>
                 {selectedCardIsDead && selectedCardIndex !== null && (
                   <Button
                     size="sm"
