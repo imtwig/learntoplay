@@ -8,7 +8,7 @@ export interface BJHand {
   bet: number;
   result: HandResult;
   stood: boolean;
-  revealed: boolean; // whether hand has been revealed to all players
+  revealed: boolean;
 }
 
 export interface BJPlayerState {
@@ -19,23 +19,25 @@ export interface BJPlayerState {
   activeHandIndex: number;
   done: boolean;
   currentBet: number;
-  ready: boolean; // ready to start round
+  ready: boolean;
+  isDealer: boolean;
 }
 
 export interface BJGameState {
   deck: Card[];
-  dealer: Card[];
-  players: BJPlayerState[];
+  players: BJPlayerState[]; // includes the dealer (host) as a player with isDealer=true
   activePlayerIndex: number;
   phase: "betting" | "dealing" | "player_turns" | "dealer_turn" | "results" | "reveal";
   roundNumber: number;
-  revealedPlayerIds: string[]; // which players' hands have been revealed by host
+  revealedPlayerIds: string[];
 }
 
-export function initGameState(playerNames: { id: string; name: string }[]): BJGameState {
+export function initGameState(
+  playerNames: { id: string; name: string }[],
+  hostId: string
+): BJGameState {
   return {
     deck: createDeck(6),
-    dealer: [],
     players: playerNames.map((p) => ({
       playerId: p.id,
       name: p.name,
@@ -45,6 +47,7 @@ export function initGameState(playerNames: { id: string; name: string }[]): BJGa
       done: false,
       currentBet: 0,
       ready: false,
+      isDealer: p.id === hostId,
     })),
     activePlayerIndex: 0,
     phase: "betting",
@@ -62,17 +65,15 @@ function draw(state: BJGameState, faceUp = true): Card {
   return card;
 }
 
-/** Mark a player as ready with their bet */
 export function setPlayerReady(state: BJGameState, playerId: string, bet: number): BJGameState {
   const s = structuredClone(state);
   const player = s.players.find((p) => p.playerId === playerId);
   if (!player) return s;
-  player.currentBet = Math.max(bet, 0);
+  player.currentBet = player.isDealer ? 0 : Math.max(bet, 0);
   player.ready = true;
   return s;
 }
 
-/** Unready a player */
 export function setPlayerUnready(state: BJGameState, playerId: string): BJGameState {
   const s = structuredClone(state);
   const player = s.players.find((p) => p.playerId === playerId);
@@ -81,12 +82,10 @@ export function setPlayerUnready(state: BJGameState, playerId: string): BJGameSt
   return s;
 }
 
-/** Check if all players are ready */
 export function allPlayersReady(state: BJGameState): boolean {
   return state.players.every((p) => p.ready);
 }
 
-/** Start dealing — called when everyone is ready and someone presses start */
 export function startDeal(state: BJGameState): BJGameState {
   const s = structuredClone(state);
   for (const p of s.players) {
@@ -98,84 +97,67 @@ export function startDeal(state: BJGameState): BJGameState {
   return dealInitial(s);
 }
 
-/**
- * Deal cards clockwise. All player cards are face-up in the raw state
- * (owners see their own hand). filterStateForPlayer hides others' cards.
- * Dealer gets 1 up, 1 down.
- */
 function dealInitial(state: BJGameState): BJGameState {
   const s = state;
 
-  // Round 1: first card to each player clockwise (face-up in raw state)
+  // Round 1: first card to each player clockwise (including dealer)
   for (const p of s.players) {
     p.hands[0].cards.push(draw(s, true));
   }
 
-  // Round 2: second card to each player clockwise (face-up in raw state)
+  // Round 2: second card to each player clockwise
   for (const p of s.players) {
     p.hands[0].cards.push(draw(s, true));
   }
 
-  // Dealer gets 1 face-up, 1 face-down
-  s.dealer = [draw(s, true), draw(s, false)];
-
-  // Check for dealer blackjack
-  const dealerFull = s.dealer.map((c) => ({ ...c, faceUp: true }));
-  if (isBlackjack(dealerFull)) {
-    s.dealer[1].faceUp = true;
-    for (const p of s.players) {
-      for (const h of p.hands) {
-        h.revealed = true;
-        h.result = isBlackjack(h.cards) ? "push" : "lose";
-      }
-      p.done = true;
-    }
-    s.phase = "results";
-    return settleRound(s);
-  }
-
-  // Check for player blackjacks
-  for (const p of s.players) {
-    if (isBlackjack(p.hands[0].cards)) {
-      p.hands[0].result = "blackjack";
-      p.hands[0].revealed = true;
-      p.done = true;
-    }
-  }
-
+  // Non-dealer players go first, then dealer goes last
+  // Find first non-dealer, non-done player
   s.phase = "player_turns";
-  s.activePlayerIndex = s.players.findIndex((p) => !p.done);
+  s.activePlayerIndex = s.players.findIndex((p) => !p.isDealer && !p.done);
   if (s.activePlayerIndex === -1) {
+    // All non-dealer players done, dealer's turn
     return startDealerTurn(s);
   }
 
   return s;
 }
 
-// No longer needed — all cards are face-up in raw state, visibility controlled by filter
-
 export function playerAction(state: BJGameState, playerId: string, action: PlayerAction): BJGameState {
   const s = structuredClone(state);
-  if (s.phase !== "player_turns") return s;
+  const currentPhase = s.phase;
+  if (currentPhase !== "player_turns" && currentPhase !== "dealer_turn") return s;
 
   const player = s.players.find((p) => p.playerId === playerId);
   if (!player || player.done) return s;
+
+  // During player_turns, only non-dealer can act. During dealer_turn, only dealer can act.
+  if (currentPhase === "player_turns" && player.isDealer) return s;
+  if (currentPhase === "dealer_turn" && !player.isDealer) return s;
 
   const hand = player.hands[player.activeHandIndex];
   if (!hand || hand.result !== "pending") return s;
 
   switch (action) {
-    case "hit": { // Draw
+    case "hit": {
       hand.cards.push(draw(s));
       if (isBust(hand.cards)) {
         hand.result = "lose";
-        advanceHand(s, player);
+        if (player.isDealer) {
+          // Dealer busted — all pending players win
+          finishDealerTurn(s);
+        } else {
+          advanceHand(s, player);
+        }
       }
       break;
     }
-    case "stand": { // Done
+    case "stand": {
       hand.stood = true;
-      advanceHand(s, player);
+      if (player.isDealer) {
+        finishDealerTurn(s);
+      } else {
+        advanceHand(s, player);
+      }
       break;
     }
   }
@@ -193,28 +175,27 @@ function advanceHand(state: BJGameState, player: BJPlayerState) {
   }
   player.done = true;
 
-  const nextPlayer = state.players.findIndex((p, i) => i > state.activePlayerIndex && !p.done);
+  // Find next non-dealer player
+  const nextPlayer = state.players.findIndex(
+    (p, i) => i > state.activePlayerIndex && !p.done && !p.isDealer
+  );
   if (nextPlayer !== -1) {
     state.activePlayerIndex = nextPlayer;
-    // Cards already face-up in raw state, filter handles visibility
   } else {
-    // All players done — move to reveal phase instead of dealer turn
+    // All non-dealer players done — move to reveal phase
     state.phase = "reveal";
     state.revealedPlayerIds = [];
   }
 }
 
-/** Host reveals a specific player's hand */
 export function revealPlayer(state: BJGameState, playerId: string): BJGameState {
   const s = structuredClone(state);
   if (s.phase !== "reveal") return s;
   if (!s.revealedPlayerIds.includes(playerId)) {
     s.revealedPlayerIds.push(playerId);
-    // Reveal the player's cards
     const player = s.players.find((p) => p.playerId === playerId);
     if (player) {
       for (const h of player.hands) {
-        h.cards = h.cards.map((c) => ({ ...c, faceUp: true }));
         h.revealed = true;
       }
     }
@@ -222,7 +203,6 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
   return s;
 }
 
-/** Host reveals all hands */
 export function revealAll(state: BJGameState): BJGameState {
   const s = structuredClone(state);
   if (s.phase !== "reveal") return s;
@@ -231,38 +211,52 @@ export function revealAll(state: BJGameState): BJGameState {
       s.revealedPlayerIds.push(p.playerId);
     }
     for (const h of p.hands) {
-      h.cards = h.cards.map((c) => ({ ...c, faceUp: true }));
       h.revealed = true;
     }
   }
-  // Now do dealer turn
+  // After revealing all, dealer plays
   return startDealerTurn(s);
 }
 
 function startDealerTurn(state: BJGameState): BJGameState {
   state.phase = "dealer_turn";
-  state.dealer[1].faceUp = true;
-
-  // Reveal all player cards
+  const dealer = state.players.find((p) => p.isDealer);
+  if (!dealer) {
+    state.phase = "results";
+    return settleRound(state);
+  }
+  // Reveal all player hands
   for (const p of state.players) {
     for (const h of p.hands) {
-      h.cards = h.cards.map((c) => ({ ...c, faceUp: true }));
       h.revealed = true;
     }
   }
+  state.revealedPlayerIds = state.players.map((p) => p.playerId);
 
-  const anyPending = state.players.some((p) => p.hands.some((h) => h.result === "pending"));
+  // Dealer is now active — they draw/done manually
+  state.activePlayerIndex = state.players.indexOf(dealer);
+  dealer.done = false;
+  return state;
+}
 
-  if (anyPending) {
-    while (handValue(state.dealer) < 17) {
-      state.dealer.push(draw(state));
-    }
+/** Called when dealer finishes (stood or busted) */
+function finishDealerTurn(state: BJGameState) {
+  const dealer = state.players.find((p) => p.isDealer);
+  if (!dealer) return;
+  dealer.done = true;
+
+  const dealerHand = dealer.hands[0];
+  const dealerVal = handValue(dealerHand.cards);
+  const dealerBust = isBust(dealerHand.cards);
+
+  // If dealer busted, mark it
+  if (dealerBust) {
+    dealerHand.result = "lose";
   }
 
-  const dealerVal = handValue(state.dealer);
-  const dealerBust = dealerVal > 21;
-
+  // Settle each non-dealer player
   for (const p of state.players) {
+    if (p.isDealer) continue;
     for (const h of p.hands) {
       if (h.result !== "pending") continue;
       const pVal = handValue(h.cards);
@@ -278,34 +272,50 @@ function startDealerTurn(state: BJGameState): BJGameState {
     }
   }
 
+  // Set dealer result based on net outcome
+  if (!dealerBust) {
+    dealerHand.result = "push"; // neutral display for dealer
+  }
+
   state.phase = "results";
-  return settleRound(state);
+  settleRound(state);
 }
 
 function settleRound(state: BJGameState): BJGameState {
+  const dealer = state.players.find((p) => p.isDealer);
+  let dealerNet = 0;
+
   for (const p of state.players) {
+    if (p.isDealer) continue;
     for (const h of p.hands) {
       switch (h.result) {
         case "blackjack":
           p.netProfit += Math.floor(h.bet * 1.5);
+          dealerNet -= Math.floor(h.bet * 1.5);
           break;
         case "win":
           p.netProfit += h.bet;
+          dealerNet -= h.bet;
           break;
         case "push":
           break;
         case "lose":
           p.netProfit -= h.bet;
+          dealerNet += h.bet;
           break;
       }
     }
   }
+
+  if (dealer) {
+    dealer.netProfit += dealerNet;
+  }
+
   return state;
 }
 
 export function newRound(state: BJGameState): BJGameState {
   const s = structuredClone(state);
-  s.dealer = [];
   s.activePlayerIndex = 0;
   s.phase = "betting";
   s.roundNumber++;
@@ -315,35 +325,39 @@ export function newRound(state: BJGameState): BJGameState {
     p.activeHandIndex = 0;
     p.done = false;
     p.ready = false;
-    // Keep currentBet from previous round so it persists
   }
   return s;
 }
 
 export function getAvailableActions(state: BJGameState, playerId: string): PlayerAction[] {
-  if (state.phase !== "player_turns") return [];
   const player = state.players.find((p) => p.playerId === playerId);
   if (!player || player.done) return [];
-  const hand = player.hands[player.activeHandIndex];
-  if (!hand || hand.result !== "pending") return [];
 
-  return ["hit", "stand"];
+  if (state.phase === "player_turns" && !player.isDealer) {
+    const hand = player.hands[player.activeHandIndex];
+    if (!hand || hand.result !== "pending") return [];
+    if (state.players[state.activePlayerIndex]?.playerId !== playerId) return [];
+    return ["hit", "stand"];
+  }
+
+  if (state.phase === "dealer_turn" && player.isDealer) {
+    const hand = player.hands[player.activeHandIndex];
+    if (!hand || hand.result !== "pending") return [];
+    return ["hit", "stand"];
+  }
+
+  return [];
 }
 
-/**
- * Filter game state for a specific viewer — hides other players' hands completely
- * unless they've been revealed by the host.
- */
 export function filterStateForPlayer(state: BJGameState, viewerPlayerId: string): BJGameState {
   const s = structuredClone(state);
   for (const p of s.players) {
     if (p.playerId === viewerPlayerId) continue;
-    // In reveal/results/dealer_turn phase, show revealed players
     if ((s.phase === "reveal" || s.phase === "results" || s.phase === "dealer_turn") && 
         s.revealedPlayerIds.includes(p.playerId)) {
       continue;
     }
-    // Hide ALL of other players' cards — they only see card backs
+    // Hide ALL of other players' cards
     for (const h of p.hands) {
       h.cards = h.cards.map(() => ({ rank: "A" as any, suit: "spades" as any, faceUp: false }));
     }
