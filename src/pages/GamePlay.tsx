@@ -16,17 +16,20 @@ const GamePlay = () => {
     myBJPlayer,
     availableActions,
     isHost,
-    myBet,
-    setMyBet,
+    myBetInput,
+    setMyBetInput,
     initGame,
+    markReady,
+    markUnready,
     startRound,
     doAction,
+    doRevealPlayer,
+    doRevealAll,
     nextRound,
   } = useBlackjack(roomId, players);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
 
-  // Host initializes the game on first load
   useEffect(() => {
     if (isHost && players.length > 0 && !gameState) {
       initGame();
@@ -68,11 +71,15 @@ const GamePlay = () => {
         myBJPlayer={myBJPlayer}
         availableActions={availableActions}
         isHost={isHost}
-        myBet={myBet}
-        setMyBet={setMyBet}
+        myBetInput={myBetInput}
+        setMyBetInput={setMyBetInput}
         onAction={doAction}
+        onMarkReady={markReady}
+        onMarkUnready={markUnready}
         onStartRound={startRound}
         onNextRound={nextRound}
+        onRevealPlayer={doRevealPlayer}
+        onRevealAll={doRevealAll}
         onLeave={handleLeave}
         onTransferHost={handleTransferHost}
         players={players}
