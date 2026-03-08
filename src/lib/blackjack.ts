@@ -354,7 +354,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
 
       // Dealer auto-busts — mark result but don't finish yet; dealer presses "Done"
       if (player.isDealer && isBust(hand.cards)) {
-        hand.result = "lose";
+        hand.result = "bust";
       }
       break;
     }
