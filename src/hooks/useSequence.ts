@@ -14,6 +14,8 @@ import {
   newSequenceRound,
   getValidPlacements,
   isDeadCard,
+  syncSeqPlayers,
+  removeSeqPlayer,
 } from "@/lib/sequence";
 
 export function useSequence(roomId: string | undefined, players: Player[]) {
@@ -132,6 +134,40 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
     await saveState(next);
   }, [rawGameState, isHost, saveState]);
 
+  const doKickPlayer = useCallback(
+    async (playerId: string) => {
+      if (!rawGameState || !isHost) return;
+      const next = removeSeqPlayer(rawGameState, playerId);
+      await saveState(next);
+      // Also disconnect the player in the players table
+      await supabase
+        .from("players")
+        .update({ connected: false })
+        .eq("id", playerId);
+    },
+    [rawGameState, isHost, saveState]
+  );
+
+  // Sync game state players with room players during team_setup
+  useEffect(() => {
+    if (!rawGameState || !isHost || rawGameState.phase !== "team_setup") return;
+    const roomPlayerIds = new Set(players.map((p) => p.id));
+    const statePlayerIds = new Set(rawGameState.players.map((p) => p.playerId));
+    
+    // Check if they differ
+    let needsSync = false;
+    for (const id of roomPlayerIds) if (!statePlayerIds.has(id)) needsSync = true;
+    for (const id of statePlayerIds) if (!roomPlayerIds.has(id)) needsSync = true;
+    
+    if (needsSync) {
+      const synced = syncSeqPlayers(
+        rawGameState,
+        players.map((p) => ({ id: p.id, name: p.display_name }))
+      );
+      saveState(synced);
+    }
+  }, [rawGameState, isHost, players, saveState]);
+
   // Filtered state for the viewer
   const gameState =
     rawGameState && myPlayer
@@ -177,5 +213,6 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
     doPlayCard,
     doDiscardDead,
     doRematch,
+    doKickPlayer,
   };
 }

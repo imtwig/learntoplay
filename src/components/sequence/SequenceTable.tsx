@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, RotateCcw, Crown, Trash2 } from "lucide-react";
+import { ArrowLeft, RotateCcw, Crown, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SeqGameState, SeqTeam } from "@/lib/sequence";
 import { teamsBalanced, isValidPlayerCount } from "@/lib/sequence";
@@ -24,6 +24,7 @@ interface Props {
   onSetTeam: (playerId: string, team: SeqTeam) => void;
   onStartGame: () => void;
   onRematch: () => void;
+  onKickPlayer: (playerId: string) => void;
   onLeave: () => void;
   players: Player[];
   myPlayerId: string | undefined;
@@ -66,6 +67,7 @@ const SequenceTable = ({
   onSetTeam,
   onStartGame,
   onRematch,
+  onKickPlayer,
   onLeave,
   players,
   myPlayerId,
@@ -206,9 +208,22 @@ const SequenceTable = ({
                       )}
                     </div>
                   ) : (
-                    <span className={`text-xs font-display ${p.team ? "" : "text-muted-foreground"}`}>
-                      {p.team === "A" ? "🔴 Red" : p.team === "B" ? "🔵 Blue" : p.team === "C" ? "🟢 Green" : "Choosing..."}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-display ${p.team ? "" : "text-muted-foreground"}`}>
+                        {p.team === "A" ? "🔴 Red" : p.team === "B" ? "🔵 Blue" : p.team === "C" ? "🟢 Green" : "Choosing..."}
+                      </span>
+                      {isHost && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          onClick={() => onKickPlayer(p.playerId)}
+                          title="Kick player"
+                        >
+                          <UserX className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               );
