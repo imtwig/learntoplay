@@ -84,15 +84,19 @@ const BlackjackTable = ({
   const [showSettings, setShowSettings] = useState(false);
   const [showResultOverlay, setShowResultOverlay] = useState(false);
   const [showAllWinnings, setShowAllWinnings] = useState(false);
+  const [showDealingAnim, setShowDealingAnim] = useState(false);
   const [prevPhase, setPrevPhase] = useState(phase);
 
-  // Show result overlay when phase transitions to "results"
+  // Show dealing animation when transitioning from betting, and result overlay for results
   useEffect(() => {
-    if (phase === "results" && prevPhase !== "results") {
+    if (phase !== "betting" && prevPhase === "betting") {
+      setShowDealingAnim(true);
+    }
+    if (phase === "results" && prevPhase !== "results" && !showDealingAnim) {
       setShowResultOverlay(true);
     }
     setPrevPhase(phase);
-  }, [phase, prevPhase]);
+  }, [phase, prevPhase, showDealingAnim]);
 
   const dealerPlayer = bjPlayers.find((p) => p.isDealer);
   const nonDealerPlayers = bjPlayers.filter((p) => !p.isDealer);
