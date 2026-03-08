@@ -154,27 +154,26 @@ function dealInitial(state: BJGameState): BJGameState {
     if (dealerStrength > 0 && playerStrength > 0) {
       // Both have specials — higher strength wins, equal = push
       if (playerStrength > dealerStrength) {
-        // Player's hand beats dealer's
         p.hands[0].result = playerStrength === 3 ? "double_aces" : "blackjack";
         p.hands[0].revealed = true;
         settleHand(s, p, p.hands[0], dealer);
         p.done = true;
       } else if (playerStrength < dealerStrength) {
-        // Dealer's hand beats player's
         p.hands[0].result = "lose";
         p.hands[0].revealed = true;
-        const mult = dealerStrength; // 2 for blackjack, 3 for double aces
+        const mult = dealerStrength;
         p.netProfit -= p.hands[0].bet * mult;
         p.roundProfit -= p.hands[0].bet * mult;
         if (dealer) { dealer.netProfit += p.hands[0].bet * mult; dealer.roundProfit += p.hands[0].bet * mult; }
         p.done = true;
       } else {
-        // Equal — push
         p.hands[0].result = "push";
         p.hands[0].revealed = true;
         p.done = true;
       }
-      if (!s.revealedPlayerIds.includes(p.playerId)) {
+      // Only reveal player hands immediately if dealer does NOT have a special
+      // (when dealer has special, hands stay hidden until dealer presses Done)
+      if (dealerStrength === 0 && !s.revealedPlayerIds.includes(p.playerId)) {
         s.revealedPlayerIds.push(p.playerId);
       }
     } else if (dealerStrength > 0 && playerStrength === 0) {
@@ -186,9 +185,7 @@ function dealInitial(state: BJGameState): BJGameState {
       p.roundProfit -= p.hands[0].bet * mult;
       if (dealer) { dealer.netProfit += p.hands[0].bet * mult; dealer.roundProfit += p.hands[0].bet * mult; }
       p.done = true;
-      if (!s.revealedPlayerIds.includes(p.playerId)) {
-        s.revealedPlayerIds.push(p.playerId);
-      }
+      // Don't reveal — dealer will reveal when pressing Done
     } else if (playerStrength > 0) {
       // Player has special, dealer doesn't — player wins immediately
       p.hands[0].result = playerStrength === 3 ? "double_aces" : "blackjack";
