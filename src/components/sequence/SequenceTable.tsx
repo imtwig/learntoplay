@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, RotateCcw, Crown, Trash2 } from "lucide-react";
+import { ArrowLeft, RotateCcw, Crown, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SeqGameState, SeqTeam } from "@/lib/sequence";
 import { teamsBalanced, isValidPlayerCount } from "@/lib/sequence";
