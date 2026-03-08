@@ -73,6 +73,10 @@ const BlackjackTable = ({
   myPlayerId,
 }: Props) => {
   const { phase, players: bjPlayers, roundNumber, revealedPlayerIds = [] } = gameState;
+  const allReady = bjPlayers.every((p) => p.ready);
+  const iAmReady = myBJPlayer?.ready ?? false;
+  const iAmDealer = myBJPlayer?.isDealer ?? false;
+
   const [showTransfer, setShowTransfer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showResultOverlay, setShowResultOverlay] = useState(false);
@@ -88,10 +92,6 @@ const BlackjackTable = ({
     }
     setPrevPhase(phase);
   }, [phase, prevPhase, iAmDealer]);
-
-  const allReady = bjPlayers.every((p) => p.ready);
-  const iAmReady = myBJPlayer?.ready ?? false;
-  const iAmDealer = myBJPlayer?.isDealer ?? false;
 
   const dealerPlayer = bjPlayers.find((p) => p.isDealer);
   const nonDealerPlayers = bjPlayers.filter((p) => !p.isDealer);
