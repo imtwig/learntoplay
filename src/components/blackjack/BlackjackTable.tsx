@@ -4,9 +4,10 @@ import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Chec
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import HandDisplay from "./HandDisplay";
-import type { BJGameState, PlayerAction } from "@/lib/blackjack";
+import type { BJGameState, PlayerAction, BJSettings } from "@/lib/blackjack";
 import type { BJPlayerState } from "@/lib/blackjack";
 import type { Player } from "@/hooks/useRoom";
+import { Switch } from "@/components/ui/switch";
 
 interface Props {
   gameState: BJGameState;
