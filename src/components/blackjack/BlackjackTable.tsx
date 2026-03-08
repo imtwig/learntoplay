@@ -310,7 +310,7 @@ const BlackjackTable = ({
                     active={phase === "dealer_turn" && dealerPlayer.playerId === myPlayerId}
                   />
                 ))}
-                <ProfitDisplay profit={dealerPlayer.netProfit} />
+                <ProfitDisplay profit={dealerPlayer.roundProfit} />
               </motion.div>
             )}
 
