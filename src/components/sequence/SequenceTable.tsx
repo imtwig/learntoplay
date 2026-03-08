@@ -82,9 +82,9 @@ const SequenceTable = ({
         <div className="text-xs text-muted-foreground font-display">
           {sequences.length > 0 && (
             <span>
-              {isTeamGame
-                ? `A: ${sequences.filter((s) => s.owner === "A").length} | B: ${sequences.filter((s) => s.owner === "B").length}`
-                : sequences.map((s) => s.owner.slice(0, 4)).join(", ")}
+              🔴{sequences.filter((s) => s.owner === "A").length}
+              {" | "}🔵{sequences.filter((s) => s.owner === "B").length}
+              {teamCount >= 3 && <>{" | "}🟢{sequences.filter((s) => s.owner === "C").length}</>}
             </span>
           )}
         </div>
