@@ -39,9 +39,9 @@ export const games: GameInfo[] = [
   },
   {
     id: "blackjack",
-    name: "Blackjack",
+    name: "Ban Luck",
     tagline: "Beat the Dealer",
-    description: "Get as close to 21 as possible without going over. Hit, stand, split, or double down against the dealer.",
+    description: "A multiplayer blackjack variant with custom bets, double aces, triple sevens, five-card charlie, dealer reveal controls, and a live leaderboard.",
     icon: Club,
     minPlayers: 1,
     maxPlayers: 7,
