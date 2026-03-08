@@ -402,28 +402,28 @@ export function revealAll(state: BJGameState): BJGameState {
 function settleHand(state: BJGameState, player: BJPlayerState, hand: BJHand, dealer: BJPlayerState | undefined) {
   switch (hand.result) {
     case "blackjack":
-      // Opening blackjack = x2
       player.netProfit += hand.bet * 2;
-      if (dealer) dealer.netProfit -= hand.bet * 2;
+      player.roundProfit += hand.bet * 2;
+      if (dealer) { dealer.netProfit -= hand.bet * 2; dealer.roundProfit -= hand.bet * 2; }
       break;
     case "double_aces":
-      // Opening double aces = x3
       player.netProfit += hand.bet * 3;
-      if (dealer) dealer.netProfit -= hand.bet * 3;
+      player.roundProfit += hand.bet * 3;
+      if (dealer) { dealer.netProfit -= hand.bet * 3; dealer.roundProfit -= hand.bet * 3; }
       break;
     case "triple_sevens":
-      // Already settled inline (x3)
       break;
     case "five_card":
-      // Already settled inline (x2)
       break;
     case "win":
       player.netProfit += hand.bet;
-      if (dealer) dealer.netProfit -= hand.bet;
+      player.roundProfit += hand.bet;
+      if (dealer) { dealer.netProfit -= hand.bet; dealer.roundProfit -= hand.bet; }
       break;
     case "lose":
       player.netProfit -= hand.bet;
-      if (dealer) dealer.netProfit += hand.bet;
+      player.roundProfit -= hand.bet;
+      if (dealer) { dealer.netProfit += hand.bet; dealer.roundProfit += hand.bet; }
       break;
     case "push":
       break;
