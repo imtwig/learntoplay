@@ -48,6 +48,17 @@ export const games: GameInfo[] = [
     color: "text-game-gold",
     gradient: "from-game-gold/20 to-primary/10",
   },
+  {
+    id: "asshole_daidi",
+    name: "Asshole Dai Di",
+    tagline: "Shedding Card Game",
+    description: "Get rid of your cards by playing higher combinations. Earn ranks like President or Asshole, then swap cards before the next round.",
+    icon: Flame,
+    minPlayers: 3,
+    maxPlayers: 7,
+    color: "text-game-red",
+    gradient: "from-game-red/20 to-game-gold/10",
+  },
 ];
 
 export const getGame = (id: GameId) => games.find((g) => g.id === id);

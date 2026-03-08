@@ -68,6 +68,40 @@ const GamePlay = () => {
     );
   }
 
+  // Asshole Dai Di game
+  if (isADD) {
+    if (!add.gameState) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-muted-foreground font-display animate-pulse">Setting up game...</p>
+        </div>
+      );
+    }
+
+    return (
+      <AssholeDaiDiTable
+        gameState={add.gameState}
+        myADDPlayer={add.myADDPlayer}
+        isHost={add.isHost}
+        isMyTurn={add.isMyTurn}
+        canPass={add.canPass}
+        selectedCards={add.selectedCards}
+        setSelectedCards={add.setSelectedCards}
+        mySwapPending={add.mySwapPending}
+        onDeal={add.doDeal}
+        onPlay={add.doPlay}
+        onPass={add.doPass}
+        onStartSwap={add.doStartSwap}
+        onSubmitSwapReturn={add.doSubmitSwapReturn}
+        onFinishSwap={add.doFinishSwap}
+        onRematch={add.doRematch}
+        onLeave={handleLeave}
+        players={players}
+        myPlayerId={myPlayer?.id}
+      />
+    );
+  }
+
   // Sequence game
   if (isSequence) {
     if (!sequence.gameState) {
