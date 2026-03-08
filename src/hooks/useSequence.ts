@@ -213,5 +213,6 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
     doPlayCard,
     doDiscardDead,
     doRematch,
+    doKickPlayer,
   };
 }
