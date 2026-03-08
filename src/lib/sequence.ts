@@ -94,9 +94,14 @@ function ownerOf(state: SeqGameState, playerId: string): string {
 /* ── Team count by player count ─────────────────────────── */
 
 function getTeamCount(playerCount: number): number {
-  // 2→2, 3→3, 4→2, 6→3, 8→2, 9→3, 10→2, 12→3
-  if (playerCount === 3 || playerCount === 6 || playerCount === 9 || playerCount === 12) return 3;
-  return 2;
+  // 3-team if divisible by 3, 2-team if divisible by 2
+  if (playerCount % 3 === 0) return 3;
+  if (playerCount % 2 === 0) return 2;
+  return 2; // odd non-div-by-3: will be flagged as invalid
+}
+
+export function isValidPlayerCount(playerCount: number): boolean {
+  return playerCount % 2 === 0 || playerCount % 3 === 0;
 }
 
 /* ── Init ───────────────────────────────────────────────── */
