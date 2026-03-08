@@ -165,7 +165,8 @@ function dealInitial(state: BJGameState): BJGameState {
         p.hands[0].revealed = true;
         const mult = dealerStrength; // 2 for blackjack, 3 for double aces
         p.netProfit -= p.hands[0].bet * mult;
-        if (dealer) dealer.netProfit += p.hands[0].bet * mult;
+        p.roundProfit -= p.hands[0].bet * mult;
+        if (dealer) { dealer.netProfit += p.hands[0].bet * mult; dealer.roundProfit += p.hands[0].bet * mult; }
         p.done = true;
       } else {
         // Equal — push
