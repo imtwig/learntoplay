@@ -3,9 +3,11 @@ import { useEffect, useCallback } from "react";
 import { useRoom, leaveRoom, sessionId, transferHost } from "@/hooks/useRoom";
 import { useBlackjack } from "@/hooks/useBlackjack";
 import { useSequence } from "@/hooks/useSequence";
+import { usePoker } from "@/hooks/usePoker";
 import { getGame, type GameId } from "@/lib/gameData";
 import BlackjackTable from "@/components/blackjack/BlackjackTable";
 import SequenceTable from "@/components/sequence/SequenceTable";
+import PokerTable from "@/components/poker/PokerTable";
 
 const GamePlay = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -13,9 +15,11 @@ const GamePlay = () => {
   const { room, players, loading } = useRoom(roomId);
   const game = room ? getGame(room.game_type as GameId) : null;
   const isSequence = room?.game_type === "sequence";
+  const isPoker = room?.game_type === "poker";
 
-  const blackjack = useBlackjack(roomId, isSequence ? [] : players);
+  const blackjack = useBlackjack(roomId, (isSequence || isPoker) ? [] : players);
   const sequence = useSequence(roomId, isSequence ? players : []);
+  const poker = usePoker(roomId, isPoker ? players : []);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
 
@@ -25,12 +29,16 @@ const GamePlay = () => {
       if (sequence.isHost && players.length > 0 && !sequence.gameState) {
         sequence.initGame(room?.settings as Record<string, unknown> | undefined);
       }
+    } else if (isPoker) {
+      if (poker.isHost && players.length > 0 && !poker.gameState) {
+        poker.initGame(room?.settings as Record<string, unknown> | undefined);
+      }
     } else {
       if (blackjack.isHost && players.length > 0 && !blackjack.gameState) {
         blackjack.initGame();
       }
     }
-  }, [isSequence, sequence.isHost, blackjack.isHost, players.length, sequence.gameState, blackjack.gameState, sequence.initGame, blackjack.initGame, room?.settings]);
+  }, [isSequence, isPoker, sequence.isHost, blackjack.isHost, poker.isHost, players.length, sequence.gameState, blackjack.gameState, poker.gameState, sequence.initGame, blackjack.initGame, poker.initGame, room?.settings]);
 
   const handleLeave = async () => {
     if (myPlayer && roomId) {
