@@ -529,6 +529,21 @@ export function syncSeqPlayers(
     }
   }
 
+  // Normalize hand sizes during team_setup so everyone has the correct count
+  if (s.phase === "team_setup" && s.players.length > 0) {
+    const hs = handSize(s.players.length);
+    for (const p of s.players) {
+      // Return excess cards to deck
+      while (p.hand.length > hs) {
+        s.deck.push(p.hand.pop()!);
+      }
+      // Deal more cards if needed
+      while (p.hand.length < hs && s.deck.length > 0) {
+        p.hand.push(s.deck.pop()!);
+      }
+    }
+  }
+
   return s;
 }
 
