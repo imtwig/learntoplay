@@ -1,6 +1,6 @@
-import { Spade, Grid3X3, Club } from "lucide-react";
+import { Spade, Grid3X3, Club, Flame } from "lucide-react";
 
-export type GameId = "poker" | "sequence" | "blackjack";
+export type GameId = "poker" | "sequence" | "blackjack" | "asshole_daidi";
 
 export interface GameInfo {
   id: GameId;
