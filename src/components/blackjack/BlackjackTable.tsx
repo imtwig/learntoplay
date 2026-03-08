@@ -108,7 +108,7 @@ const BlackjackTable = ({
           BLACKJACK • ROUND {roundNumber}
         </span>
         <div className="flex items-center gap-3">
-          {myBJPlayer && <ProfitDisplay profit={myBJPlayer.netProfit} />}
+          <LeaderboardButton players={bjPlayers} myPlayerId={myPlayerId} />
           {isHost && (
             <>
               <Button
