@@ -1,10 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Crown, Users, Copy, Play, LogOut } from "lucide-react";
+import { Crown, Users, Copy, Play, LogOut, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRoom, leaveRoom, startGame, sessionId } from "@/hooks/useRoom";
-import { Check } from "lucide-react";
+import { useRoom, leaveRoom, startGame, sessionId, toggleReady } from "@/hooks/useRoom";
 import { getGame, type GameId } from "@/lib/gameData";
 import { toast } from "@/hooks/use-toast";
 
@@ -16,13 +15,11 @@ const WaitingRoom = () => {
 
   const game = room ? getGame(room.game_type as GameId) : null;
 
-  // Find my player
   useEffect(() => {
     const me = players.find((p) => p.session_id === sessionId);
     if (me) setMyPlayerId(me.id);
   }, [players]);
 
-  // If room closed, redirect
   useEffect(() => {
     if (room?.status === "closed") {
       toast({ title: "Room closed", description: "The host has closed the room." });
@@ -33,14 +30,22 @@ const WaitingRoom = () => {
     }
   }, [room?.status, navigate, game, roomId]);
 
-  const isHost = players.find((p) => p.session_id === sessionId)?.is_host;
   const minPlayers = game?.minPlayers ?? 2;
   const canStart = players.length >= minPlayers;
+  const myPlayer = players.find((p) => p.session_id === sessionId);
+  const iAmReady = (myPlayer?.player_state as any)?.ready === true;
+  const allReady = players.length > 0 && players.every((p) => (p.player_state as any)?.ready === true);
 
   const handleLeave = async () => {
     if (myPlayerId && roomId) {
       await leaveRoom(myPlayerId, roomId);
       navigate(game ? `/game/${game.id}` : "/");
+    }
+  };
+
+  const handleToggleReady = async () => {
+    if (myPlayerId) {
+      await toggleReady(myPlayerId, !iAmReady);
     }
   };
 
@@ -106,7 +111,11 @@ const WaitingRoom = () => {
           </div>
           <p className="text-muted-foreground text-sm">
             {players.length}/{game.maxPlayers} players •{" "}
-            {canStart ? "Ready to start!" : `Need ${minPlayers - players.length} more`}
+            {canStart
+              ? allReady
+                ? "Everyone is ready!"
+                : "Waiting for everyone to ready up"
+              : `Need ${minPlayers - players.length} more`}
           </p>
         </motion.div>
 
@@ -117,34 +126,46 @@ const WaitingRoom = () => {
             <span className="font-display text-xs tracking-wider">PLAYERS</span>
           </div>
           <div className="space-y-2">
-            {players.map((player, i) => (
-              <motion.div
-                key={player.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className={`flex items-center gap-3 p-3 rounded-xl border ${
-                  player.session_id === sessionId
-                    ? "border-primary/50 bg-primary/5"
-                    : "border-border/50 bg-card/50"
-                }`}
-              >
-                <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center font-display text-sm font-bold">
-                  {player.display_name.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">
-                    {player.display_name}
-                    {player.session_id === sessionId && (
-                      <span className="text-primary ml-2 text-xs">(You)</span>
+            {players.map((player, i) => {
+              const isReady = (player.player_state as any)?.ready === true;
+              return (
+                <motion.div
+                  key={player.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`flex items-center gap-3 p-3 rounded-xl border ${
+                    isReady
+                      ? "border-primary/50 bg-primary/5"
+                      : player.session_id === sessionId
+                        ? "border-border/50 bg-card/50"
+                        : "border-border/50 bg-card/50"
+                  }`}
+                >
+                  <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center font-display text-sm font-bold">
+                    {player.display_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">
+                      {player.display_name}
+                      {player.session_id === sessionId && (
+                        <span className="text-primary ml-2 text-xs">(You)</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {player.is_host && (
+                      <Crown className="h-4 w-4 text-game-gold" />
                     )}
-                  </p>
-                </div>
-                {player.is_host && (
-                  <Crown className="h-4 w-4 text-game-gold" />
-                )}
-              </motion.div>
-            ))}
+                    {isReady ? (
+                      <Check className="h-4 w-4 text-primary" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">not ready</span>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
@@ -159,10 +180,28 @@ const WaitingRoom = () => {
             Copy Invite Link
           </Button>
 
-          {isHost && (
+          {!iAmReady ? (
             <Button
               className="w-full gap-2 font-display text-sm tracking-wider"
-              disabled={!canStart}
+              onClick={handleToggleReady}
+            >
+              <Check className="h-4 w-4" />
+              Ready
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full gap-2 font-display text-sm tracking-wider"
+              onClick={handleToggleReady}
+            >
+              <X className="h-4 w-4" />
+              Unready
+            </Button>
+          )}
+
+          {canStart && allReady && (
+            <Button
+              className="w-full gap-2 font-display text-sm tracking-wider bg-primary"
               onClick={handleStart}
             >
               <Play className="h-4 w-4" />
