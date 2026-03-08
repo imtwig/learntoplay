@@ -145,7 +145,10 @@ const SequenceTable = ({
         <div className="flex items-center gap-2">
           <span className="font-display text-[10px] tracking-widest text-muted-foreground">SEQUENCE</span>
           {gameState.houseRules && (
-            <span className="text-[8px] font-display tracking-wider px-1.5 py-0.5 rounded bg-game-gold/20 text-game-gold">HOUSE RULES</span>
+            <span className="text-[9px] font-display tracking-wider font-bold px-2 py-0.5 rounded-full bg-game-gold/30 text-game-gold border border-game-gold/40">🏠 HOUSE RULES</span>
+          )}
+          {mySeqPlayer?.team && phase !== "team_setup" && (
+            <span className={`w-3 h-3 rounded-full ${TEAM_COLORS[mySeqPlayer.team]}`} title={`You: Team ${mySeqPlayer.team === "A" ? "Red" : mySeqPlayer.team === "B" ? "Blue" : "Green"}`} />
           )}
         </div>
         <div className="text-xs text-muted-foreground font-display">
