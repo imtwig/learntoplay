@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Check, X } from "lucide-react";
+import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Check, X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import HandDisplay from "./HandDisplay";
