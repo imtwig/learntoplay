@@ -134,6 +134,7 @@ export function setTeam(state: SeqGameState, playerId: string, team: SeqTeam): S
   const s = structuredClone(state);
   const player = s.players.find((p) => p.playerId === playerId);
   if (!player) return s;
+  // Remove from old team
   if (player.team) {
     s.teams[player.team] = s.teams[player.team].filter((id) => id !== playerId);
   }
@@ -143,8 +144,14 @@ export function setTeam(state: SeqGameState, playerId: string, team: SeqTeam): S
 }
 
 export function teamsBalanced(state: SeqGameState): boolean {
-  if (!state.isTeamGame) return true;
-  return state.teams.A.length === state.teams.B.length && state.teams.A.length > 0;
+  const { teamCount, teams, players } = state;
+  const assigned = teams.A.length + teams.B.length + teams.C.length;
+  if (assigned !== players.length) return false; // everyone must pick
+  if (teamCount === 2) {
+    return teams.A.length === teams.B.length && teams.A.length > 0;
+  }
+  // 3 teams: all must be equal
+  return teams.A.length === teams.B.length && teams.B.length === teams.C.length && teams.A.length > 0;
 }
 
 export function startSequenceGame(state: SeqGameState): SeqGameState {
