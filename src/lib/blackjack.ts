@@ -646,6 +646,7 @@ function finishDealerTurn(state: BJGameState) {
     }
     for (const h of p.hands) {
       h.revealed = true;
+      for (const c of h.cards) c.faceUp = true;
       if (h.result !== "pending") continue;
       const pVal = handValue(h.cards);
       const playerBust = isBust(h.cards);
