@@ -259,8 +259,8 @@ export function getValidPlacements(
     return valid;
   }
 
-  // Standard rules: two-eyed jacks are wild
-  if (!hr && isTwoEyedJack(card)) {
+  // Two-eyed jacks: wild when allJacksRemove is OFF (standard behavior)
+  if (!hr.allJacksRemove && isTwoEyedJack(card)) {
     const valid: [number, number][] = [];
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 10; c++) {
@@ -272,8 +272,8 @@ export function getValidPlacements(
     return valid;
   }
 
-  // Standard rules: one-eyed jacks remove (not from sequences)
-  if (!hr && isOneEyedJack(card)) {
+  // One-eyed jacks remove (standard behavior, always active)
+  if (!hr.allJacksRemove && isOneEyedJack(card)) {
     const valid: [number, number][] = [];
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 10; c++) {
@@ -286,13 +286,13 @@ export function getValidPlacements(
     return valid;
   }
 
-  // House rules: ALL jacks are removal cards (can remove even from sequences)
-  if (hr && isJack(card)) {
+  // All jacks remove (house rule): can remove from sequences if that rule is on
+  if (hr.allJacksRemove && isJack(card)) {
     const valid: [number, number][] = [];
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 10; c++) {
         const chip = state.board[r][c];
-        if (chip && chip.owner !== owner) {
+        if (chip && chip.owner !== owner && (hr.removeFromSequence || !chip.partOfSequence)) {
           valid.push([r, c]);
         }
       }
