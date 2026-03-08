@@ -201,17 +201,29 @@ function dealInitial(state: BJGameState): BJGameState {
     }
   }
 
-  // If dealer had a special, mark dealer hand result too
+  // If dealer had a special, mark dealer hand result but DON'T auto-end
+  // Instead, go to dealer_turn so dealer can press "Done" and reveal/settle
   if (dealer && dealerStrength > 0) {
     dealer.hands[0].result = dealerStrength === 3 ? "double_aces" : "blackjack";
-    dealer.done = true;
+    // Auto-reveal dealer's cards
+    dealer.hands[0].revealed = true;
+    for (const c of dealer.hands[0].cards) c.faceUp = true;
+    if (!s.revealedPlayerIds.includes(dealer.playerId)) {
+      s.revealedPlayerIds.push(dealer.playerId);
+    }
+    // Don't mark dealer as done — go to dealer_turn so they press "Done"
+    // But first settle any non-dealer players that already have specials
+    // (those are already settled above)
+    s.phase = "dealer_turn";
+    s.activePlayerIndex = s.players.indexOf(dealer);
+    dealer.done = false;
+    return s;
   }
 
   // Check if all players are done (all had opening specials)
   const allNonDealerDone = s.players.filter((p) => !p.isDealer).every((p) => p.done);
-  if (allNonDealerDone || (dealer && dealer.done)) {
+  if (allNonDealerDone) {
     s.phase = "results";
-    // Mark any remaining pending as done
     for (const p of s.players) {
       p.done = true;
     }
@@ -239,7 +251,11 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
   if (currentPhase === "dealer_turn" && !player.isDealer) return s;
 
   const hand = player.hands[player.activeHandIndex];
-  if (!hand || hand.result !== "pending") return s;
+  if (!hand) return s;
+  
+  // Allow dealer with ban luck/ban ban to press "stand" (Done) to finish
+  const dealerHasNatural = player.isDealer && (hand.result === "blackjack" || hand.result === "double_aces");
+  if (hand.result !== "pending" && !dealerHasNatural) return s;
 
   switch (action) {
     case "hit": {
@@ -587,7 +603,13 @@ export function getAvailableActions(state: BJGameState, playerId: string): Playe
 
   if (state.phase === "dealer_turn" && player.isDealer) {
     const hand = player.hands[player.activeHandIndex];
-    if (!hand || hand.result !== "pending") return [];
+    if (!hand || hand.result !== "pending") {
+      // Dealer has a winning hand (ban luck/ban ban) — only allow "stand" (Done)
+      if (hand && (hand.result === "blackjack" || hand.result === "double_aces")) {
+        return ["stand"];
+      }
+      return [];
+    }
     return ["hit", "stand"];
   }
 

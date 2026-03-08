@@ -108,7 +108,7 @@ const BlackjackTable = ({
           Leave
         </Button>
         <span className="font-display text-xs tracking-widest text-muted-foreground">
-          BLACKJACK • ROUND {roundNumber}
+          BAN LUCK • ROUND {roundNumber}
         </span>
         <div className="flex items-center gap-3">
           {isHost && (
@@ -464,25 +464,44 @@ const BlackjackTable = ({
           {/* Dealer turn: draw/done + reveal controls combined */}
           {phase === "dealer_turn" && iAmDealer && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              {/* Draw/Done buttons */}
-              {availableActions.length > 0 && (
+              {/* Dealer has ban luck/ban ban — show winning message + Done only */}
+              {myBJPlayer && myBJPlayer.hands[0] && (myBJPlayer.hands[0].result === "blackjack" || myBJPlayer.hands[0].result === "double_aces") ? (
                 <div className="space-y-2">
-                  <p className="text-center text-xs font-display text-game-gold tracking-wider">YOUR TURN (DEALER)</p>
-                  <div className="flex gap-3 justify-center">
-                    <Button
-                      onClick={() => onAction("hit")}
-                      className="font-display text-sm tracking-wider px-8 bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                      Draw
-                    </Button>
+                  <p className="text-center text-sm font-display text-game-gold tracking-wider">
+                    🎉 You have {myBJPlayer.hands[0].result === "double_aces" ? "BAN BAN!" : "BAN LUCK!"}
+                  </p>
+                  <div className="flex justify-center">
                     <Button
                       onClick={() => onAction("stand")}
-                      className="font-display text-sm tracking-wider px-8 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                      className="font-display text-sm tracking-wider px-8 bg-game-gold text-background hover:bg-game-gold/90"
                     >
                       Done
                     </Button>
                   </div>
                 </div>
+              ) : (
+                <>
+                  {/* Draw/Done buttons */}
+                  {availableActions.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-center text-xs font-display text-game-gold tracking-wider">YOUR TURN (DEALER)</p>
+                      <div className="flex gap-3 justify-center">
+                        <Button
+                          onClick={() => onAction("hit")}
+                          className="font-display text-sm tracking-wider px-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          Draw
+                        </Button>
+                        <Button
+                          onClick={() => onAction("stand")}
+                          className="font-display text-sm tracking-wider px-8 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        >
+                          Done
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Reveal controls */}

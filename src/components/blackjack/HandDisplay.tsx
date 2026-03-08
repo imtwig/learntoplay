@@ -12,8 +12,8 @@ interface HandDisplayProps {
 }
 
 const resultBadge: Record<string, { text: string; class: string }> = {
-  blackjack: { text: "BLACKJACK! x2", class: "bg-game-gold text-background" },
-  double_aces: { text: "DOUBLE ACES! x3", class: "bg-game-gold text-background" },
+  blackjack: { text: "BAN LUCK! x2", class: "bg-game-gold text-background" },
+  double_aces: { text: "BAN BAN! x3", class: "bg-game-gold text-background" },
   triple_sevens: { text: "7-7-7! x3", class: "bg-game-gold text-background" },
   five_card: { text: "5 CARDS! x2", class: "bg-primary text-primary-foreground" },
   win: { text: "WIN", class: "bg-primary text-primary-foreground" },
