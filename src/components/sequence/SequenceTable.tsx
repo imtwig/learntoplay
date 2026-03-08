@@ -434,16 +434,18 @@ const SequenceTable = ({
                     >
                       <span
                         className="font-display font-bold text-sm leading-none"
-                        style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
+                        style={{ color: isJokerCard ? "#7c3aed" : suitColor === "red" ? "#dc2626" : "#000000" }}
                       >
-                        {rank}
+                        {isJokerCard ? "JKR" : rank}
                       </span>
-                      <span
-                        className="text-xs leading-none"
-                        style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
-                      >
-                        {suitSymbol}
-                      </span>
+                      {!isJokerCard && (
+                        <span
+                          className="text-xs leading-none"
+                          style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
+                        >
+                          {suitSymbol}
+                        </span>
+                      )}
                       {label && (
                         <span className={`text-[6px] ${label.color} font-display mt-0.5`}>{label.text}</span>
                       )}
