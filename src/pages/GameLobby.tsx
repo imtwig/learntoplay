@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Accordion,
   AccordionContent,
@@ -36,6 +37,7 @@ const GameLobby = () => {
   const [joinRoomId, setJoinRoomId] = useState("");
   const [joinPassword, setJoinPassword] = useState("");
   const [creating, setCreating] = useState(false);
+  const [houseRules, setHouseRules] = useState(false);
 
   if (!game) {
     navigate("/");
@@ -50,12 +52,16 @@ const GameLobby = () => {
     setCreating(true);
     try {
       localStorage.setItem("player_name", playerName);
+      const settings: Record<string, unknown> = {};
+      if (game.id === "sequence" && houseRules) {
+        settings.houseRules = true;
+      }
       const { room } = await createRoom(
         game.id,
         roomName.trim(),
         playerName.trim(),
         roomPassword || undefined,
-        {},
+        settings,
         game.maxPlayers
       );
       setCreateOpen(false);
@@ -175,6 +181,17 @@ const GameLobby = () => {
                       onChange={(e) => setRoomPassword(e.target.value)}
                     />
                   </div>
+                  {game.id === "sequence" && (
+                    <div className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2">
+                      <div>
+                        <Label className="text-sm font-medium">House Rules</Label>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          4 Jokers as wilds, all Jacks remove chips (even from sequences)
+                        </p>
+                      </div>
+                      <Switch checked={houseRules} onCheckedChange={setHouseRules} />
+                    </div>
+                  )}
                   <Button
                     onClick={handleCreate}
                     className="w-full font-display text-sm tracking-wider"

@@ -42,6 +42,7 @@ export interface SeqGameState {
   winner: string | null;
   lastMove: { row: number; col: number; type: "place" | "remove" } | null;
   message: string | null;
+  houseRules: boolean;
 }
 
 /* ── Helpers ────────────────────────────────────────────── */
@@ -55,8 +56,10 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function createSequenceDeck(): string[] {
-  const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+function createSequenceDeck(houseRules: boolean): string[] {
+  const ranks = houseRules
+    ? ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+    : ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
   const suits = ["S", "C", "D", "H"];
   const deck: string[] = [];
   for (let d = 0; d < 2; d++) {
@@ -65,6 +68,10 @@ function createSequenceDeck(): string[] {
         deck.push(rank + suit);
       }
     }
+  }
+  // House rules: add 4 jokers (wild cards)
+  if (houseRules) {
+    deck.push("JKR1", "JKR2", "JKR3", "JKR4");
   }
   return shuffle(deck);
 }
@@ -94,12 +101,13 @@ function getTeamCount(playerCount: number): number {
 /* ── Init ───────────────────────────────────────────────── */
 
 export function initSequenceGame(
-  playerNames: { id: string; name: string }[]
+  playerNames: { id: string; name: string }[],
+  houseRules: boolean = false
 ): SeqGameState {
   const n = playerNames.length;
   const teamCount = getTeamCount(n);
   const hs = handSize(n);
-  const deck = createSequenceDeck();
+  const deck = createSequenceDeck(houseRules);
 
   const teams: { A: string[]; B: string[]; C: string[] } = { A: [], B: [], C: [] };
   const players: SeqPlayer[] = playerNames.map((p) => {
@@ -125,6 +133,7 @@ export function initSequenceGame(
     winner: null,
     lastMove: null,
     message: null,
+    houseRules,
   };
 }
 
@@ -160,10 +169,16 @@ export function startSequenceGame(state: SeqGameState): SeqGameState {
   return s;
 }
 
+/* ── House rules helpers ─────────────────────────────────── */
+
+function isJoker(card: string): boolean {
+  return card.startsWith("JKR");
+}
+
 /* ── Dead card check ────────────────────────────────────── */
 
 export function isDeadCard(state: SeqGameState, card: string): boolean {
-  if (isJack(card)) return false;
+  if (isJack(card) || isJoker(card)) return false;
   const positions = getBoardPositions(card);
   return positions.every(([r, c]) => state.board[r][c] !== null);
 }
@@ -176,8 +191,10 @@ export function getValidPlacements(
   card: string
 ): [number, number][] {
   const owner = ownerOf(state, playerId);
+  const hr = state.houseRules;
 
-  if (isTwoEyedJack(card)) {
+  // Jokers are wild (house rules only) — place on any empty non-corner
+  if (isJoker(card)) {
     const valid: [number, number][] = [];
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 10; c++) {
@@ -189,12 +206,40 @@ export function getValidPlacements(
     return valid;
   }
 
-  if (isOneEyedJack(card)) {
+  // Standard rules: two-eyed jacks are wild
+  if (!hr && isTwoEyedJack(card)) {
+    const valid: [number, number][] = [];
+    for (let r = 0; r < 10; r++) {
+      for (let c = 0; c < 10; c++) {
+        if (state.board[r][c] === null && !isCorner(r, c)) {
+          valid.push([r, c]);
+        }
+      }
+    }
+    return valid;
+  }
+
+  // Standard rules: one-eyed jacks remove (not from sequences)
+  if (!hr && isOneEyedJack(card)) {
     const valid: [number, number][] = [];
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 10; c++) {
         const chip = state.board[r][c];
         if (chip && chip.owner !== owner && !chip.partOfSequence) {
+          valid.push([r, c]);
+        }
+      }
+    }
+    return valid;
+  }
+
+  // House rules: ALL jacks are removal cards (can remove even from sequences)
+  if (hr && isJack(card)) {
+    const valid: [number, number][] = [];
+    for (let r = 0; r < 10; r++) {
+      for (let c = 0; c < 10; c++) {
+        const chip = state.board[r][c];
+        if (chip && chip.owner !== owner) {
           valid.push([r, c]);
         }
       }
@@ -225,21 +270,51 @@ export function playCard(
   if (card === undefined) return s;
 
   const owner = ownerOf(s, playerId);
+  const hr = s.houseRules;
 
-  if (isOneEyedJack(card)) {
+  // Determine if this is a removal action
+  const isRemoval = hr
+    ? isJack(card)
+    : isOneEyedJack(card);
+
+  if (isRemoval) {
     const chip = s.board[row][col];
-    if (!chip || chip.owner === owner || chip.partOfSequence) return s;
+    if (!chip || chip.owner === owner) return s;
+    // Standard rules: can't remove from sequence. House rules: can.
+    if (!hr && chip.partOfSequence) return s;
+
+    // If removing from a sequence (house rules), invalidate that sequence
+    if (hr && chip.partOfSequence) {
+      // Remove sequences that include this position
+      s.sequences = s.sequences.filter((seq) => {
+        const includes = seq.positions.some(([pr, pc]) => pr === row && pc === col);
+        if (includes) {
+          // Unmark partOfSequence for positions in this sequence (unless in another sequence)
+          for (const [pr, pc] of seq.positions) {
+            if (pr === row && pc === col) continue;
+            const inOther = s.sequences.some(
+              (other) => other !== seq && other.positions.some(([or, oc]) => or === pr && oc === pc)
+            );
+            if (!inOther && s.board[pr][pc]) {
+              s.board[pr][pc]!.partOfSequence = false;
+            }
+          }
+        }
+        return !includes;
+      });
+    }
+
     s.board[row][col] = null;
     s.lastMove = { row, col, type: "remove" };
     s.message = `${player.name} removed a chip at ${SEQUENCE_BOARD[row][col]}`;
   } else {
+    // Placement (normal card, joker, or two-eyed jack in standard rules)
     if (s.board[row][col] !== null && !isCorner(row, col)) return s;
-    if (isCorner(row, col)) return s; // can't place on corner; corners are always free
+    if (isCorner(row, col)) return s;
     s.board[row][col] = { owner, partOfSequence: false };
     s.lastMove = { row, col, type: "place" };
     s.message = null;
 
-    // Detect new sequences
     detectNewSequences(s, owner);
   }
 
@@ -373,6 +448,7 @@ export function filterSeqStateForPlayer(state: SeqGameState, viewerPlayerId: str
 
 export function newSequenceRound(state: SeqGameState): SeqGameState {
   return initSequenceGame(
-    state.players.map((p) => ({ id: p.playerId, name: p.name }))
+    state.players.map((p) => ({ id: p.playerId, name: p.name })),
+    state.houseRules
   );
 }

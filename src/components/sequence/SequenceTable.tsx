@@ -96,7 +96,12 @@ const SequenceTable = ({
           <ArrowLeft className="h-3.5 w-3.5" />
           Leave
         </Button>
-        <span className="font-display text-[10px] tracking-widest text-muted-foreground">SEQUENCE</span>
+        <div className="flex items-center gap-2">
+          <span className="font-display text-[10px] tracking-widest text-muted-foreground">SEQUENCE</span>
+          {gameState.houseRules && (
+            <span className="text-[8px] font-display tracking-wider px-1.5 py-0.5 rounded bg-game-gold/20 text-game-gold">HOUSE RULES</span>
+          )}
+        </div>
         <div className="text-xs text-muted-foreground font-display">
           {sequences.length > 0 && (
             <span>
@@ -301,7 +306,21 @@ const SequenceTable = ({
                   if (card === "HIDDEN") return null;
                   const { rank, suitSymbol, suitColor } = parseCard(card);
                   const isSelected = selectedCardIndex === i;
-                  const isSpecial = isJack(card);
+                  const isJokerCard = card.startsWith("JKR");
+                  const isSpecial = isJack(card) || isJokerCard;
+                  const hr = gameState.houseRules;
+
+                  // Label logic
+                  let label: { text: string; color: string } | null = null;
+                  if (isJokerCard) {
+                    label = { text: "WILD", color: "text-primary" };
+                  } else if (hr && isJack(card)) {
+                    label = { text: "REM", color: "text-destructive" };
+                  } else if (!hr && isTwoEyedJack(card)) {
+                    label = { text: "WILD", color: "text-primary" };
+                  } else if (!hr && isOneEyedJack(card)) {
+                    label = { text: "REM", color: "text-destructive" };
+                  }
 
                   return (
                     <motion.button
@@ -332,11 +351,8 @@ const SequenceTable = ({
                       >
                         {suitSymbol}
                       </span>
-                      {isTwoEyedJack(card) && (
-                        <span className="text-[6px] text-primary font-display mt-0.5">WILD</span>
-                      )}
-                      {isOneEyedJack(card) && (
-                        <span className="text-[6px] text-destructive font-display mt-0.5">REM</span>
+                      {label && (
+                        <span className={`text-[6px] ${label.color} font-display mt-0.5`}>{label.text}</span>
                       )}
                     </motion.button>
                   );
