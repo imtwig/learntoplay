@@ -88,11 +88,13 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
 
   const doSetTeam = useCallback(
     async (playerId: string, team: SeqTeam) => {
-      if (!rawGameState || !isHost) return;
+      if (!rawGameState) return;
+      // Players can only set their own team
+      if (playerId !== myPlayer?.id) return;
       const next = setTeam(rawGameState, playerId, team);
       await saveState(next);
     },
-    [rawGameState, isHost, saveState]
+    [rawGameState, myPlayer, saveState]
   );
 
   const doStartGame = useCallback(async () => {
