@@ -76,6 +76,36 @@ const GamePlay = () => {
     );
   }
 
+  // Dai Di game
+  if (isDD) {
+    if (!dd.gameState) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-muted-foreground font-display animate-pulse">Setting up game...</p>
+        </div>
+      );
+    }
+
+    return (
+      <DaiDiTable
+        gameState={dd.gameState}
+        myDDPlayer={dd.myDDPlayer}
+        isHost={dd.isHost}
+        isMyTurn={dd.isMyTurn}
+        canPass={dd.canPass}
+        selectedCards={dd.selectedCards}
+        setSelectedCards={dd.setSelectedCards}
+        onDeal={dd.doDeal}
+        onPlay={dd.doPlay}
+        onPass={dd.doPass}
+        onRematch={dd.doRematch}
+        onLeave={handleLeave}
+        players={players}
+        myPlayerId={myPlayer?.id}
+      />
+    );
+  }
+
   // Asshole Dai Di game
   if (isADD) {
     if (!add.gameState) {
