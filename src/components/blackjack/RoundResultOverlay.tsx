@@ -13,7 +13,7 @@ const resultLabel: Record<string, { text: string; italic?: boolean }> = {
   lose: { text: "LOSE" },
   bust: { text: "BUST" },
   fail: { text: "FAIL" },
-  push: { text: "PUSH" },
+  push: { text: "DRAW" },
 };
 
 interface HandInfo {
