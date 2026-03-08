@@ -35,28 +35,29 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
   const myPlayer = players.find((p) => p.session_id === sessionId);
   const isHost = myPlayer?.is_host ?? false;
 
-  useEffect(() => {
+  const loadGameState = useCallback(async () => {
     if (!roomId) return;
-    const load = async () => {
-      const { data } = await supabase
-        .from("rooms")
-        .select("game_state")
-        .eq("id", roomId)
-        .single();
-      if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any) && "dealer" in (data.game_state as any)) {
-        const gs = normalizeGameState(data.game_state as unknown as BJGameState);
-        setRawGameState(gs);
-        initialized.current = true;
-        if (myPlayer) {
-          const myBJ = gs.players.find((p) => p.playerId === myPlayer.id);
-          if (myBJ && myBJ.currentBet > 0) {
-            setMyBetInput(String(myBJ.currentBet));
-          }
+    const { data } = await supabase
+      .from("rooms")
+      .select("game_state")
+      .eq("id", roomId)
+      .single();
+    if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any) && "dealer" in (data.game_state as any)) {
+      const gs = normalizeGameState(data.game_state as unknown as BJGameState);
+      setRawGameState(gs);
+      initialized.current = true;
+      if (myPlayer) {
+        const myBJ = gs.players.find((p) => p.playerId === myPlayer.id);
+        if (myBJ && myBJ.currentBet > 0) {
+          setMyBetInput(String(myBJ.currentBet));
         }
       }
-    };
-    load();
-  }, [roomId]);
+    }
+  }, [roomId, myPlayer]);
+
+  useEffect(() => {
+    loadGameState();
+  }, [loadGameState]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -72,9 +73,14 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Re-fetch after subscription is established to handle race condition
+        if (status === "SUBSCRIBED") {
+          loadGameState();
+        }
+      });
     return () => { supabase.removeChannel(channel); };
-  }, [roomId]);
+  }, [roomId, loadGameState]);
 
   const saveState = useCallback(async (state: BJGameState) => {
     if (!roomId) return;
