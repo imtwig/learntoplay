@@ -63,7 +63,7 @@ export function initGameState(
   hostId: string
 ): BJGameState {
   return {
-    deck: createDeck(6),
+    deck: createDeck(1),
     players: playerNames.map((p) => ({
       playerId: p.id,
       name: p.name,
@@ -85,8 +85,8 @@ export function initGameState(
 }
 
 function draw(state: BJGameState, faceUp = true): Card {
-  if (state.deck.length < 20) {
-    state.deck = createDeck(6);
+  if (state.deck.length < 5) {
+    state.deck = createDeck(1);
   }
   const card = state.deck.pop()!;
   card.faceUp = faceUp;
