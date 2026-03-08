@@ -157,6 +157,11 @@ const SequenceTable = ({
         <div className="flex-1 flex flex-col items-center justify-center px-4 gap-6">
           <h2 className="font-display text-sm tracking-widest text-muted-foreground">PICK YOUR TEAM</h2>
           <p className="text-xs text-muted-foreground">{teamCount} teams &middot; {seqPlayers.length} players</p>
+          {!isValidPlayerCount(seqPlayers.length) && (
+            <p className="text-xs text-destructive font-medium">
+              ⚠ {seqPlayers.length} players can't be split evenly into teams. Need an even number or a multiple of 3.
+            </p>
+          )}
           <div className="w-full max-w-sm space-y-2">
             {seqPlayers.map((p) => {
               const isMe = p.playerId === myPlayerId;
@@ -211,7 +216,7 @@ const SequenceTable = ({
           </div>
           <Button
             onClick={onStartGame}
-            disabled={!teamsBalanced(gameState)}
+            disabled={!teamsBalanced(gameState) || !isValidPlayerCount(seqPlayers.length)}
             className="font-display tracking-wider"
           >
             Start Game
