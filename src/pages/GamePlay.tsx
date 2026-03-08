@@ -45,12 +45,16 @@ const GamePlay = () => {
       if (add.isHost && players.length > 0 && !add.gameState) {
         add.initGame(room?.settings as Record<string, unknown> | undefined);
       }
+    } else if (isDD) {
+      if (dd.isHost && players.length > 0 && !dd.gameState) {
+        dd.initGame(room?.settings as Record<string, unknown> | undefined);
+      }
     } else {
       if (blackjack.isHost && players.length > 0 && !blackjack.gameState) {
         blackjack.initGame();
       }
     }
-  }, [isSequence, isPoker, isADD, sequence.isHost, blackjack.isHost, poker.isHost, add.isHost, players.length, sequence.gameState, blackjack.gameState, poker.gameState, add.gameState, sequence.initGame, blackjack.initGame, poker.initGame, add.initGame, room?.settings]);
+  }, [isSequence, isPoker, isADD, isDD, sequence.isHost, blackjack.isHost, poker.isHost, add.isHost, dd.isHost, players.length, sequence.gameState, blackjack.gameState, poker.gameState, add.gameState, dd.gameState, sequence.initGame, blackjack.initGame, poker.initGame, add.initGame, dd.initGame, room?.settings]);
 
   const handleLeave = async () => {
     if (myPlayer && roomId) {
