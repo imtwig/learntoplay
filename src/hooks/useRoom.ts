@@ -231,6 +231,25 @@ export async function joinRoom(
   return player;
 }
 
+export async function transferHost(roomId: string, fromPlayerId: string, toPlayerId: string) {
+  // Remove host from current
+  await supabase
+    .from("players")
+    .update({ is_host: false })
+    .eq("id", fromPlayerId);
+
+  // Set new host
+  await supabase
+    .from("players")
+    .update({ is_host: true })
+    .eq("id", toPlayerId);
+
+  await supabase
+    .from("rooms")
+    .update({ host_player_id: toPlayerId })
+    .eq("id", roomId);
+}
+
 export async function leaveRoom(playerId: string, roomId: string) {
   const { data: player } = await supabase
     .from("players")
@@ -239,11 +258,25 @@ export async function leaveRoom(playerId: string, roomId: string) {
     .single();
 
   if (player?.is_host) {
-    // Host leaving = close room
-    await supabase
-      .from("rooms")
-      .update({ status: "closed" })
-      .eq("id", roomId);
+    // Find another connected player to transfer host to
+    const { data: otherPlayers } = await supabase
+      .from("players")
+      .select("id")
+      .eq("room_id", roomId)
+      .eq("connected", true)
+      .neq("id", playerId)
+      .order("join_order")
+      .limit(1);
+
+    if (otherPlayers && otherPlayers.length > 0) {
+      await transferHost(roomId, playerId, otherPlayers[0].id);
+    } else {
+      // No other players, close room
+      await supabase
+        .from("rooms")
+        .update({ status: "closed" })
+        .eq("id", roomId);
+    }
   }
 
   await supabase
