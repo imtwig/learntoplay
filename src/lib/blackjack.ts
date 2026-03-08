@@ -427,6 +427,9 @@ function finishDealerTurn(state: BJGameState) {
   const dealer = state.players.find((p) => p.isDealer);
   if (!dealer) return;
   dealer.done = true;
+  if (!state.revealedPlayerIds.includes(dealer.playerId)) {
+    state.revealedPlayerIds.push(dealer.playerId);
+  }
 
   const dealerHand = dealer.hands[0];
   const dealerVal = handValue(dealerHand.cards);
@@ -514,8 +517,7 @@ export function filterStateForPlayer(state: BJGameState, viewerPlayerId: string)
   if (!s.settings) s.settings = { showFirstCard: false, showFirstCardNextRound: false };
   for (const p of s.players) {
     if (p.playerId === viewerPlayerId) continue;
-    if ((s.phase === "dealer_turn" || s.phase === "results") && 
-        s.revealedPlayerIds.includes(p.playerId)) {
+    if (s.revealedPlayerIds.includes(p.playerId)) {
       continue;
     }
     for (const h of p.hands) {
