@@ -5,16 +5,21 @@ import {
   type BJGameState,
   type PlayerAction,
   initGameState,
-  placeBets,
+  startDeal,
+  setPlayerReady,
+  setPlayerUnready,
+  allPlayersReady,
   playerAction,
   newRound,
   getAvailableActions,
   filterStateForPlayer,
+  revealPlayer,
+  revealAll,
 } from "@/lib/blackjack";
 
 export function useBlackjack(roomId: string | undefined, players: Player[]) {
   const [rawGameState, setRawGameState] = useState<BJGameState | null>(null);
-  const [myBet, setMyBet] = useState(0);
+  const [myBetInput, setMyBetInput] = useState<string>("");
   const initialized = useRef(false);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
@@ -30,8 +35,16 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
         .eq("id", roomId)
         .single();
       if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any)) {
-        setRawGameState(data.game_state as unknown as BJGameState);
+        const gs = data.game_state as unknown as BJGameState;
+        setRawGameState(gs);
         initialized.current = true;
+        // Restore bet input from previous round
+        if (myPlayer) {
+          const myBJ = gs.players.find((p) => p.playerId === myPlayer.id);
+          if (myBJ && myBJ.currentBet > 0) {
+            setMyBetInput(String(myBJ.currentBet));
+          }
+        }
       }
     };
     load();
@@ -75,12 +88,28 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
     await saveState(state);
   }, [roomId, isHost, players, saveState]);
 
-  // Place bets and start round (host triggers, uses collected bets)
-  const startRound = useCallback(async (allBets: Record<string, number>) => {
-    if (!rawGameState || !isHost) return;
-    const next = placeBets(rawGameState, allBets);
+  // Player marks ready with their bet
+  const markReady = useCallback(async () => {
+    if (!rawGameState || !myPlayer) return;
+    const bet = parseInt(myBetInput) || 0;
+    const next = setPlayerReady(rawGameState, myPlayer.id, bet);
     await saveState(next);
-  }, [rawGameState, isHost, saveState]);
+  }, [rawGameState, myPlayer, myBetInput, saveState]);
+
+  // Player unreadies
+  const markUnready = useCallback(async () => {
+    if (!rawGameState || !myPlayer) return;
+    const next = setPlayerUnready(rawGameState, myPlayer.id);
+    await saveState(next);
+  }, [rawGameState, myPlayer, saveState]);
+
+  // Start dealing (anyone can press once all ready)
+  const startRound = useCallback(async () => {
+    if (!rawGameState) return;
+    if (!allPlayersReady(rawGameState)) return;
+    const next = startDeal(rawGameState);
+    await saveState(next);
+  }, [rawGameState, saveState]);
 
   // Player action
   const doAction = useCallback(async (action: PlayerAction) => {
@@ -88,6 +117,20 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
     const next = playerAction(rawGameState, myPlayer.id, action);
     await saveState(next);
   }, [rawGameState, myPlayer, saveState]);
+
+  // Host reveals a player
+  const doRevealPlayer = useCallback(async (playerId: string) => {
+    if (!rawGameState || !isHost) return;
+    const next = revealPlayer(rawGameState, playerId);
+    await saveState(next);
+  }, [rawGameState, isHost, saveState]);
+
+  // Host reveals all
+  const doRevealAll = useCallback(async () => {
+    if (!rawGameState || !isHost) return;
+    const next = revealAll(rawGameState);
+    await saveState(next);
+  }, [rawGameState, isHost, saveState]);
 
   // New round
   const nextRound = useCallback(async () => {
@@ -112,11 +155,15 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
     myBJPlayer,
     availableActions,
     isHost,
-    myBet,
-    setMyBet,
+    myBetInput,
+    setMyBetInput,
     initGame,
+    markReady,
+    markUnready,
     startRound,
     doAction,
+    doRevealPlayer,
+    doRevealAll,
     nextRound,
   };
 }

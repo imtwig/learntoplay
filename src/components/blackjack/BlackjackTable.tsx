@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, EyeOff, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import HandDisplay from "./HandDisplay";
@@ -13,58 +13,45 @@ interface Props {
   myBJPlayer: BJPlayerState | undefined;
   availableActions: PlayerAction[];
   isHost: boolean;
-  myBet: number;
-  setMyBet: (v: number) => void;
+  myBetInput: string;
+  setMyBetInput: (v: string) => void;
   onAction: (a: PlayerAction) => void;
-  onStartRound: (allBets: Record<string, number>) => void;
+  onMarkReady: () => void;
+  onMarkUnready: () => void;
+  onStartRound: () => void;
   onNextRound: () => void;
+  onRevealPlayer: (playerId: string) => void;
+  onRevealAll: () => void;
   onLeave: () => void;
   onTransferHost: (playerId: string) => void;
   players: Player[];
   myPlayerId: string | undefined;
 }
 
-const actionLabel: Record<PlayerAction, string> = {
-  hit: "Hit",
-  stand: "Stand",
-  double: "Double",
-  split: "Split",
-};
-
-const actionStyle: Record<PlayerAction, string> = {
-  hit: "bg-primary text-primary-foreground hover:bg-primary/90",
-  stand: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-  double: "bg-game-gold/90 text-background hover:bg-game-gold",
-  split: "bg-accent text-accent-foreground hover:bg-accent/90",
-};
-
 const BlackjackTable = ({
   gameState,
   myBJPlayer,
   availableActions,
   isHost,
-  myBet,
-  setMyBet,
+  myBetInput,
+  setMyBetInput,
   onAction,
+  onMarkReady,
+  onMarkUnready,
   onStartRound,
   onNextRound,
+  onRevealPlayer,
+  onRevealAll,
   onLeave,
   onTransferHost,
   players,
   myPlayerId,
 }: Props) => {
-  const { phase, dealer, players: bjPlayers, roundNumber } = gameState;
+  const { phase, dealer, players: bjPlayers, roundNumber, revealedPlayerIds } = gameState;
   const [showTransfer, setShowTransfer] = useState(false);
 
-  const handleDeal = () => {
-    // Collect bets: use myBet for current player, 0 for others (they set their own via sync)
-    // For now, all players use the host's bet amount as default
-    const bets: Record<string, number> = {};
-    for (const p of bjPlayers) {
-      bets[p.playerId] = p.playerId === myPlayerId ? myBet : myBet;
-    }
-    onStartRound(bets);
-  };
+  const allReady = bjPlayers.every((p) => p.ready);
+  const iAmReady = myBJPlayer?.ready ?? false;
 
   const ProfitDisplay = ({ profit }: { profit: number }) => {
     if (profit > 0) return (
@@ -141,75 +128,215 @@ const BlackjackTable = ({
         )}
 
         {/* Felt divider */}
-        <div className="w-full max-w-lg border-t border-dashed border-border/30" />
+        {dealer.length > 0 && (
+          <div className="w-full max-w-lg border-t border-dashed border-border/30" />
+        )}
 
-        {/* Players */}
-        <div className="flex flex-wrap justify-center gap-6">
-          {bjPlayers.map((p) => (
-            <div key={p.playerId} className="flex flex-col items-center gap-1">
-              {p.hands.map((hand, hi) => (
-                <HandDisplay
-                  key={hi}
-                  cards={hand.cards}
-                  label={p.playerId === myPlayerId ? `${p.name} (You)` : p.name}
-                  result={hand.result}
-                  bet={hand.bet}
-                  active={
-                    phase === "player_turns" &&
-                    gameState.activePlayerIndex === bjPlayers.indexOf(p) &&
-                    p.activeHandIndex === hi
-                  }
-                  compact={bjPlayers.length > 3}
-                />
-              ))}
-              <ProfitDisplay profit={p.netProfit} />
-            </div>
-          ))}
-        </div>
-
-        {/* Controls */}
-        <div className="w-full max-w-sm space-y-4">
-          {phase === "betting" && isHost && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+        {/* Betting phase */}
+        {phase === "betting" && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-sm space-y-6">
+            {/* My bet input */}
+            <div className="space-y-3">
               <div className="flex items-center gap-3 justify-center">
-                <label className="text-sm font-display text-muted-foreground">Bet $</label>
+                <label className="text-sm font-display text-muted-foreground">Your Bet $</label>
                 <Input
                   type="number"
                   min={0}
-                  value={myBet}
-                  onChange={(e) => setMyBet(Math.max(0, parseInt(e.target.value) || 0))}
+                  placeholder="Enter bet"
+                  value={myBetInput}
+                  onChange={(e) => setMyBetInput(e.target.value)}
                   className="w-28 text-center font-display"
+                  disabled={iAmReady}
                 />
               </div>
-              <Button onClick={handleDeal} className="w-full font-display tracking-wider">
+              {!iAmReady ? (
+                <Button
+                  onClick={onMarkReady}
+                  className="w-full gap-2 font-display tracking-wider"
+                  disabled={!myBetInput || parseInt(myBetInput) <= 0}
+                >
+                  <Check className="h-4 w-4" />
+                  Ready
+                </Button>
+              ) : (
+                <Button
+                  onClick={onMarkUnready}
+                  variant="outline"
+                  className="w-full gap-2 font-display tracking-wider"
+                >
+                  <X className="h-4 w-4" />
+                  Unready
+                </Button>
+              )}
+            </div>
+
+            {/* Player ready status */}
+            <div className="space-y-2">
+              <p className="text-xs font-display text-muted-foreground tracking-wider text-center">PLAYERS</p>
+              {bjPlayers.map((p) => (
+                <div
+                  key={p.playerId}
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
+                    p.ready ? "border-primary/50 bg-primary/5" : "border-border/50 bg-card/50"
+                  }`}
+                >
+                  <span className="text-sm font-medium">
+                    {p.name}{p.playerId === myPlayerId && " (You)"}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {p.ready && p.currentBet > 0 && (
+                      <span className="text-xs text-game-gold font-display">${p.currentBet}</span>
+                    )}
+                    {p.ready ? (
+                      <Check className="h-4 w-4 text-primary" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">waiting...</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Start button — anyone can press when all ready */}
+            {allReady && (
+              <Button
+                onClick={onStartRound}
+                className="w-full gap-2 font-display tracking-wider"
+              >
                 Deal Cards
               </Button>
-            </motion.div>
-          )}
+            )}
+          </motion.div>
+        )}
 
-          {phase === "betting" && !isHost && (
-            <p className="text-center text-muted-foreground text-sm font-display tracking-wider">
-              Waiting for host to deal...
+        {/* Dealing animation */}
+        {phase === "dealing" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center"
+          >
+            <p className="text-muted-foreground font-display tracking-wider animate-pulse">
+              Dealing cards...
             </p>
-          )}
+          </motion.div>
+        )}
 
-          {phase === "player_turns" && availableActions.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2 justify-center">
-              {availableActions.map((a) => (
-                <Button
-                  key={a}
-                  onClick={() => onAction(a)}
-                  className={`font-display text-sm tracking-wider px-6 ${actionStyle[a]}`}
+        {/* Player turns / reveal / results — show hands */}
+        {(phase === "player_turns" || phase === "reveal" || phase === "results" || phase === "dealer_turn") && (
+          <>
+            {/* My hand */}
+            {myBJPlayer && myBJPlayer.hands.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center gap-2"
+              >
+                {myBJPlayer.hands.map((hand, hi) => (
+                  <HandDisplay
+                    key={hi}
+                    cards={hand.cards}
+                    label={`${myBJPlayer.name} (You)`}
+                    result={hand.result}
+                    bet={hand.bet}
+                    active={
+                      phase === "player_turns" &&
+                      gameState.activePlayerIndex === bjPlayers.findIndex((p) => p.playerId === myPlayerId) &&
+                      myBJPlayer.activeHandIndex === hi
+                    }
+                  />
+                ))}
+                <ProfitDisplay profit={myBJPlayer.netProfit} />
+              </motion.div>
+            )}
+
+            {/* Other players — only show face-up card(s) or revealed hands */}
+            <div className="flex flex-wrap justify-center gap-4">
+              {bjPlayers.filter((p) => p.playerId !== myPlayerId).map((p) => (
+                <motion.div
+                  key={p.playerId}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center gap-1"
                 >
-                  {actionLabel[a]}
-                </Button>
+                  {p.hands.map((hand, hi) => (
+                    <HandDisplay
+                      key={hi}
+                      cards={hand.cards}
+                      label={p.name}
+                      result={hand.revealed ? hand.result : undefined}
+                      bet={hand.bet}
+                      compact
+                    />
+                  ))}
+                  {(phase === "results" || phase === "dealer_turn") && (
+                    <ProfitDisplay profit={p.netProfit} />
+                  )}
+                </motion.div>
               ))}
+            </div>
+          </>
+        )}
+
+        {/* Controls */}
+        <div className="w-full max-w-sm space-y-4">
+          {/* Player turn actions: Draw / Done */}
+          {phase === "player_turns" && availableActions.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3 justify-center">
+              <Button
+                onClick={() => onAction("hit")}
+                className="font-display text-sm tracking-wider px-8 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Draw
+              </Button>
+              <Button
+                onClick={() => onAction("stand")}
+                className="font-display text-sm tracking-wider px-8 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              >
+                Done
+              </Button>
             </motion.div>
           )}
 
           {phase === "player_turns" && availableActions.length === 0 && myBJPlayer && (
             <p className="text-center text-muted-foreground text-sm font-display tracking-wider">
               Waiting for other players...
+            </p>
+          )}
+
+          {/* Reveal phase — host controls */}
+          {phase === "reveal" && isHost && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+              <p className="text-center text-xs font-display text-muted-foreground tracking-wider">
+                REVEAL HANDS
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {bjPlayers.filter((p) => p.playerId !== myPlayerId && !revealedPlayerIds.includes(p.playerId)).map((p) => (
+                  <Button
+                    key={p.playerId}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onRevealPlayer(p.playerId)}
+                    className="gap-1 text-xs"
+                  >
+                    <Eye className="h-3 w-3" />
+                    {p.name}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                onClick={onRevealAll}
+                className="w-full gap-2 font-display tracking-wider"
+              >
+                <Eye className="h-4 w-4" />
+                Reveal All & Finish
+              </Button>
+            </motion.div>
+          )}
+
+          {phase === "reveal" && !isHost && (
+            <p className="text-center text-muted-foreground text-sm font-display tracking-wider">
+              Waiting for host to reveal hands...
             </p>
           )}
 

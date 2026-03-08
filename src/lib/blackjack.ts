@@ -1,24 +1,25 @@
 import { type Card, createDeck, handValue, isBlackjack, isBust } from "./cards";
 
-export type PlayerAction = "hit" | "stand" | "double" | "split";
+export type PlayerAction = "hit" | "stand";
 export type HandResult = "win" | "lose" | "push" | "blackjack" | "pending";
 
 export interface BJHand {
   cards: Card[];
   bet: number;
   result: HandResult;
-  doubled: boolean;
   stood: boolean;
+  revealed: boolean; // whether hand has been revealed to all players
 }
 
 export interface BJPlayerState {
   playerId: string;
   name: string;
-  netProfit: number; // cumulative profit/loss
+  netProfit: number;
   hands: BJHand[];
   activeHandIndex: number;
   done: boolean;
-  currentBet: number; // what they chose to bet this round
+  currentBet: number;
+  ready: boolean; // ready to start round
 }
 
 export interface BJGameState {
@@ -26,8 +27,9 @@ export interface BJGameState {
   dealer: Card[];
   players: BJPlayerState[];
   activePlayerIndex: number;
-  phase: "betting" | "dealing" | "player_turns" | "dealer_turn" | "results";
+  phase: "betting" | "dealing" | "player_turns" | "dealer_turn" | "results" | "reveal";
   roundNumber: number;
+  revealedPlayerIds: string[]; // which players' hands have been revealed by host
 }
 
 export function initGameState(playerNames: { id: string; name: string }[]): BJGameState {
@@ -42,10 +44,12 @@ export function initGameState(playerNames: { id: string; name: string }[]): BJGa
       activeHandIndex: 0,
       done: false,
       currentBet: 0,
+      ready: false,
     })),
     activePlayerIndex: 0,
     phase: "betting",
     roundNumber: 1,
+    revealedPlayerIds: [],
   };
 }
 
@@ -58,13 +62,35 @@ function draw(state: BJGameState, faceUp = true): Card {
   return card;
 }
 
-/** Each player sets their own bet */
-export function placeBets(state: BJGameState, bets: Record<string, number>): BJGameState {
+/** Mark a player as ready with their bet */
+export function setPlayerReady(state: BJGameState, playerId: string, bet: number): BJGameState {
+  const s = structuredClone(state);
+  const player = s.players.find((p) => p.playerId === playerId);
+  if (!player) return s;
+  player.currentBet = Math.max(bet, 0);
+  player.ready = true;
+  return s;
+}
+
+/** Unready a player */
+export function setPlayerUnready(state: BJGameState, playerId: string): BJGameState {
+  const s = structuredClone(state);
+  const player = s.players.find((p) => p.playerId === playerId);
+  if (!player) return s;
+  player.ready = false;
+  return s;
+}
+
+/** Check if all players are ready */
+export function allPlayersReady(state: BJGameState): boolean {
+  return state.players.every((p) => p.ready);
+}
+
+/** Start dealing — called when everyone is ready and someone presses start */
+export function startDeal(state: BJGameState): BJGameState {
   const s = structuredClone(state);
   for (const p of s.players) {
-    const bet = Math.max(bets[p.playerId] ?? 0, 0);
-    p.currentBet = bet;
-    p.hands = [{ cards: [], bet, result: "pending", doubled: false, stood: false }];
+    p.hands = [{ cards: [], bet: p.currentBet, result: "pending", stood: false, revealed: false }];
     p.activeHandIndex = 0;
     p.done = false;
   }
@@ -73,8 +99,8 @@ export function placeBets(state: BJGameState, bets: Record<string, number>): BJG
 }
 
 /**
- * Deal cards clockwise: first card face-up to each player, then second card face-down.
- * Dealer also gets 1 up, 1 down.
+ * Deal cards clockwise: first card face-up, second card face-down.
+ * Dealer gets 1 up, 1 down.
  */
 function dealInitial(state: BJGameState): BJGameState {
   const s = state;
@@ -97,9 +123,9 @@ function dealInitial(state: BJGameState): BJGameState {
   if (isBlackjack(dealerFull)) {
     s.dealer[1].faceUp = true;
     for (const p of s.players) {
-      // Reveal player cards for results
       for (const h of p.hands) {
         h.cards = h.cards.map((c) => ({ ...c, faceUp: true }));
+        h.revealed = true;
         h.result = isBlackjack(h.cards) ? "push" : "lose";
       }
       p.done = true;
@@ -108,12 +134,13 @@ function dealInitial(state: BJGameState): BJGameState {
     return settleRound(s);
   }
 
-  // Check for player blackjacks (need to check with both cards visible)
+  // Check for player blackjacks
   for (const p of s.players) {
     const fullHand = p.hands[0].cards.map((c) => ({ ...c, faceUp: true }));
     if (isBlackjack(fullHand)) {
-      p.hands[0].cards = fullHand; // reveal both cards
+      p.hands[0].cards = fullHand;
       p.hands[0].result = "blackjack";
+      p.hands[0].revealed = true;
       p.done = true;
     }
   }
@@ -124,13 +151,10 @@ function dealInitial(state: BJGameState): BJGameState {
     return startDealerTurn(s);
   }
 
-  // Reveal the active player's own hand (face-down card) so they can play
   revealActivePlayerHand(s);
-
   return s;
 }
 
-/** Reveal the current active player's face-down cards so they can see their hand */
 function revealActivePlayerHand(state: BJGameState) {
   const player = state.players[state.activePlayerIndex];
   if (!player) return;
@@ -151,7 +175,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
   if (!hand || hand.result !== "pending") return s;
 
   switch (action) {
-    case "hit": {
+    case "hit": { // Draw
       hand.cards.push(draw(s));
       if (isBust(hand.cards)) {
         hand.result = "lose";
@@ -159,36 +183,9 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
       }
       break;
     }
-    case "stand": {
+    case "stand": { // Done
       hand.stood = true;
       advanceHand(s, player);
-      break;
-    }
-    case "double": {
-      if (hand.cards.length === 2) {
-        hand.bet *= 2;
-        hand.doubled = true;
-        hand.cards.push(draw(s));
-        if (isBust(hand.cards)) {
-          hand.result = "lose";
-        }
-        hand.stood = true;
-        advanceHand(s, player);
-      }
-      break;
-    }
-    case "split": {
-      if (hand.cards.length === 2 && hand.cards[0].rank === hand.cards[1].rank) {
-        const secondCard = hand.cards.pop()!;
-        hand.cards.push(draw(s));
-        player.hands.splice(player.activeHandIndex + 1, 0, {
-          cards: [secondCard, draw(s)],
-          bet: hand.bet,
-          result: "pending",
-          doubled: false,
-          stood: false,
-        });
-      }
       break;
     }
   }
@@ -209,21 +206,58 @@ function advanceHand(state: BJGameState, player: BJPlayerState) {
   const nextPlayer = state.players.findIndex((p, i) => i > state.activePlayerIndex && !p.done);
   if (nextPlayer !== -1) {
     state.activePlayerIndex = nextPlayer;
-    // Reveal next player's hand
     revealActivePlayerHand(state);
   } else {
-    startDealerTurn(state);
+    // All players done — move to reveal phase instead of dealer turn
+    state.phase = "reveal";
+    state.revealedPlayerIds = [];
   }
+}
+
+/** Host reveals a specific player's hand */
+export function revealPlayer(state: BJGameState, playerId: string): BJGameState {
+  const s = structuredClone(state);
+  if (s.phase !== "reveal") return s;
+  if (!s.revealedPlayerIds.includes(playerId)) {
+    s.revealedPlayerIds.push(playerId);
+    // Reveal the player's cards
+    const player = s.players.find((p) => p.playerId === playerId);
+    if (player) {
+      for (const h of player.hands) {
+        h.cards = h.cards.map((c) => ({ ...c, faceUp: true }));
+        h.revealed = true;
+      }
+    }
+  }
+  return s;
+}
+
+/** Host reveals all hands */
+export function revealAll(state: BJGameState): BJGameState {
+  const s = structuredClone(state);
+  if (s.phase !== "reveal") return s;
+  for (const p of s.players) {
+    if (!s.revealedPlayerIds.includes(p.playerId)) {
+      s.revealedPlayerIds.push(p.playerId);
+    }
+    for (const h of p.hands) {
+      h.cards = h.cards.map((c) => ({ ...c, faceUp: true }));
+      h.revealed = true;
+    }
+  }
+  // Now do dealer turn
+  return startDealerTurn(s);
 }
 
 function startDealerTurn(state: BJGameState): BJGameState {
   state.phase = "dealer_turn";
   state.dealer[1].faceUp = true;
 
-  // Reveal all remaining face-down player cards
+  // Reveal all player cards
   for (const p of state.players) {
     for (const h of p.hands) {
       h.cards = h.cards.map((c) => ({ ...c, faceUp: true }));
+      h.revealed = true;
     }
   }
 
@@ -263,13 +297,12 @@ function settleRound(state: BJGameState): BJGameState {
     for (const h of p.hands) {
       switch (h.result) {
         case "blackjack":
-          p.netProfit += Math.floor(h.bet * 1.5); // 3:2 payout (profit only)
+          p.netProfit += Math.floor(h.bet * 1.5);
           break;
         case "win":
           p.netProfit += h.bet;
           break;
         case "push":
-          // no change
           break;
         case "lose":
           p.netProfit -= h.bet;
@@ -286,11 +319,13 @@ export function newRound(state: BJGameState): BJGameState {
   s.activePlayerIndex = 0;
   s.phase = "betting";
   s.roundNumber++;
+  s.revealedPlayerIds = [];
   for (const p of s.players) {
     p.hands = [];
     p.activeHandIndex = 0;
     p.done = false;
-    p.currentBet = 0;
+    p.ready = false;
+    // Keep currentBet from previous round so it persists
   }
   return s;
 }
@@ -302,26 +337,23 @@ export function getAvailableActions(state: BJGameState, playerId: string): Playe
   const hand = player.hands[player.activeHandIndex];
   if (!hand || hand.result !== "pending") return [];
 
-  const actions: PlayerAction[] = ["hit", "stand"];
-
-  if (hand.cards.length === 2 && !hand.doubled) {
-    actions.push("double");
-    if (hand.cards[0].rank === hand.cards[1].rank) {
-      actions.push("split");
-    }
-  }
-
-  return actions;
+  return ["hit", "stand"];
 }
 
 /**
- * Filter game state for a specific viewer — hides other players' face-down cards.
- * The viewer can see their own full hand, dealer cards as-is, and only face-up cards of others.
+ * Filter game state for a specific viewer — hides other players' hands completely
+ * unless they've been revealed by the host.
  */
 export function filterStateForPlayer(state: BJGameState, viewerPlayerId: string): BJGameState {
   const s = structuredClone(state);
   for (const p of s.players) {
     if (p.playerId === viewerPlayerId) continue;
+    // In reveal/results phase, show revealed players
+    if ((s.phase === "reveal" || s.phase === "results" || s.phase === "dealer_turn") && 
+        s.revealedPlayerIds.includes(p.playerId)) {
+      continue;
+    }
+    // Hide other players' cards entirely — show only face-up cards (first card)
     for (const h of p.hands) {
       h.cards = h.cards.map((c) =>
         c.faceUp ? c : { ...c, rank: "A" as any, suit: "spades" as any, faceUp: false }
