@@ -85,13 +85,13 @@ const BlackjackTable = ({
   const [showAllWinnings, setShowAllWinnings] = useState(false);
   const [prevPhase, setPrevPhase] = useState(phase);
 
-  // Show result overlay when phase transitions to "results" (skip for dealer)
+  // Show result overlay when phase transitions to "results"
   useEffect(() => {
-    if (phase === "results" && prevPhase !== "results" && !iAmDealer) {
+    if (phase === "results" && prevPhase !== "results") {
       setShowResultOverlay(true);
     }
     setPrevPhase(phase);
-  }, [phase, prevPhase, iAmDealer]);
+  }, [phase, prevPhase]);
 
   const dealerPlayer = bjPlayers.find((p) => p.isDealer);
   const nonDealerPlayers = bjPlayers.filter((p) => !p.isDealer);
