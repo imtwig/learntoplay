@@ -551,16 +551,21 @@ const BlackjackTable = ({
         roundProfit={myBJPlayer?.roundProfit ?? 0}
         visible={showResultOverlay}
         onDismiss={() => setShowResultOverlay(false)}
-        myHand={myBJPlayer && myBJPlayer.hands[0] ? {
+        isDealer={iAmDealer}
+        myHand={!iAmDealer && myBJPlayer && myBJPlayer.hands[0] ? {
           cards: myBJPlayer.hands[0].cards,
           result: myBJPlayer.hands[0].result,
           name: myBJPlayer.name,
         } : undefined}
-        dealerHand={dealerPlayer && dealerPlayer.hands[0] ? {
+        dealerHand={!iAmDealer && dealerPlayer && dealerPlayer.hands[0] ? {
           cards: dealerPlayer.hands[0].cards,
           result: dealerPlayer.hands[0].result,
           name: dealerPlayer.name,
         } : undefined}
+        playerBreakdown={iAmDealer ? nonDealerPlayers.map((p) => ({
+          name: p.name,
+          profit: p.roundProfit,
+        })) : undefined}
       />
     </div>
   );
