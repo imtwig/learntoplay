@@ -79,6 +79,7 @@ const DaiDiTable = ({
   onPass,
   onRematch,
   onLeave,
+  onKickPlayer,
   players,
   myPlayerId,
 }: Props) => {

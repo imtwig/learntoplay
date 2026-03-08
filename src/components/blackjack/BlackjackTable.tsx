@@ -69,6 +69,7 @@ const BlackjackTable = ({
   onRevealAll,
   onLeave,
   onTransferHost,
+  onKickPlayer,
   onToggleShowFirstCard,
   players,
   myPlayerId,

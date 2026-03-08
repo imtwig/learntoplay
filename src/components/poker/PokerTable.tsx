@@ -79,6 +79,7 @@ const PokerTable = ({
   onDeal,
   onNextHand,
   onLeave,
+  onKickPlayer,
   players,
   myPlayerId,
 }: Props) => {

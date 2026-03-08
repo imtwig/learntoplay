@@ -95,6 +95,7 @@ const AssholeDaiDiTable = ({
   onFinishSwap,
   onRematch,
   onLeave,
+  onKickPlayer,
   players,
   myPlayerId,
 }: Props) => {
