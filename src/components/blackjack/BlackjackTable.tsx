@@ -277,7 +277,7 @@ const BlackjackTable = ({
         )}
 
         {/* Active game phases */}
-        {(phase === "player_turns" || phase === "reveal" || phase === "results" || phase === "dealer_turn") && (
+        {(phase === "player_turns" || phase === "results" || phase === "dealer_turn") && (
           <>
             {/* Dealer's hand at the top */}
             {dealerPlayer && dealerPlayer.hands.length > 0 && (
