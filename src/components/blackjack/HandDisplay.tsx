@@ -11,13 +11,15 @@ interface HandDisplayProps {
   compact?: boolean;
 }
 
-const resultBadge: Record<string, { text: string; class: string }> = {
-  blackjack: { text: "BAN LUCK! x2", class: "bg-game-gold text-background" },
-  double_aces: { text: "BAN BAN! x3", class: "bg-game-gold text-background" },
-  triple_sevens: { text: "7-7-7! x3", class: "bg-game-gold text-background" },
-  five_card: { text: "5 CARDS! x2", class: "bg-primary text-primary-foreground" },
+const resultBadge: Record<string, { text: string; class: string; italic?: boolean }> = {
+  blackjack: { text: "Ban Luck! ×2", class: "bg-game-gold text-background", italic: true },
+  double_aces: { text: "Ban Ban! ×3", class: "bg-game-gold text-background", italic: true },
+  triple_sevens: { text: "7-7-7! ×3", class: "bg-game-gold text-background", italic: true },
+  five_card: { text: "Ngou Leng! ×2", class: "bg-primary text-primary-foreground", italic: true },
   win: { text: "WIN", class: "bg-primary text-primary-foreground" },
   lose: { text: "LOSE", class: "bg-destructive text-destructive-foreground" },
+  bust: { text: "BUST", class: "bg-destructive text-destructive-foreground" },
+  fail: { text: "FAIL", class: "bg-destructive text-destructive-foreground" },
   push: { text: "PUSH", class: "bg-muted text-muted-foreground" },
 };
 
