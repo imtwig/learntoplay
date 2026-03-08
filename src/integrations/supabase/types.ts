@@ -110,7 +110,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_empty_rooms: { Args: never; Returns: undefined }
     }
     Enums: {
       game_type: "poker" | "sequence" | "blackjack"
