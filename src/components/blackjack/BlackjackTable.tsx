@@ -354,6 +354,7 @@ const BlackjackTable = ({
           <DealingAnimation
             players={bjPlayers}
             showFirstCard={rawSettings?.showFirstCard}
+            myPlayerId={myPlayerId}
             onComplete={() => {
               setShowDealingAnim(false);
               if (phase === "results") {

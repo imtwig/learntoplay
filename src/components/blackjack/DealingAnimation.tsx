@@ -6,10 +6,11 @@ import type { BJPlayerState } from "@/lib/blackjack";
 interface Props {
   players: BJPlayerState[];
   showFirstCard?: boolean;
+  myPlayerId?: string;
   onComplete: () => void;
 }
 
-const DealingAnimation = ({ players, showFirstCard = false, onComplete }: Props) => {
+const DealingAnimation = ({ players, showFirstCard = false, myPlayerId, onComplete }: Props) => {
   const [phase, setPhase] = useState<"shuffle" | "deal">("shuffle");
   // Each deal step: [roundIndex, playerIndex] — deal 2 rounds, each round goes through all players
   const [dealStep, setDealStep] = useState(-1);
@@ -117,7 +118,8 @@ const DealingAnimation = ({ players, showFirstCard = false, onComplete }: Props)
                 </span>
                 <div className="flex -space-x-3 h-[96px] items-center">
                   {Array.from({ length: count }).map((_, ci) => {
-                    const isFaceUp = showFirstCard && ci === 0;
+                    const isMe = p.playerId === myPlayerId;
+                    const isFaceUp = isMe || (showFirstCard && ci === 0);
                     const actualCard = p.hands[0]?.cards[ci];
                     return (
                       <motion.div
@@ -155,7 +157,8 @@ const DealingAnimation = ({ players, showFirstCard = false, onComplete }: Props)
                   </span>
                   <div className="flex -space-x-3 h-[96px] items-center">
                     {Array.from({ length: count }).map((_, ci) => {
-                      const isFaceUp = showFirstCard && ci === 0;
+                      const isMe = p.playerId === myPlayerId;
+                      const isFaceUp = isMe || (showFirstCard && ci === 0);
                       const actualCard = p.hands[0]?.cards[ci];
                       return (
                         <motion.div
