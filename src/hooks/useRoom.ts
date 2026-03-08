@@ -248,6 +248,25 @@ export async function transferHost(roomId: string, fromPlayerId: string, toPlaye
     .from("rooms")
     .update({ host_player_id: toPlayerId })
     .eq("id", roomId);
+
+  // Transfer dealer in game state if it's blackjack
+  const { data: room } = await supabase
+    .from("rooms")
+    .select("game_type, game_state")
+    .eq("id", roomId)
+    .single();
+
+  if (room?.game_type === "blackjack" && room.game_state) {
+    const { transferDealer } = await import("@/lib/blackjack");
+    const gameState = room.game_state as any;
+    if (gameState.phase) {
+      const updatedState = transferDealer(gameState, fromPlayerId, toPlayerId);
+      await supabase
+        .from("rooms")
+        .update({ game_state: updatedState as any })
+        .eq("id", roomId);
+    }
+  }
 }
 
 export async function leaveRoom(playerId: string, roomId: string) {

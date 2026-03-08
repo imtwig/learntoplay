@@ -499,6 +499,18 @@ export function newRound(state: BJGameState): BJGameState {
   return s;
 }
 
+export function transferDealer(state: BJGameState, fromPlayerId: string, toPlayerId: string): BJGameState {
+  const s = structuredClone(state);
+  
+  const oldDealer = s.players.find((p) => p.playerId === fromPlayerId);
+  const newDealer = s.players.find((p) => p.playerId === toPlayerId);
+  
+  if (oldDealer) oldDealer.isDealer = false;
+  if (newDealer) newDealer.isDealer = true;
+  
+  return s;
+}
+
 export function getAvailableActions(state: BJGameState, playerId: string): PlayerAction[] {
   const player = state.players.find((p) => p.playerId === playerId);
   if (!player || player.done) return [];
