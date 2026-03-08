@@ -528,7 +528,7 @@ function finishDealerTurn(state: BJGameState) {
   const dealerBust = isBust(dealerHand.cards);
 
   if (dealerBust) {
-    dealerHand.result = "lose";
+    dealerHand.result = "bust";
   }
 
   for (const p of state.players) {
