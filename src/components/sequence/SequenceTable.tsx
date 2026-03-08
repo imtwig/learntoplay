@@ -65,7 +65,7 @@ const SequenceTable = ({
   players,
   myPlayerId,
 }: Props) => {
-  const { phase, players: seqPlayers, currentPlayerIndex, winner, isTeamGame, teams, sequences, message } = gameState;
+  const { phase, players: seqPlayers, currentPlayerIndex, winner, isTeamGame, teams, sequences, message, teamCount } = gameState;
   const validSet = new Set(validPlacements.map(([r, c]) => `${r},${c}`));
   const currentPlayer = seqPlayers[currentPlayerIndex];
 
