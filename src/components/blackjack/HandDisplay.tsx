@@ -20,7 +20,7 @@ const resultBadge: Record<string, { text: string; class: string; italic?: boolea
   lose: { text: "LOSE", class: "bg-destructive text-destructive-foreground" },
   bust: { text: "BUST", class: "bg-destructive text-destructive-foreground" },
   fail: { text: "FAIL", class: "bg-destructive text-destructive-foreground" },
-  push: { text: "PUSH", class: "bg-muted text-muted-foreground" },
+  push: { text: "DRAW", class: "bg-muted text-muted-foreground" },
 };
 
 const HandDisplay = ({ cards, label, result, bet, active, compact }: HandDisplayProps) => {

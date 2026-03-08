@@ -13,7 +13,7 @@ const resultLabel: Record<string, { text: string; italic?: boolean }> = {
   lose: { text: "LOSE" },
   bust: { text: "BUST" },
   fail: { text: "FAIL" },
-  push: { text: "PUSH" },
+  push: { text: "DRAW" },
 };
 
 interface HandInfo {
@@ -212,7 +212,7 @@ const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHan
                   transition={{ delay: 0.5 }}
                   className="text-sm font-display text-muted-foreground tracking-wider"
                 >
-                  PUSH
+                  DRAW
                 </motion.p>
               </>
             )}
