@@ -6,7 +6,7 @@ import type { SeqGameState, SeqTeam } from "@/lib/sequence";
 import { teamsBalanced } from "@/lib/sequence";
 import type { SeqPlayer } from "@/lib/sequence";
 import type { Player } from "@/hooks/useRoom";
-import { SEQUENCE_BOARD, parseCard, isCorner, isOneEyedJack, isTwoEyedJack, isJack } from "@/lib/sequenceBoard";
+import { SEQUENCE_BOARD, parseCard, isCorner, isOneEyedJack, isTwoEyedJack, isJack, getBoardPositions } from "@/lib/sequenceBoard";
 import SequenceResultOverlay from "./SequenceResultOverlay";
 
 interface Props {
@@ -74,6 +74,22 @@ const SequenceTable = ({
   const validSet = new Set(validPlacements.map(([r, c]) => `${r},${c}`));
   const previewSet = new Set(previewPlacements.map(([r, c]) => `${r},${c}`));
   const currentPlayer = seqPlayers[currentPlayerIndex];
+
+  // Compute occupied cells matching the selected card (show orange outline)
+  const occupiedMatchSet = (() => {
+    if (selectedCardIndex === null || !mySeqPlayer) return new Set<string>();
+    const card = mySeqPlayer.hand[selectedCardIndex];
+    if (!card || card === "HIDDEN") return new Set<string>();
+    const allPositions = getBoardPositions(card);
+    const set = new Set<string>();
+    for (const [r, c] of allPositions) {
+      const key = `${r},${c}`;
+      if (!validSet.has(key) && !previewSet.has(key) && gameState.board[r][c] !== null) {
+        set.add(key);
+      }
+    }
+    return set;
+  })();
 
   // Track last move for pop animation
   const [animatingCell, setAnimatingCell] = useState<string | null>(null);
@@ -269,6 +285,7 @@ const SequenceTable = ({
                   const isFree = isCorner(r, c);
                   const isValid = validSet.has(`${r},${c}`);
                   const isPreview = previewSet.has(`${r},${c}`);
+                  const isOccupiedMatch = occupiedMatchSet.has(`${r},${c}`);
                   const cellKey = `${r},${c}`;
                   const isAnimating = animatingCell === cellKey;
                   const isLastMove = gameState.lastMove?.row === r && gameState.lastMove?.col === c;
@@ -295,6 +312,7 @@ const SequenceTable = ({
                         }
                         ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
                         ${isPreview ? "ring-1 ring-green-400/50 bg-green-50/50" : ""}
+                        ${isOccupiedMatch ? "ring-2 ring-orange-400 bg-orange-50/50" : ""}
                         ${isLastMove && !isAnimating ? "ring-2 ring-accent" : ""}
                         ${isSeqCell ? "ring-1 ring-game-gold" : ""}
                       `}
