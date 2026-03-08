@@ -86,6 +86,7 @@ const GamePlay = () => {
         onSetTeam={sequence.doSetTeam}
         onStartGame={sequence.doStartGame}
         onRematch={sequence.doRematch}
+        onKickPlayer={sequence.doKickPlayer}
         onLeave={handleLeave}
         players={players}
         myPlayerId={myPlayer?.id}

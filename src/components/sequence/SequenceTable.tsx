@@ -24,6 +24,7 @@ interface Props {
   onSetTeam: (playerId: string, team: SeqTeam) => void;
   onStartGame: () => void;
   onRematch: () => void;
+  onKickPlayer: (playerId: string) => void;
   onLeave: () => void;
   players: Player[];
   myPlayerId: string | undefined;
