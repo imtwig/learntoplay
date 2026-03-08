@@ -62,6 +62,11 @@ const GameLobby = () => {
       if (game.id === "sequence" && anyActive) {
         settings.houseRules = houseRules;
       }
+      if (game.id === "asshole_daidi") {
+        if (addHouseRules.allowEndOn2) {
+          settings.houseRules = addHouseRules;
+        }
+      }
       const { room } = await createRoom(
         game.id,
         roomName.trim(),
