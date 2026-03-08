@@ -75,6 +75,22 @@ const SequenceTable = ({
   const previewSet = new Set(previewPlacements.map(([r, c]) => `${r},${c}`));
   const currentPlayer = seqPlayers[currentPlayerIndex];
 
+  // Compute occupied cells matching the selected card (show orange outline)
+  const occupiedMatchSet = (() => {
+    if (selectedCardIndex === null || !mySeqPlayer) return new Set<string>();
+    const card = mySeqPlayer.hand[selectedCardIndex];
+    if (!card || card === "HIDDEN") return new Set<string>();
+    const allPositions = getBoardPositions(card);
+    const set = new Set<string>();
+    for (const [r, c] of allPositions) {
+      const key = `${r},${c}`;
+      if (!validSet.has(key) && !previewSet.has(key) && gameState.board[r][c] !== null) {
+        set.add(key);
+      }
+    }
+    return set;
+  })();
+
   // Track last move for pop animation
   const [animatingCell, setAnimatingCell] = useState<string | null>(null);
   const lastMoveRef = useState<string | null>(null);
