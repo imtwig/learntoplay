@@ -354,14 +354,14 @@ const SequenceTable = ({
                             initial={{ y: -20, opacity: 1, scale: 1.2 }}
                             animate={{ y: 6, opacity: 1, scale: 1 }}
                             transition={{ duration: 0.4, ease: "easeOut" }}
-                            className="absolute inset-0 flex items-end justify-center text-[10px] z-10 pointer-events-none"
+                            className="absolute inset-0 flex items-end justify-center text-lg z-10 pointer-events-none"
                           >
                             🫳
                           </motion.span>
                         )}
                       </AnimatePresence>
                       {settledCell === cellKey && (
-                        <span className="absolute inset-0 flex items-end justify-center text-[10px] z-10 pointer-events-none" style={{ paddingBottom: '1px' }}>
+                        <span className="absolute inset-0 flex items-end justify-center text-lg z-10 pointer-events-none">
                           🫳
                         </span>
                       )}
