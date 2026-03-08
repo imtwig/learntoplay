@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Accordion,
   AccordionContent,
@@ -36,6 +37,7 @@ const GameLobby = () => {
   const [joinRoomId, setJoinRoomId] = useState("");
   const [joinPassword, setJoinPassword] = useState("");
   const [creating, setCreating] = useState(false);
+  const [houseRules, setHouseRules] = useState(false);
 
   if (!game) {
     navigate("/");
