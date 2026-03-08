@@ -20,12 +20,19 @@ interface HandInfo {
   name: string;
 }
 
+interface PlayerBreakdown {
+  name: string;
+  profit: number;
+}
+
 interface Props {
   roundProfit: number;
   visible: boolean;
   onDismiss?: () => void;
   myHand?: HandInfo;
   dealerHand?: HandInfo;
+  isDealer?: boolean;
+  playerBreakdown?: PlayerBreakdown[];
 }
 
 const MiniHand = ({ cards, label, result }: { cards: Card[]; label: string; result?: HandResult }) => {
@@ -53,7 +60,7 @@ const MiniHand = ({ cards, label, result }: { cards: Card[]; label: string; resu
   );
 };
 
-const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHand }: Props) => {
+const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHand, isDealer, playerBreakdown }: Props) => {
   if (!visible) return null;
 
   const isWin = roundProfit > 0;
@@ -76,8 +83,8 @@ const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHan
             transition={{ type: "spring", damping: 12, stiffness: 200 }}
             className="flex flex-col items-center gap-4 pointer-events-none"
           >
-            {/* Hands comparison */}
-            {dealerHand && myHand && (
+            {/* Hands comparison (non-dealer) */}
+            {!isDealer && dealerHand && myHand && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -87,6 +94,26 @@ const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHan
                 <MiniHand cards={dealerHand.cards} label={`${dealerHand.name} (Dealer)`} result={dealerHand.result} />
                 <span className="text-muted-foreground font-display text-lg font-bold">vs</span>
                 <MiniHand cards={myHand.cards} label="You" result={myHand.result} />
+              </motion.div>
+            )}
+
+            {/* Dealer breakdown */}
+            {isDealer && playerBreakdown && playerBreakdown.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="w-full max-w-[240px] space-y-1"
+              >
+                <p className="text-[10px] font-display tracking-widest text-muted-foreground text-center mb-2">ROUND BREAKDOWN</p>
+                {playerBreakdown.map((p, i) => (
+                  <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-card/50 border border-border/30">
+                    <span className="text-xs font-medium truncate">{p.name}</span>
+                    <span className={`text-xs font-display font-bold ${p.profit > 0 ? "text-primary" : p.profit < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                      {p.profit > 0 ? `+$${p.profit}` : p.profit < 0 ? `-$${Math.abs(p.profit)}` : "$0"}
+                    </span>
+                  </div>
+                ))}
               </motion.div>
             )}
 
