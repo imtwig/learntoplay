@@ -227,14 +227,47 @@ const GameLobby = () => {
                     />
                   </div>
                   {game.id === "sequence" && (
-                    <div className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2">
-                      <div>
+                    <div className="rounded-lg border border-border/50 px-3 py-2 space-y-2">
+                      <div className="flex items-center justify-between">
                         <Label className="text-sm font-medium">House Rules</Label>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          4 Jokers as wilds, all Jacks remove chips (even from sequences)
-                        </p>
+                        <button
+                          type="button"
+                          className="text-[10px] font-display tracking-wider text-primary hover:underline"
+                          onClick={() => {
+                            const allOn = houseRules.jokers && houseRules.allJacksRemove && houseRules.removeFromSequence;
+                            if (allOn) {
+                              setHouseRules({ jokers: false, allJacksRemove: false, removeFromSequence: false });
+                            } else {
+                              setHouseRules({ ...DEFAULT_HOUSE_RULES });
+                            }
+                          }}
+                        >
+                          {houseRules.jokers && houseRules.allJacksRemove && houseRules.removeFromSequence ? "Deselect All" : "Select All"}
+                        </button>
                       </div>
-                      <Switch checked={houseRules} onCheckedChange={setHouseRules} />
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={houseRules.jokers}
+                            onCheckedChange={(v) => setHouseRules((prev) => ({ ...prev, jokers: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">4 Jokers as wild cards</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={houseRules.allJacksRemove}
+                            onCheckedChange={(v) => setHouseRules((prev) => ({ ...prev, allJacksRemove: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">All Jacks are removal cards</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={houseRules.removeFromSequence}
+                            onCheckedChange={(v) => setHouseRules((prev) => ({ ...prev, removeFromSequence: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Can remove chips from sequences</span>
+                        </label>
+                      </div>
                     </div>
                   )}
                   <Button
