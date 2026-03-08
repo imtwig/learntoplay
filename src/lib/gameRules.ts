@@ -72,4 +72,26 @@ export const gameRules: Record<GameId, RuleSection[]> = {
         "Win: 1:1. Blackjack (Ace + 10-value): 3:2. Push (tie): bet returned. Insurance pays 2:1 if dealer has Blackjack.",
     },
   ],
+  asshole_daidi: [
+    {
+      title: "Overview",
+      content:
+        "Shed all your cards by playing combinations (singles, pairs, triples, or 5-card hands) that beat the current play. Last player with cards is the Asshole!",
+    },
+    {
+      title: "Card Ranking",
+      content:
+        "Ranks: 3 < 4 < … < K < A < 2. Suits: ♦ < ♣ < ♥ < ♠. The 2 of Spades is the highest card.",
+    },
+    {
+      title: "Ranks & Swaps",
+      content:
+        "After each round, players are ranked (President → Asshole). Before the next round, the Asshole must give their best cards to the President, who returns their worst.",
+    },
+    {
+      title: "Scoring",
+      content:
+        "The President earns points equal to the total cards remaining in all other players' hands. Highest cumulative score wins the session.",
+    },
+  ],
 };
