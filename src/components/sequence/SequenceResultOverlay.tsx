@@ -21,10 +21,8 @@ const SequenceResultOverlay = ({ visible, isWinner, winnerNames, teamColor }: Pr
   useEffect(() => {
     if (visible) {
       setShow(true);
-      if (!isWinner) {
-        const timer = setTimeout(() => setShow(false), 2000);
-        return () => clearTimeout(timer);
-      }
+      const timer = setTimeout(() => setShow(false), 2000);
+      return () => clearTimeout(timer);
     } else {
       setShow(false);
     }
