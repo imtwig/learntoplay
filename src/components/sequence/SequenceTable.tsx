@@ -293,7 +293,7 @@ const SequenceTable = ({
                 className={`
                   grid gap-[1px] w-full aspect-square bg-white rounded-lg p-1
                   transition-all duration-300
-                  ${isMyTurn ? "ring-[3px] ring-green-500 shadow-[0_0_35px_rgba(34,197,94,0.45)]" : ""}
+                  ${isMyTurn ? `ring-[3px] ${mySeqPlayer?.team === "A" ? "ring-game-red shadow-[0_0_35px_rgba(239,68,68,0.45)]" : mySeqPlayer?.team === "B" ? "ring-game-blue shadow-[0_0_35px_rgba(59,130,246,0.45)]" : "ring-game-green shadow-[0_0_35px_rgba(34,197,94,0.45)]"}` : ""}
                 `}
                 style={{ gridTemplateColumns: "repeat(10, 1fr)" }}
               >
@@ -331,8 +331,8 @@ const SequenceTable = ({
                             : "border border-gray-200"
                           }
                           ${!isFree && !isLastPlaced ? "bg-white" : ""}
-                          ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
-                          ${isPreview ? "ring-2 ring-green-500 bg-green-50" : ""}
+                          ${isValid ? `ring-2 cursor-pointer ${mySeqPlayer?.team === "A" ? "ring-game-red bg-red-50" : mySeqPlayer?.team === "B" ? "ring-game-blue bg-blue-50" : "ring-game-green bg-green-50"}` : ""}
+                          ${isPreview ? `ring-2 ${mySeqPlayer?.team === "A" ? "ring-game-red bg-red-50" : mySeqPlayer?.team === "B" ? "ring-game-blue bg-blue-50" : "ring-game-green bg-green-50"}` : ""}
                           ${isOccupiedMatch && chip ? `!ring-2 ${chip.owner === "A" ? "!ring-game-red !bg-red-100" : chip.owner === "B" ? "!ring-game-blue !bg-blue-100" : "!ring-game-green !bg-green-100"}` : ""}
                           ${isSeqCell ? "ring-1 ring-game-gold" : ""}
                           ${""}
