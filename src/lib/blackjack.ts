@@ -338,16 +338,14 @@ export function filterStateForPlayer(state: BJGameState, viewerPlayerId: string)
   const s = structuredClone(state);
   for (const p of s.players) {
     if (p.playerId === viewerPlayerId) continue;
-    // In reveal/results phase, show revealed players
+    // In reveal/results/dealer_turn phase, show revealed players
     if ((s.phase === "reveal" || s.phase === "results" || s.phase === "dealer_turn") && 
         s.revealedPlayerIds.includes(p.playerId)) {
       continue;
     }
-    // Hide other players' cards entirely — show only face-up cards (first card)
+    // Hide ALL of other players' cards — they only see card backs
     for (const h of p.hands) {
-      h.cards = h.cards.map((c) =>
-        c.faceUp ? c : { ...c, rank: "A" as any, suit: "spades" as any, faceUp: false }
-      );
+      h.cards = h.cards.map(() => ({ rank: "A" as any, suit: "spades" as any, faceUp: false }));
     }
   }
   return s;
