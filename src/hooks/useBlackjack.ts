@@ -18,6 +18,15 @@ import {
   toggleShowFirstCard,
 } from "@/lib/blackjack";
 
+/** Ensure game state loaded from DB has all required fields */
+function normalizeGameState(gs: BJGameState): BJGameState {
+  if (!gs.revealedPlayerIds) gs.revealedPlayerIds = [];
+  if (!gs.settings) gs.settings = { showFirstCard: false, showFirstCardNextRound: false };
+  if (gs.settings.showFirstCard === undefined) gs.settings.showFirstCard = false;
+  if (gs.settings.showFirstCardNextRound === undefined) gs.settings.showFirstCardNextRound = false;
+  return gs;
+}
+
 export function useBlackjack(roomId: string | undefined, players: Player[]) {
   const [rawGameState, setRawGameState] = useState<BJGameState | null>(null);
   const [myBetInput, setMyBetInput] = useState<string>("");
@@ -35,7 +44,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
         .eq("id", roomId)
         .single();
       if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any)) {
-        const gs = data.game_state as unknown as BJGameState;
+        const gs = normalizeGameState(data.game_state as unknown as BJGameState);
         setRawGameState(gs);
         initialized.current = true;
         if (myPlayer) {
@@ -59,7 +68,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
         (payload) => {
           const gs = payload.new?.game_state;
           if (gs && typeof gs === "object" && "phase" in (gs as any)) {
-            setRawGameState(gs as unknown as BJGameState);
+            setRawGameState(normalizeGameState(gs as unknown as BJGameState));
           }
         }
       )

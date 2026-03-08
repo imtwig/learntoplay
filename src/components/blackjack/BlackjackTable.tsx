@@ -70,7 +70,7 @@ const BlackjackTable = ({
   players,
   myPlayerId,
 }: Props) => {
-  const { phase, players: bjPlayers, roundNumber, revealedPlayerIds } = gameState;
+  const { phase, players: bjPlayers, roundNumber, revealedPlayerIds = [] } = gameState;
   const [showTransfer, setShowTransfer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -80,7 +80,7 @@ const BlackjackTable = ({
 
   const dealerPlayer = bjPlayers.find((p) => p.isDealer);
   const nonDealerPlayers = bjPlayers.filter((p) => !p.isDealer);
-  const unrevealed = nonDealerPlayers.filter((p) => !revealedPlayerIds.includes(p.playerId));
+  const unrevealed = nonDealerPlayers.filter((p) => !(revealedPlayerIds || []).includes(p.playerId));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
