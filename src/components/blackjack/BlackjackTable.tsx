@@ -24,7 +24,7 @@ interface Props {
   onAction: (a: PlayerAction) => void;
   onMarkReady: () => void;
   onMarkUnready: () => void;
-  onStartRound: () => void;
+  onStartRound: (overrides?: DealOverrides) => void;
   onNextRound: () => void;
   onRevealPlayer: (playerId: string) => void;
   onRevealAll: () => void;
