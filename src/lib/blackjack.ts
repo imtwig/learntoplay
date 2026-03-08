@@ -438,7 +438,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
               if (h.result !== "pending") continue;
               const pVal = handValue(h.cards);
               h.revealed = true;
-              if (pVal > 21) {
+              for (const c of h.cards) c.faceUp = true;
                 h.result = "push";
               } else {
                 h.result = "win";
