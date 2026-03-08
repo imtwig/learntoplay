@@ -421,7 +421,7 @@ const SequenceTable = ({
                       </span>
                       <span
                         className="text-xs leading-none"
-                        style={{ color: suitColor === "red" ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}
+                        style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
                       >
                         {suitSymbol}
                       </span>
