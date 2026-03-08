@@ -6,7 +6,7 @@ import type { SeqGameState, SeqTeam } from "@/lib/sequence";
 import { teamsBalanced } from "@/lib/sequence";
 import type { SeqPlayer } from "@/lib/sequence";
 import type { Player } from "@/hooks/useRoom";
-import { SEQUENCE_BOARD, parseCard, isCorner, isOneEyedJack, isTwoEyedJack, isJack } from "@/lib/sequenceBoard";
+import { SEQUENCE_BOARD, parseCard, isCorner, isOneEyedJack, isTwoEyedJack, isJack, getBoardPositions } from "@/lib/sequenceBoard";
 import SequenceResultOverlay from "./SequenceResultOverlay";
 
 interface Props {
