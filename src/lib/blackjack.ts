@@ -376,6 +376,8 @@ export function getAvailableActions(state: BJGameState, playerId: string): Playe
 
 export function filterStateForPlayer(state: BJGameState, viewerPlayerId: string): BJGameState {
   const s = structuredClone(state);
+  if (!s.revealedPlayerIds) s.revealedPlayerIds = [];
+  if (!s.settings) s.settings = { showFirstCard: false, showFirstCardNextRound: false };
   for (const p of s.players) {
     if (p.playerId === viewerPlayerId) continue;
     // Show revealed players fully
