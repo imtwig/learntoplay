@@ -74,7 +74,7 @@ const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHan
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: -20 }}
             transition={{ type: "spring", damping: 12, stiffness: 200 }}
-            className="flex flex-col items-center gap-4"
+            className="flex flex-col items-center gap-4 pointer-events-none"
           >
             {/* Hands comparison */}
             {dealerHand && myHand && (
