@@ -54,22 +54,22 @@ export const gameRules: Record<GameId, RuleSection[]> = {
     {
       title: "Overview",
       content:
-        "Beat the dealer by getting a hand value as close to 21 as possible without going over. Number cards = face value, Face cards = 10, Ace = 1 or 11.",
+        "Ban Luck — beat the dealer by getting a hand value as close to 21 as possible without going over. Number cards = face value, Face cards = 10, Ace = 1 or 11.",
     },
     {
       title: "Your Options",
       content:
-        "Hit (draw a card), Stand (keep your hand), Double Down (double bet, get one card), Split (if same-value pair, play two hands).",
+        "Draw (hit a card), Done (keep your hand). Try to get as close to 21 as possible without busting.",
     },
     {
-      title: "Dealer Rules",
+      title: "Special Hands",
       content:
-        "The dealer must hit on 16 or below and stand on 17 or above. If the dealer busts, all remaining players win.",
+        "Ban Luck (Ace + 10-value): pays 2x. Ban Ban (Double Aces): pays 3x. Triple Sevens (7-7-7): pays 3x. Five Card Charlie (5 cards without busting): pays 2x.",
     },
     {
       title: "Payouts",
       content:
-        "Win: 1:1. Blackjack (Ace + 10-value): 3:2. Push (tie): bet returned. Insurance pays 2:1 if dealer has Blackjack.",
+        "Win: 1:1. Ban Luck: 2:1. Ban Ban: 3:1. Push (tie): bet returned.",
     },
   ],
   asshole_daidi: [
