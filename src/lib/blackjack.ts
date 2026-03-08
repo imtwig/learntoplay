@@ -251,7 +251,11 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
   if (currentPhase === "dealer_turn" && !player.isDealer) return s;
 
   const hand = player.hands[player.activeHandIndex];
-  if (!hand || hand.result !== "pending") return s;
+  if (!hand) return s;
+  
+  // Allow dealer with ban luck/ban ban to press "stand" (Done) to finish
+  const dealerHasNatural = player.isDealer && (hand.result === "blackjack" || hand.result === "double_aces");
+  if (hand.result !== "pending" && !dealerHasNatural) return s;
 
   switch (action) {
     case "hit": {
