@@ -43,6 +43,7 @@ export interface SeqGameState {
   lastMove: { row: number; col: number; type: "place" | "remove" } | null;
   message: string | null;
   houseRules: boolean;
+  roundStartIndex: number;
 }
 
 /* ── Helpers ────────────────────────────────────────────── */
