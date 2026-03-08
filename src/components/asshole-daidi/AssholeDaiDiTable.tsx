@@ -181,6 +181,11 @@ const AssholeDaiDiTable = ({
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] text-muted-foreground">{p.cardCount} cards</span>
                     <span className="font-display text-game-gold">{p.cumulativeScore}pts</span>
+                    {isHost && p.playerId !== myPlayerId && (
+                      <Button variant="ghost" size="sm" onClick={() => onKickPlayer(p.playerId)} className="text-destructive h-6 w-6 p-0">
+                        <UserX className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
