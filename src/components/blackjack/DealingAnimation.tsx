@@ -154,19 +154,23 @@ const DealingAnimation = ({ players, showFirstCard = false, onComplete }: Props)
                     {p.name}
                   </span>
                   <div className="flex -space-x-3 h-[96px] items-center">
-                    {Array.from({ length: count }).map((_, ci) => (
-                      <motion.div
-                        key={ci}
-                        initial={{ opacity: 0, y: -60, scale: 0.5 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ type: "spring", damping: 15, stiffness: 200 }}
-                      >
-                        <PlayingCard
-                          card={{ rank: "A", suit: "spades", faceUp: false }}
-                          index={ci}
-                        />
-                      </motion.div>
-                    ))}
+                    {Array.from({ length: count }).map((_, ci) => {
+                      const isFaceUp = showFirstCard && ci === 0;
+                      const actualCard = p.hands[0]?.cards[ci];
+                      return (
+                        <motion.div
+                          key={ci}
+                          initial={{ opacity: 0, y: -60, scale: 0.5 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{ type: "spring", damping: 15, stiffness: 200 }}
+                        >
+                          <PlayingCard
+                            card={isFaceUp && actualCard ? { ...actualCard, faceUp: true } : { rank: "A", suit: "spades", faceUp: false }}
+                            index={ci}
+                          />
+                        </motion.div>
+                      );
+                    })}
                     {count === 0 && (
                       <div className="w-[66px] h-[96px] rounded-lg border border-dashed border-border/30" />
                     )}
