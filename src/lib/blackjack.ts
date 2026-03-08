@@ -324,7 +324,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
           }
         } else {
           // Dealer busts with 5 cards - loses x2 to all remaining players (except those who also busted)
-          hand.result = "lose";
+          hand.result = "bust";
           for (const p of s.players) {
             if (p.isDealer || s.revealedPlayerIds.includes(p.playerId)) continue;
             for (const h of p.hands) {
