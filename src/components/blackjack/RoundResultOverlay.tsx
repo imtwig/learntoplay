@@ -4,14 +4,16 @@ import { type Card, handValue } from "@/lib/cards";
 import type { HandResult } from "@/lib/blackjack";
 import PlayingCard from "./PlayingCard";
 
-const resultLabel: Record<string, string> = {
-  blackjack: "BAN LUCK",
-  double_aces: "BAN BAN",
-  triple_sevens: "7-7-7",
-  five_card: "5 CARDS",
-  win: "WIN",
-  lose: "BUST",
-  push: "PUSH",
+const resultLabel: Record<string, { text: string; italic?: boolean }> = {
+  blackjack: { text: "Ban Luck!", italic: true },
+  double_aces: { text: "Ban Ban!", italic: true },
+  triple_sevens: { text: "7-7-7!", italic: true },
+  five_card: { text: "Ngou Leng!", italic: true },
+  win: { text: "WIN" },
+  lose: { text: "LOSE" },
+  bust: { text: "BUST" },
+  fail: { text: "FAIL" },
+  push: { text: "PUSH" },
 };
 
 interface HandInfo {
