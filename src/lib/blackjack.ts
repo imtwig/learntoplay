@@ -1,7 +1,7 @@
 import { type Card, createDeck, handValue, isBlackjack, isBust } from "./cards";
 
 export type PlayerAction = "hit" | "stand";
-export type HandResult = "win" | "lose" | "push" | "blackjack" | "pending";
+export type HandResult = "win" | "lose" | "push" | "blackjack" | "double_aces" | "five_card" | "triple_sevens" | "pending";
 
 export interface BJHand {
   cards: Card[];
