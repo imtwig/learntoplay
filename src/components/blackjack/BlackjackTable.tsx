@@ -554,7 +554,7 @@ const BlackjackTable = ({
               Waiting for dealer to start next round...
             </p>
           )}
-        </div>
+        </div>}
       </main>
       <RoundResultOverlay
         roundProfit={myBJPlayer?.roundProfit ?? 0}
