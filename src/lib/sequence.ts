@@ -99,8 +99,6 @@ function createSequenceDeck(hr: boolean | SeqHouseRules): string[] {
   if (rules.jokers) {
     deck.push("JKR1", "JKR2", "JKR3", "JKR4");
   }
-    deck.push("JKR1", "JKR2", "JKR3", "JKR4");
-  }
   return shuffle(deck);
 }
 
