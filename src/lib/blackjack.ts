@@ -196,7 +196,7 @@ function advanceHand(state: BJGameState, player: BJPlayerState) {
   const nextPlayer = state.players.findIndex((p, i) => i > state.activePlayerIndex && !p.done);
   if (nextPlayer !== -1) {
     state.activePlayerIndex = nextPlayer;
-    revealActivePlayerHand(state);
+    // Cards already face-up in raw state, filter handles visibility
   } else {
     // All players done — move to reveal phase instead of dealer turn
     state.phase = "reveal";
