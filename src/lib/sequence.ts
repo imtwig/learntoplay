@@ -472,9 +472,16 @@ export function filterSeqStateForPlayer(state: SeqGameState, viewerPlayerId: str
 
 export function newSequenceRound(state: SeqGameState): SeqGameState {
   const nextStart = (state.roundStartIndex + 1) % state.players.length;
-  return initSequenceGame(
+  const fresh = initSequenceGame(
     state.players.map((p) => ({ id: p.playerId, name: p.name })),
     state.houseRules,
     nextStart
   );
+  // Preserve teams from the previous round
+  fresh.teams = structuredClone(state.teams);
+  for (const p of fresh.players) {
+    const prev = state.players.find((sp) => sp.playerId === p.playerId);
+    if (prev?.team) p.team = prev.team;
+  }
+  return fresh;
 }

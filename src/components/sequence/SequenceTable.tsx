@@ -149,15 +149,7 @@ const SequenceTable = ({
             <span className={`w-3 h-3 rounded-full ${TEAM_COLORS[mySeqPlayer.team]}`} title={`You: Team ${mySeqPlayer.team === "A" ? "Red" : mySeqPlayer.team === "B" ? "Blue" : "Green"}`} />
           )}
         </div>
-        <div className="text-xs text-muted-foreground font-display">
-          {sequences.length > 0 && (
-            <span>
-              🔴{sequences.filter((s) => s.owner === "A").length}
-              {" | "}🔵{sequences.filter((s) => s.owner === "B").length}
-              {teamCount >= 3 && <>{" | "}🟢{sequences.filter((s) => s.owner === "C").length}</>}
-            </span>
-          )}
-        </div>
+        <div className="w-16" />
       </header>
 
       {/* Team setup phase */}
