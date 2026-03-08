@@ -87,7 +87,7 @@ const DebugPanel = ({ onGetOverrides }: Props) => {
 
       {/* Player section */}
       <div className="space-y-1.5">
-        <p className="text-[10px] font-display tracking-wider text-muted-foreground">RANDOM PLAYER SCENARIO</p>
+        <p className="text-[10px] font-display tracking-wider text-muted-foreground">ALL PLAYERS SCENARIO</p>
         <div className="flex flex-wrap gap-1">
           {PLAYER_SCENARIOS.map((s) => (
             <button
