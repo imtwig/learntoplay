@@ -564,7 +564,14 @@ function finishDealerTurn(state: BJGameState) {
   }
 
   if (!dealerBust) {
-    dealerHand.result = "push";
+    // Set dealer hand result based on net outcome
+    if (dealer.roundProfit > 0) {
+      dealerHand.result = "win";
+    } else if (dealer.roundProfit < 0) {
+      dealerHand.result = "lose";
+    } else {
+      dealerHand.result = "push";
+    }
   }
 
   state.phase = "results";
