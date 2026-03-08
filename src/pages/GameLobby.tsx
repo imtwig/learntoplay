@@ -40,7 +40,7 @@ const GameLobby = () => {
   const [joinRoomId, setJoinRoomId] = useState("");
   const [joinPassword, setJoinPassword] = useState("");
   const [creating, setCreating] = useState(false);
-  const [houseRules, setHouseRules] = useState(false);
+  const [houseRules, setHouseRules] = useState<SeqHouseRules>({ jokers: false, allJacksRemove: false, removeFromSequence: false });
 
   if (!game) {
     navigate("/");
