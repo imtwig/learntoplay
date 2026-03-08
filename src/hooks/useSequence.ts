@@ -100,11 +100,11 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
   );
 
   const doStartGame = useCallback(async () => {
-    if (!rawGameState || !isHost) return;
+    if (!rawGameState) return;
     if (rawGameState.isTeamGame && !teamsBalanced(rawGameState)) return;
     const next = startSequenceGame(rawGameState);
     await saveState(next);
-  }, [rawGameState, isHost, saveState]);
+  }, [rawGameState, saveState]);
 
   const doPlayCard = useCallback(
     async (cardIndex: number, row: number, col: number) => {
