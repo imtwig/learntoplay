@@ -16,7 +16,7 @@ const PlayingCard = ({ card, index = 0, small = false }: PlayingCardProps) => {
         initial={{ rotateY: 180, opacity: 0 }}
         animate={{ rotateY: 0, opacity: 1 }}
         transition={{ duration: 0.3, delay: index * 0.1 }}
-        className={`${small ? "w-12 h-[68px]" : "w-16 h-[92px]"} rounded-lg bg-gradient-to-br from-primary/80 to-accent/60 border border-border/50 flex items-center justify-center shadow-lg`}
+        className={`${small ? "w-12 h-[72px]" : "w-[66px] h-[96px]"} rounded-lg bg-gradient-to-br from-primary/80 to-accent/60 border border-border/50 flex items-center justify-center shadow-lg`}
       >
         <div className="w-[80%] h-[80%] rounded border border-primary-foreground/20 bg-primary/40 flex items-center justify-center">
           <span className="text-primary-foreground/50 text-xs font-display">♠♥</span>
