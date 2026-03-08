@@ -474,7 +474,8 @@ const SequenceTable = ({
                       )}
                     </motion.button>
                   );
-                })}
+                  });
+                })()}
               </div>
             </div>
           )}
