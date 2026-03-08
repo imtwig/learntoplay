@@ -73,25 +73,25 @@ const BlackjackTable = ({
   myPlayerId,
 }: Props) => {
   const { phase, players: bjPlayers, roundNumber, revealedPlayerIds = [] } = gameState;
+  const allReady = bjPlayers.every((p) => p.ready);
+  const iAmReady = myBJPlayer?.ready ?? false;
+  const iAmDealer = myBJPlayer?.isDealer ?? false;
+
   const [showTransfer, setShowTransfer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showResultOverlay, setShowResultOverlay] = useState(false);
   const [showAllWinnings, setShowAllWinnings] = useState(false);
   const [prevPhase, setPrevPhase] = useState(phase);
 
-  // Show result overlay when phase transitions to "results"
+  // Show result overlay when phase transitions to "results" (skip for dealer)
   useEffect(() => {
-    if (phase === "results" && prevPhase !== "results") {
+    if (phase === "results" && prevPhase !== "results" && !iAmDealer) {
       setShowResultOverlay(true);
       const timer = setTimeout(() => setShowResultOverlay(false), 4000);
       return () => clearTimeout(timer);
     }
     setPrevPhase(phase);
-  }, [phase, prevPhase]);
-
-  const allReady = bjPlayers.every((p) => p.ready);
-  const iAmReady = myBJPlayer?.ready ?? false;
-  const iAmDealer = myBJPlayer?.isDealer ?? false;
+  }, [phase, prevPhase, iAmDealer]);
 
   const dealerPlayer = bjPlayers.find((p) => p.isDealer);
   const nonDealerPlayers = bjPlayers.filter((p) => !p.isDealer);
