@@ -100,8 +100,8 @@ const SequenceTable = ({
       const key = `${r},${c}`;
       const cellOccupant = gameState.board[r][c];
       if (!validSet.has(key) && !previewSet.has(key) && cellOccupant !== null) {
-        // For one-eyed jacks (remove), don't highlight your own team's chips
-        if (isOneEyedJack(card) && cellOccupant.owner === myTeam) continue;
+        // For jacks used as removal, don't highlight your own team's chips
+        if (isJack(card) && cellOccupant.owner === myTeam) continue;
         set.add(key);
       }
     }
