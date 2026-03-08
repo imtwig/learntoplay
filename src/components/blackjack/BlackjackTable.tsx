@@ -470,9 +470,22 @@ const BlackjackTable = ({
           )}
 
           {phase === "player_turns" && availableActions.length === 0 && myBJPlayer && (
-            <p className="text-center text-muted-foreground text-sm font-display tracking-wider">
-              {iAmDealer ? "Waiting for players to finish..." : "Waiting for your turn..."}
-            </p>
+            myBJPlayer.hands[0] && myBJPlayer.hands[0].result !== "pending" ? (
+              <p className="text-center text-lg font-display text-game-gold tracking-wider font-bold">
+                {myBJPlayer.hands[0].result === "blackjack" && "🎉 Ban Luck!"}
+                {myBJPlayer.hands[0].result === "double_aces" && "🎉 Ban Ban!"}
+                {myBJPlayer.hands[0].result === "triple_sevens" && "🎉 7-7-7!"}
+                {myBJPlayer.hands[0].result === "five_card" && "🎉 Ngou Leng!"}
+                {myBJPlayer.hands[0].result === "bust" && "💥 BUST!"}
+                {myBJPlayer.hands[0].result === "win" && "✅ WIN!"}
+                {myBJPlayer.hands[0].result === "lose" && "❌ LOSE"}
+                {myBJPlayer.hands[0].result === "push" && "🤝 DRAW"}
+              </p>
+            ) : (
+              <p className="text-center text-muted-foreground text-sm font-display tracking-wider">
+                {iAmDealer ? "Waiting for players to finish..." : "Waiting for your turn..."}
+              </p>
+            )
           )}
 
           {/* Dealer turn: draw/done + reveal controls combined */}
