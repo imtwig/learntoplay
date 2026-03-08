@@ -323,9 +323,10 @@ export function playCard(
   player.hand.splice(cardIndex, 1);
   if (s.deck.length > 0) player.hand.push(s.deck.pop()!);
 
-  // Win check
+  // Win check: 3-team games need 1 sequence, 2-team games need 2
   const seqCount = s.sequences.filter((sq) => sq.owner === owner).length;
-  if (seqCount >= 2) {
+  const seqsToWin = s.teamCount >= 3 ? 1 : 2;
+  if (seqCount >= seqsToWin) {
     s.phase = "finished";
     s.winner = owner;
     return s;
