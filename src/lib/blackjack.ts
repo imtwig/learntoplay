@@ -68,6 +68,7 @@ export function initGameState(
       playerId: p.id,
       name: p.name,
       netProfit: 0,
+      roundProfit: 0,
       hands: [],
       activeHandIndex: 0,
       done: false,
