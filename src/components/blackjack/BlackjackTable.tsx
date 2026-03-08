@@ -108,7 +108,7 @@ const BlackjackTable = ({
           Leave
         </Button>
         <span className="font-display text-xs tracking-widest text-muted-foreground">
-          BLACKJACK • ROUND {roundNumber}
+          BAN LUCK • ROUND {roundNumber}
         </span>
         <div className="flex items-center gap-3">
           {isHost && (
