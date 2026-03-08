@@ -42,7 +42,7 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
       .select("game_state")
       .eq("id", roomId)
       .single();
-    if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any) && "dealer" in (data.game_state as any)) {
+    if (data?.game_state && typeof data.game_state === "object" && "phase" in (data.game_state as any) && "players" in (data.game_state as any)) {
       const gs = normalizeGameState(data.game_state as unknown as BJGameState);
       setRawGameState(gs);
       initialized.current = true;
