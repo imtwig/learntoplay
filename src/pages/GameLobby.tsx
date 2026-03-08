@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { type SeqHouseRules, DEFAULT_HOUSE_RULES } from "@/lib/sequence";
+import { type ADDHouseRules, DEFAULT_ADD_HOUSE_RULES } from "@/lib/assholeDaiDi";
 import {
   Accordion,
   AccordionContent,
