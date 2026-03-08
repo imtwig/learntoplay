@@ -371,6 +371,13 @@ const SequenceTable = ({
             </div>
           </div>
 
+          {/* Team banner */}
+          {mySeqPlayer?.team && phase === "playing" && (
+            <div className={`px-3 py-1.5 text-center text-xs font-display font-bold tracking-wider text-white ${TEAM_COLORS[mySeqPlayer.team]}`}>
+              You are team {mySeqPlayer.team === "A" ? "Red" : mySeqPlayer.team === "B" ? "Blue" : "Green"}!
+            </div>
+          )}
+
           {/* Player hand */}
           {mySeqPlayer && phase === "playing" && (
             <div className="border-t border-border/30 px-3 py-3 bg-card/30">
