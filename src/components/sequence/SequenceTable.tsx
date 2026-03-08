@@ -404,7 +404,7 @@ const SequenceTable = ({
                       onClick={() => onSelectCard(isSelected ? null : i)}
                       className={`
                         flex-shrink-0 w-12 h-16 rounded-lg border-2 flex flex-col items-center justify-center
-                        transition-all duration-150 bg-card
+                        transition-all duration-150 bg-white
                         ${isSelected
                           ? "border-primary shadow-lg -translate-y-2 scale-105"
                           : "border-border/50 hover:border-border"
