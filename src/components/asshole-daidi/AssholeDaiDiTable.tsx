@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronDown, ChevronUp, Trophy, Crown } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Trophy, Crown, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ADDGameState, ADDPlayer, PlayedCombination } from "@/lib/assholeDaiDi";
 import { cardDisplay, sortHand, detectCombination } from "@/lib/assholeDaiDi";
