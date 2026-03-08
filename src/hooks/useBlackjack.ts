@@ -15,6 +15,7 @@ import {
   filterStateForPlayer,
   revealPlayer,
   revealAll,
+  toggleShowFirstCard,
 } from "@/lib/blackjack";
 
 export function useBlackjack(roomId: string | undefined, players: Player[]) {
