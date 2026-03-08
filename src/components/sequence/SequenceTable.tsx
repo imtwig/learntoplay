@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, RotateCcw, Crown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SeqGameState, SeqTeam } from "@/lib/sequence";
+import { teamsBalanced } from "@/lib/sequence";
 import type { SeqPlayer } from "@/lib/sequence";
 import type { Player } from "@/hooks/useRoom";
 import { SEQUENCE_BOARD, parseCard, isCorner, isOneEyedJack, isTwoEyedJack, isJack } from "@/lib/sequenceBoard";
