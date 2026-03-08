@@ -52,12 +52,16 @@ const GameLobby = () => {
     setCreating(true);
     try {
       localStorage.setItem("player_name", playerName);
+      const settings: Record<string, unknown> = {};
+      if (game.id === "sequence" && houseRules) {
+        settings.houseRules = true;
+      }
       const { room } = await createRoom(
         game.id,
         roomName.trim(),
         playerName.trim(),
         roomPassword || undefined,
-        {},
+        settings,
         game.maxPlayers
       );
       setCreateOpen(false);
