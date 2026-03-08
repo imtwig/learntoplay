@@ -20,6 +20,7 @@ interface Props {
   onDeal: () => void;
   onNextHand: () => void;
   onLeave: () => void;
+  onKickPlayer: (playerId: string) => void;
   players: Player[];
   myPlayerId: string | undefined;
 }
