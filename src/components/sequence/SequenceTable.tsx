@@ -364,8 +364,8 @@ const SequenceTable = ({
                         )}
                         {chip && (
                           <div
-                            className={`absolute inset-[15%] rounded-full ${chipColorClass(chip.owner)} opacity-75 ${
-                              isSeqCell ? "opacity-90 ring-1 ring-white/50" : ""
+                            className={`absolute inset-[15%] rounded-full ${chipColorClass(chip.owner)} opacity-60 ${
+                              isSeqCell ? "opacity-75 ring-1 ring-white/50" : ""
                             }`}
                           />
                         )}
