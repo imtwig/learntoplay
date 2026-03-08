@@ -181,6 +181,17 @@ const GameLobby = () => {
                       onChange={(e) => setRoomPassword(e.target.value)}
                     />
                   </div>
+                  {game.id === "sequence" && (
+                    <div className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2">
+                      <div>
+                        <Label className="text-sm font-medium">House Rules</Label>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          4 Jokers as wilds, all Jacks remove chips (even from sequences)
+                        </p>
+                      </div>
+                      <Switch checked={houseRules} onCheckedChange={setHouseRules} />
+                    </div>
+                  )}
                   <Button
                     onClick={handleCreate}
                     className="w-full font-display text-sm tracking-wider"
