@@ -103,7 +103,8 @@ function getTeamCount(playerCount: number): number {
 
 export function initSequenceGame(
   playerNames: { id: string; name: string }[],
-  houseRules: boolean = false
+  houseRules: boolean = false,
+  roundStartIndex: number = 0
 ): SeqGameState {
   const n = playerNames.length;
   const teamCount = getTeamCount(n);
@@ -125,7 +126,7 @@ export function initSequenceGame(
     players,
     deck,
     discardPile: [],
-    currentPlayerIndex: 0,
+    currentPlayerIndex: roundStartIndex % n,
     phase: "team_setup",
     isTeamGame: true,
     teamCount,
@@ -135,6 +136,7 @@ export function initSequenceGame(
     lastMove: null,
     message: null,
     houseRules,
+    roundStartIndex: roundStartIndex % n,
   };
 }
 
