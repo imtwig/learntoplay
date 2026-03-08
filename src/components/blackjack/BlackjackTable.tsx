@@ -76,6 +76,7 @@ const BlackjackTable = ({
   const [showTransfer, setShowTransfer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showResultOverlay, setShowResultOverlay] = useState(false);
+  const [showAllWinnings, setShowAllWinnings] = useState(false);
   const [prevPhase, setPrevPhase] = useState(phase);
 
   // Show result overlay when phase transitions to "results"
