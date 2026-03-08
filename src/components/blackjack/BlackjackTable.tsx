@@ -150,7 +150,7 @@ const BlackjackTable = ({
                     disabled={!myBetInput || parseInt(myBetInput) <= 0}
                   >
                     <Check className="h-4 w-4" />
-                    Ready
+                    Confirm Bet
                   </Button>
                 ) : (
                   <Button
@@ -159,7 +159,7 @@ const BlackjackTable = ({
                     className="w-full gap-2 font-display tracking-wider"
                   >
                     <X className="h-4 w-4" />
-                    Unready
+                    Change Bet
                   </Button>
                 )}
               </div>
@@ -174,7 +174,7 @@ const BlackjackTable = ({
                     className="w-full gap-2 font-display tracking-wider"
                   >
                     <Check className="h-4 w-4" />
-                    Ready
+                    Ready to Deal
                   </Button>
                 ) : (
                   <Button
@@ -183,15 +183,15 @@ const BlackjackTable = ({
                     className="w-full gap-2 font-display tracking-wider"
                   >
                     <X className="h-4 w-4" />
-                    Unready
+                    Not Ready
                   </Button>
                 )}
               </div>
             )}
 
-            {/* Player ready status */}
+            {/* Player bet status */}
             <div className="space-y-2">
-              <p className="text-xs font-display text-muted-foreground tracking-wider text-center">PLAYERS</p>
+              <p className="text-xs font-display text-muted-foreground tracking-wider text-center">BETS</p>
               {bjPlayers.map((p) => (
                 <div
                   key={p.playerId}

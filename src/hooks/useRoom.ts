@@ -285,6 +285,13 @@ export async function leaveRoom(playerId: string, roomId: string) {
     .eq("id", playerId);
 }
 
+export async function toggleReady(playerId: string, ready: boolean) {
+  await supabase
+    .from("players")
+    .update({ player_state: { ready } as any })
+    .eq("id", playerId);
+}
+
 export async function startGame(roomId: string) {
   await supabase
     .from("rooms")
