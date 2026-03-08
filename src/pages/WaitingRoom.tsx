@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Crown, Users, Copy, Play, LogOut, Check, X, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRoom, leaveRoom, startGame, sessionId, toggleReady } from "@/hooks/useRoom";
+import { useRoom, leaveRoom, startGame, sessionId, toggleReady, kickPlayer } from "@/hooks/useRoom";
 import { getGame, type GameId } from "@/lib/gameData";
 import { toast } from "@/hooks/use-toast";
 
