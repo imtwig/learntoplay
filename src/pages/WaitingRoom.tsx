@@ -163,6 +163,16 @@ const WaitingRoom = () => {
                     ) : (
                       <span className="text-xs text-muted-foreground">not ready</span>
                     )}
+                    {isHost && player.session_id !== sessionId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => kickPlayer(roomId!, player.id)}
+                        className="text-destructive h-7 w-7 p-0"
+                      >
+                        <UserX className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </motion.div>
               );
