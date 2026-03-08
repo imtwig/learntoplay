@@ -85,8 +85,8 @@ export function initGameState(
 }
 
 function draw(state: BJGameState, faceUp = true): Card {
-  if (state.deck.length < 20) {
-    state.deck = createDeck(6);
+  if (state.deck.length < 5) {
+    state.deck = createDeck(1);
   }
   const card = state.deck.pop()!;
   card.faceUp = faceUp;
