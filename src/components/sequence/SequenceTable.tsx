@@ -208,9 +208,22 @@ const SequenceTable = ({
                       )}
                     </div>
                   ) : (
-                    <span className={`text-xs font-display ${p.team ? "" : "text-muted-foreground"}`}>
-                      {p.team === "A" ? "🔴 Red" : p.team === "B" ? "🔵 Blue" : p.team === "C" ? "🟢 Green" : "Choosing..."}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-display ${p.team ? "" : "text-muted-foreground"}`}>
+                        {p.team === "A" ? "🔴 Red" : p.team === "B" ? "🔵 Blue" : p.team === "C" ? "🟢 Green" : "Choosing..."}
+                      </span>
+                      {isHost && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          onClick={() => onKickPlayer(p.playerId)}
+                          title="Kick player"
+                        >
+                          <UserX className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               );
