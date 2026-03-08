@@ -70,6 +70,7 @@ const GamePlay = () => {
         isMyTurn={sequence.isMyTurn}
         selectedCardIndex={sequence.selectedCardIndex}
         validPlacements={sequence.validPlacements}
+        previewPlacements={sequence.previewPlacements}
         selectedCardIsDead={sequence.selectedCardIsDead}
         onSelectCard={sequence.setSelectedCardIndex}
         onPlayCard={sequence.doPlayCard}

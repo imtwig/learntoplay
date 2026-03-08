@@ -143,9 +143,15 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
     gameState?.phase === "playing" &&
     gameState.players[gameState.currentPlayerIndex]?.playerId === myPlayer?.id;
 
-  // Valid placements for selected card
+  // Valid placements for selected card (show even when not your turn for preview)
   const validPlacements =
     gameState && myPlayer && selectedCardIndex !== null && isMyTurn
+      ? getValidPlacements(rawGameState!, myPlayer.id, mySeqPlayer!.hand[selectedCardIndex])
+      : [];
+
+  // Preview placements (when not your turn, just to highlight possible spots)
+  const previewPlacements =
+    gameState && myPlayer && selectedCardIndex !== null && !isMyTurn && mySeqPlayer
       ? getValidPlacements(rawGameState!, myPlayer.id, mySeqPlayer!.hand[selectedCardIndex])
       : [];
 
@@ -163,6 +169,7 @@ export function useSequence(roomId: string | undefined, players: Player[]) {
     selectedCardIndex,
     setSelectedCardIndex,
     validPlacements,
+    previewPlacements,
     selectedCardIsDead,
     initGame,
     doSetTeam,

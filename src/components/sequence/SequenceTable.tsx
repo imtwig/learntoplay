@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, RotateCcw, Crown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ interface Props {
   validPlacements: [number, number][];
   selectedCardIsDead: boolean;
   onSelectCard: (idx: number | null) => void;
+  previewPlacements: [number, number][];
   onPlayCard: (cardIndex: number, row: number, col: number) => void;
   onDiscardDead: (cardIndex: number) => void;
   onSetTeam: (playerId: string, team: SeqTeam) => void;
@@ -56,6 +58,7 @@ const SequenceTable = ({
   isMyTurn,
   selectedCardIndex,
   validPlacements,
+  previewPlacements,
   selectedCardIsDead,
   onSelectCard,
   onPlayCard,
@@ -69,7 +72,34 @@ const SequenceTable = ({
 }: Props) => {
   const { phase, players: seqPlayers, currentPlayerIndex, winner, isTeamGame, teams, sequences, message, teamCount } = gameState;
   const validSet = new Set(validPlacements.map(([r, c]) => `${r},${c}`));
+  const previewSet = new Set(previewPlacements.map(([r, c]) => `${r},${c}`));
   const currentPlayer = seqPlayers[currentPlayerIndex];
+
+  // Track last move for pop animation
+  const [animatingCell, setAnimatingCell] = useState<string | null>(null);
+  const lastMoveRef = useState<string | null>(null);
+
+  useEffect(() => {
+    const key = gameState.lastMove ? `${gameState.lastMove.row},${gameState.lastMove.col}` : null;
+    if (key && key !== lastMoveRef[0]) {
+      lastMoveRef[0] = key;
+      setAnimatingCell(key);
+      const t = setTimeout(() => setAnimatingCell(null), 500);
+      return () => clearTimeout(t);
+    }
+  }, [gameState.lastMove]);
+
+  // Flash animation when it becomes your turn
+  const [turnFlash, setTurnFlash] = useState(false);
+  useEffect(() => {
+    if (isMyTurn && phase === "playing") {
+      setTurnFlash(true);
+      const t = setTimeout(() => setTurnFlash(false), 1500);
+      return () => clearTimeout(t);
+    } else {
+      setTurnFlash(false);
+    }
+  }, [isMyTurn, currentPlayerIndex]);
 
   // Determine win/loss for overlay
   const isFinished = phase === "finished" && winner;
@@ -189,30 +219,49 @@ const SequenceTable = ({
       {(phase === "playing" || phase === "finished") && (
         <div className="flex-1 flex flex-col">
           {/* Turn indicator */}
-          <div className="px-3 py-1.5 text-center border-b border-border/20">
-            {phase === "playing" && (
-              <p className="text-xs font-display tracking-wider">
-                {isMyTurn ? (
-                  <span className="text-primary">YOUR TURN</span>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isMyTurn ? "my-turn" : "other-turn"}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="px-3 py-1.5 text-center border-b border-border/20"
+            >
+              {phase === "playing" && (
+                isMyTurn ? (
+                  <motion.p
+                    className="text-sm font-display tracking-wider font-bold text-primary"
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                  >
+                    🎯 YOUR TURN
+                  </motion.p>
                 ) : (
-                  <span className="text-muted-foreground">{currentPlayer?.name}'s turn</span>
-                )}
-              </p>
-            )}
-            {phase === "finished" && (
-              <p className="text-xs font-display tracking-wider text-primary">
-                {isTeamGame ? `TEAM ${winner} WINS!` : `${seqPlayers.find((p) => p.playerId === winner)?.name || winner} WINS!`}
-              </p>
-            )}
-            {message && (
-              <p className="text-[10px] text-muted-foreground mt-0.5">{message}</p>
-            )}
-          </div>
+                  <p className="text-xs font-display tracking-wider text-muted-foreground">
+                    {currentPlayer?.name}'s turn
+                  </p>
+                )
+              )}
+              {phase === "finished" && (
+                <p className="text-xs font-display tracking-wider text-primary">
+                  {isTeamGame ? `TEAM ${winner} WINS!` : `${seqPlayers.find((p) => p.playerId === winner)?.name || winner} WINS!`}
+                </p>
+              )}
+              {message && (
+                <p className="text-[10px] text-muted-foreground mt-0.5">{message}</p>
+              )}
+            </motion.div>
+          </AnimatePresence>
 
           {/* Board */}
           <div className="flex-1 flex items-center justify-center p-2 overflow-auto">
             <div
-              className="grid gap-[1px] w-full max-w-[520px] aspect-square bg-white rounded-lg p-1"
+              className={`
+                grid gap-[1px] w-full max-w-[520px] aspect-square bg-white rounded-lg p-1
+                transition-shadow duration-500
+                ${isMyTurn && turnFlash ? "ring-2 ring-primary shadow-[0_0_20px_hsl(var(--primary)/0.3)]" : ""}
+                ${isMyTurn && !turnFlash ? "ring-1 ring-primary/40" : ""}
+              `}
               style={{ gridTemplateColumns: "repeat(10, 1fr)" }}
             >
               {SEQUENCE_BOARD.map((row, r) =>
@@ -220,12 +269,15 @@ const SequenceTable = ({
                   const chip = gameState.board[r][c];
                   const isFree = isCorner(r, c);
                   const isValid = validSet.has(`${r},${c}`);
+                  const isPreview = previewSet.has(`${r},${c}`);
+                  const cellKey = `${r},${c}`;
+                  const isAnimating = animatingCell === cellKey;
                   const isLastMove = gameState.lastMove?.row === r && gameState.lastMove?.col === c;
                   const { rank, suitSymbol, suitColor } = parseCard(cell);
                   const isSeqCell = chip?.partOfSequence;
 
                   return (
-                    <button
+                    <motion.button
                       key={`${r}-${c}`}
                       disabled={!isValid || !isMyTurn}
                       onClick={() => {
@@ -233,6 +285,8 @@ const SequenceTable = ({
                           onPlayCard(selectedCardIndex, r, c);
                         }
                       }}
+                      animate={isAnimating ? { scale: [1, 1.3, 1] } : {}}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
                       className={`
                         relative flex flex-col items-center justify-center rounded-[3px] leading-tight
                         transition-all duration-150 aspect-square
@@ -241,7 +295,8 @@ const SequenceTable = ({
                           : "bg-white border border-gray-200"
                         }
                         ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
-                        ${isLastMove ? "ring-2 ring-accent" : ""}
+                        ${isPreview ? "bg-primary/5 border-primary/20" : ""}
+                        ${isLastMove && !isAnimating ? "ring-2 ring-accent" : ""}
                         ${isSeqCell ? "ring-1 ring-game-gold" : ""}
                       `}
                     >
@@ -265,7 +320,10 @@ const SequenceTable = ({
                       )}
                       {/* Chip */}
                       {chip && (
-                        <div
+                        <motion.div
+                          initial={isAnimating ? { scale: 0 } : false}
+                          animate={{ scale: 1 }}
+                          transition={{ duration: 0.3, type: "spring" }}
                           className={`absolute inset-[15%] rounded-full ${chipColorClass(chip.owner)} opacity-75 ${
                             isSeqCell ? "opacity-90 ring-1 ring-white/50" : ""
                           }`}
@@ -275,7 +333,7 @@ const SequenceTable = ({
                       {isFree && (
                         <div className="absolute inset-[20%] rounded-full bg-game-gold/30" />
                       )}
-                    </button>
+                    </motion.button>
                   );
                 })
               )}
@@ -335,9 +393,8 @@ const SequenceTable = ({
                           : "border-border/50 hover:border-border"
                         }
                         ${isSpecial ? "bg-secondary/50" : ""}
-                        ${!isMyTurn ? "opacity-50" : ""}
+                        ${!isMyTurn ? "opacity-70" : ""}
                       `}
-                      disabled={!isMyTurn}
                     >
                       <span
                         className="font-display font-bold text-sm leading-none"
