@@ -563,6 +563,7 @@ export function revealAll(state: BJGameState): BJGameState {
     s.revealedPlayerIds.push(p.playerId);
     for (const h of p.hands) {
       h.revealed = true;
+      for (const c of h.cards) c.faceUp = true;
       if (h.result !== "pending") continue;
 
       const playerVal = handValue(h.cards);
