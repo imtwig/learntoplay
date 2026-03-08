@@ -191,14 +191,6 @@ const SequenceTable = ({
                       >
                         Red
                       </Button>
-                      <Button
-                        size="sm"
-                        variant={p.team === "B" ? "default" : "outline"}
-                        className={`text-xs h-7 px-3 ${p.team === "B" ? "bg-game-blue hover:bg-game-blue/90 text-white" : ""}`}
-                        onClick={() => onSetTeam(p.playerId, "B")}
-                      >
-                        Blue
-                      </Button>
                       {teamCount >= 3 && (
                         <Button
                           size="sm"
@@ -209,6 +201,14 @@ const SequenceTable = ({
                           Green
                         </Button>
                       )}
+                      <Button
+                        size="sm"
+                        variant={p.team === "B" ? "default" : "outline"}
+                        className={`text-xs h-7 px-3 ${p.team === "B" ? "bg-game-blue hover:bg-game-blue/90 text-white" : ""}`}
+                        onClick={() => onSetTeam(p.playerId, "B")}
+                      >
+                        Blue
+                      </Button>
                     </div>
                   ) : (
                     <span className={`text-xs font-display ${p.team ? "" : "text-muted-foreground"}`}>
