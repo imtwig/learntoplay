@@ -101,12 +101,13 @@ function getTeamCount(playerCount: number): number {
 /* ── Init ───────────────────────────────────────────────── */
 
 export function initSequenceGame(
-  playerNames: { id: string; name: string }[]
+  playerNames: { id: string; name: string }[],
+  houseRules: boolean = false
 ): SeqGameState {
   const n = playerNames.length;
   const teamCount = getTeamCount(n);
   const hs = handSize(n);
-  const deck = createSequenceDeck();
+  const deck = createSequenceDeck(houseRules);
 
   const teams: { A: string[]; B: string[]; C: string[] } = { A: [], B: [], C: [] };
   const players: SeqPlayer[] = playerNames.map((p) => {
@@ -132,6 +133,7 @@ export function initSequenceGame(
     winner: null,
     lastMove: null,
     message: null,
+    houseRules,
   };
 }
 
