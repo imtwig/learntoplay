@@ -159,7 +159,7 @@ const SequenceTable = ({
         </Button>
         <div className="flex items-center gap-2">
           <span className="font-display text-[10px] tracking-widest text-muted-foreground">SEQUENCE</span>
-          {gameState.houseRules && (
+          {anyHouseRuleActive(gameState.houseRules) && (
             <span className="text-[9px] font-display tracking-wider font-bold px-2 py-0.5 rounded-full bg-game-gold/30 text-game-gold border border-game-gold/40">🏠 HOUSE RULES</span>
           )}
           {mySeqPlayer?.team && phase !== "team_setup" && (
