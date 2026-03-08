@@ -1,12 +1,58 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { PartyPopper, Frown, Shield } from "lucide-react";
+import { type Card, handValue } from "@/lib/cards";
+import type { HandResult } from "@/lib/blackjack";
+import PlayingCard from "./PlayingCard";
+
+const resultLabel: Record<string, string> = {
+  blackjack: "BAN LUCK",
+  double_aces: "BAN BAN",
+  triple_sevens: "7-7-7",
+  five_card: "5 CARDS",
+  win: "WIN",
+  lose: "BUST",
+  push: "PUSH",
+};
+
+interface HandInfo {
+  cards: Card[];
+  result: HandResult;
+  name: string;
+}
 
 interface Props {
   roundProfit: number;
   visible: boolean;
+  myHand?: HandInfo;
+  dealerHand?: HandInfo;
 }
 
-const RoundResultOverlay = ({ roundProfit, visible }: Props) => {
+const MiniHand = ({ cards, label, result }: { cards: Card[]; label: string; result?: HandResult }) => {
+  const val = handValue(cards);
+  const badge = result && result !== "pending" ? resultLabel[result] : null;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span className="text-[10px] font-display tracking-wider text-muted-foreground uppercase">{label}</span>
+      <div className="flex -space-x-2">
+        {cards.map((card, i) => (
+          <PlayingCard key={i} card={{ ...card, faceUp: true }} index={i} small />
+        ))}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className={`text-xs font-display font-bold ${val > 21 ? "text-destructive" : "text-foreground"}`}>
+          {val}
+        </span>
+        {badge && (
+          <span className="text-[8px] font-display font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+            {badge}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const RoundResultOverlay = ({ roundProfit, visible, myHand, dealerHand }: Props) => {
   if (!visible) return null;
 
   const isWin = roundProfit > 0;
@@ -26,11 +72,24 @@ const RoundResultOverlay = ({ roundProfit, visible }: Props) => {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: -20 }}
             transition={{ type: "spring", damping: 12, stiffness: 200 }}
-            className="flex flex-col items-center gap-3"
+            className="flex flex-col items-center gap-4"
           >
+            {/* Hands comparison */}
+            {dealerHand && myHand && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center gap-6"
+              >
+                <MiniHand cards={dealerHand.cards} label={`${dealerHand.name} (Dealer)`} result={dealerHand.result} />
+                <span className="text-muted-foreground font-display text-lg font-bold">vs</span>
+                <MiniHand cards={myHand.cards} label="You" result={myHand.result} />
+              </motion.div>
+            )}
+
             {isWin && (
               <>
-                {/* Confetti-like particles */}
                 {[...Array(8)].map((_, i) => (
                   <motion.div
                     key={i}
@@ -122,7 +181,7 @@ const RoundResultOverlay = ({ roundProfit, visible }: Props) => {
                   transition={{ delay: 0.5 }}
                   className="text-sm font-display text-muted-foreground tracking-wider"
                 >
-                  PHEW, YOU LIVED TO SEE ANOTHER DAY
+                  PUSH
                 </motion.p>
               </>
             )}
