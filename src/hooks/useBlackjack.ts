@@ -4,6 +4,7 @@ import { sessionId, type Player } from "./useRoom";
 import {
   type BJGameState,
   type PlayerAction,
+  type DealOverrides,
   initGameState,
   startDeal,
   setPlayerReady,
