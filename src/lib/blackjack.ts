@@ -537,7 +537,10 @@ function finishDealerTurn(state: BJGameState) {
       const pVal = handValue(h.cards);
       const playerBust = isBust(h.cards);
 
-      if (playerBust) {
+      if (playerBust && dealerBust) {
+        // Both busted — push, no money exchanged
+        h.result = "push";
+      } else if (playerBust) {
         h.result = "lose";
       } else if (dealerBust) {
         h.result = "win";
