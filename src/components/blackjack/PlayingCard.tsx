@@ -30,18 +30,18 @@ const PlayingCard = ({ card, index = 0, small = false }: PlayingCardProps) => {
       initial={{ rotateY: 180, opacity: 0, y: -20 }}
       animate={{ rotateY: 0, opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      className={`${small ? "w-12 h-[68px] text-xs" : "w-16 h-[92px] text-sm"} rounded-lg bg-foreground border border-border/30 shadow-lg flex flex-col justify-between p-1.5 select-none`}
+      className={`${small ? "w-12 h-[72px] text-[10px]" : "w-[66px] h-[96px] text-xs"} rounded-lg bg-foreground border border-border/30 shadow-lg flex flex-col justify-between p-1 select-none overflow-hidden`}
     >
       <div className={`font-bold leading-none ${isRed ? "text-game-red" : "text-background"}`}>
-        <div>{card.rank}</div>
-        <div className={small ? "text-[10px]" : "text-xs"}>{suitSymbol[card.suit]}</div>
+        <div className={small ? "text-[10px]" : "text-xs"}>{card.rank}</div>
+        <div className={small ? "text-[8px]" : "text-[10px]"}>{suitSymbol[card.suit]}</div>
       </div>
-      <div className={`text-center ${isRed ? "text-game-red" : "text-background"} ${small ? "text-lg" : "text-2xl"}`}>
+      <div className={`text-center ${isRed ? "text-game-red" : "text-background"} ${small ? "text-base" : "text-xl"} leading-none`}>
         {suitSymbol[card.suit]}
       </div>
       <div className={`font-bold leading-none self-end rotate-180 ${isRed ? "text-game-red" : "text-background"}`}>
-        <div>{card.rank}</div>
-        <div className={small ? "text-[10px]" : "text-xs"}>{suitSymbol[card.suit]}</div>
+        <div className={small ? "text-[10px]" : "text-xs"}>{card.rank}</div>
+        <div className={small ? "text-[8px]" : "text-[10px]"}>{suitSymbol[card.suit]}</div>
       </div>
     </motion.div>
   );
