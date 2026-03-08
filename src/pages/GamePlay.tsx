@@ -2,41 +2,35 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useCallback } from "react";
 import { useRoom, leaveRoom, sessionId, transferHost } from "@/hooks/useRoom";
 import { useBlackjack } from "@/hooks/useBlackjack";
+import { useSequence } from "@/hooks/useSequence";
 import { getGame, type GameId } from "@/lib/gameData";
 import BlackjackTable from "@/components/blackjack/BlackjackTable";
+import SequenceTable from "@/components/sequence/SequenceTable";
 
 const GamePlay = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { room, players, loading } = useRoom(roomId);
   const game = room ? getGame(room.game_type as GameId) : null;
+  const isSequence = room?.game_type === "sequence";
 
-  const {
-    gameState,
-    rawSettings,
-    myBJPlayer,
-    availableActions,
-    isHost,
-    myBetInput,
-    setMyBetInput,
-    initGame,
-    markReady,
-    markUnready,
-    startRound,
-    doAction,
-    doRevealPlayer,
-    doRevealAll,
-    nextRound,
-    doToggleShowFirstCard,
-  } = useBlackjack(roomId, players);
+  const blackjack = useBlackjack(roomId, isSequence ? [] : players);
+  const sequence = useSequence(roomId, isSequence ? players : []);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
 
+  // Init game
   useEffect(() => {
-    if (isHost && players.length > 0 && !gameState) {
-      initGame();
+    if (isSequence) {
+      if (sequence.isHost && players.length > 0 && !sequence.gameState) {
+        sequence.initGame();
+      }
+    } else {
+      if (blackjack.isHost && players.length > 0 && !blackjack.gameState) {
+        blackjack.initGame();
+      }
     }
-  }, [isHost, players.length, gameState, initGame]);
+  }, [isSequence, sequence.isHost, blackjack.isHost, players.length, sequence.gameState, blackjack.gameState, sequence.initGame, blackjack.initGame]);
 
   const handleLeave = async () => {
     if (myPlayer && roomId) {
@@ -58,7 +52,40 @@ const GamePlay = () => {
     );
   }
 
-  if (!gameState) {
+  // Sequence game
+  if (isSequence) {
+    if (!sequence.gameState) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-muted-foreground font-display animate-pulse">Setting up board...</p>
+        </div>
+      );
+    }
+
+    return (
+      <SequenceTable
+        gameState={sequence.gameState}
+        mySeqPlayer={sequence.mySeqPlayer}
+        isHost={sequence.isHost}
+        isMyTurn={sequence.isMyTurn}
+        selectedCardIndex={sequence.selectedCardIndex}
+        validPlacements={sequence.validPlacements}
+        selectedCardIsDead={sequence.selectedCardIsDead}
+        onSelectCard={sequence.setSelectedCardIndex}
+        onPlayCard={sequence.doPlayCard}
+        onDiscardDead={sequence.doDiscardDead}
+        onSetTeam={sequence.doSetTeam}
+        onStartGame={sequence.doStartGame}
+        onRematch={sequence.doRematch}
+        onLeave={handleLeave}
+        players={players}
+        myPlayerId={myPlayer?.id}
+      />
+    );
+  }
+
+  // Blackjack game
+  if (!blackjack.gameState) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground font-display animate-pulse">Setting up table...</p>
@@ -69,23 +96,23 @@ const GamePlay = () => {
   if (room.game_type === "blackjack") {
     return (
       <BlackjackTable
-        gameState={gameState}
-        rawSettings={rawSettings}
-        myBJPlayer={myBJPlayer}
-        availableActions={availableActions}
-        isHost={isHost}
-        myBetInput={myBetInput}
-        setMyBetInput={setMyBetInput}
-        onAction={doAction}
-        onMarkReady={markReady}
-        onMarkUnready={markUnready}
-        onStartRound={startRound}
-        onNextRound={nextRound}
-        onRevealPlayer={doRevealPlayer}
-        onRevealAll={doRevealAll}
+        gameState={blackjack.gameState}
+        rawSettings={blackjack.rawSettings}
+        myBJPlayer={blackjack.myBJPlayer}
+        availableActions={blackjack.availableActions}
+        isHost={blackjack.isHost}
+        myBetInput={blackjack.myBetInput}
+        setMyBetInput={blackjack.setMyBetInput}
+        onAction={blackjack.doAction}
+        onMarkReady={blackjack.markReady}
+        onMarkUnready={blackjack.markUnready}
+        onStartRound={blackjack.startRound}
+        onNextRound={blackjack.nextRound}
+        onRevealPlayer={blackjack.doRevealPlayer}
+        onRevealAll={blackjack.doRevealAll}
         onLeave={handleLeave}
         onTransferHost={handleTransferHost}
-        onToggleShowFirstCard={doToggleShowFirstCard}
+        onToggleShowFirstCard={blackjack.doToggleShowFirstCard}
         players={players}
         myPlayerId={myPlayer?.id}
       />
