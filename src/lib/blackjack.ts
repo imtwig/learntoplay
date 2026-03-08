@@ -409,6 +409,12 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
   if (s.phase !== "dealer_turn") return s;
   if (s.revealedPlayerIds.includes(playerId)) return s;
 
+  // Dealer must have at least 15 points to reveal hands
+  const dealer = s.players.find((p) => p.isDealer);
+  const dealerVal = dealer ? handValue(dealer.hands[0]?.cards ?? []) : 0;
+  const dealerHasNatural = dealer?.hands[0] && (dealer.hands[0].result === "blackjack" || dealer.hands[0].result === "double_aces");
+  if (dealerVal < 15 && !dealerHasNatural) return s;
+
   s.revealedPlayerIds.push(playerId);
   const player = s.players.find((p) => p.playerId === playerId);
   if (!player) return s;
