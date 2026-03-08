@@ -439,6 +439,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
               const pVal = handValue(h.cards);
               h.revealed = true;
               for (const c of h.cards) c.faceUp = true;
+              if (pVal > 21) {
                 h.result = "push";
               } else {
                 h.result = "win";
