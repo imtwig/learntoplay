@@ -80,6 +80,7 @@ const BlackjackTable = ({
 
   const dealerPlayer = bjPlayers.find((p) => p.isDealer);
   const nonDealerPlayers = bjPlayers.filter((p) => !p.isDealer);
+  const unrevealed = nonDealerPlayers.filter((p) => !revealedPlayerIds.includes(p.playerId));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
