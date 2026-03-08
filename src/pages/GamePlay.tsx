@@ -13,6 +13,7 @@ const GamePlay = () => {
 
   const {
     gameState,
+    rawSettings,
     myBJPlayer,
     availableActions,
     isHost,
@@ -26,6 +27,7 @@ const GamePlay = () => {
     doRevealPlayer,
     doRevealAll,
     nextRound,
+    doToggleShowFirstCard,
   } = useBlackjack(roomId, players);
 
   const myPlayer = players.find((p) => p.session_id === sessionId);
@@ -68,6 +70,7 @@ const GamePlay = () => {
     return (
       <BlackjackTable
         gameState={gameState}
+        rawSettings={rawSettings}
         myBJPlayer={myBJPlayer}
         availableActions={availableActions}
         isHost={isHost}
@@ -82,6 +85,7 @@ const GamePlay = () => {
         onRevealAll={doRevealAll}
         onLeave={handleLeave}
         onTransferHost={handleTransferHost}
+        onToggleShowFirstCard={doToggleShowFirstCard}
         players={players}
         myPlayerId={myPlayer?.id}
       />

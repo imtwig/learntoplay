@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Check, X } from "lucide-react";
+import { ArrowLeft, RotateCcw, TrendingUp, TrendingDown, Minus, Crown, Eye, Check, X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import HandDisplay from "./HandDisplay";
-import type { BJGameState, PlayerAction } from "@/lib/blackjack";
+import type { BJGameState, PlayerAction, BJSettings } from "@/lib/blackjack";
 import type { BJPlayerState } from "@/lib/blackjack";
 import type { Player } from "@/hooks/useRoom";
+import { Switch } from "@/components/ui/switch";
 
 interface Props {
   gameState: BJGameState;
+  rawSettings: BJSettings | undefined;
   myBJPlayer: BJPlayerState | undefined;
   availableActions: PlayerAction[];
   isHost: boolean;
@@ -24,6 +26,7 @@ interface Props {
   onRevealAll: () => void;
   onLeave: () => void;
   onTransferHost: (playerId: string) => void;
+  onToggleShowFirstCard: () => void;
   players: Player[];
   myPlayerId: string | undefined;
 }
@@ -48,6 +51,7 @@ const ProfitDisplay = ({ profit }: { profit: number }) => {
 
 const BlackjackTable = ({
   gameState,
+  rawSettings,
   myBJPlayer,
   availableActions,
   isHost,
@@ -62,11 +66,13 @@ const BlackjackTable = ({
   onRevealAll,
   onLeave,
   onTransferHost,
+  onToggleShowFirstCard,
   players,
   myPlayerId,
 }: Props) => {
   const { phase, players: bjPlayers, roundNumber, revealedPlayerIds } = gameState;
   const [showTransfer, setShowTransfer] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const allReady = bjPlayers.every((p) => p.ready);
   const iAmReady = myBJPlayer?.ready ?? false;
@@ -89,18 +95,51 @@ const BlackjackTable = ({
         <div className="flex items-center gap-3">
           {myBJPlayer && <ProfitDisplay profit={myBJPlayer.netProfit} />}
           {isHost && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowTransfer(!showTransfer)}
-              className="text-game-gold"
-              title="Transfer host"
-            >
-              <Crown className="h-4 w-4" />
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setShowSettings(!showSettings); setShowTransfer(false); }}
+                className="text-muted-foreground"
+                title="Game settings"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setShowTransfer(!showTransfer); setShowSettings(false); }}
+                className="text-game-gold"
+                title="Transfer host"
+              >
+                <Crown className="h-4 w-4" />
+              </Button>
+            </>
           )}
         </div>
       </header>
+
+      {/* Settings panel */}
+      {showSettings && isHost && (
+        <div className="border-b border-border/30 px-4 py-3 bg-secondary/30">
+          <p className="text-xs text-muted-foreground font-display mb-3 tracking-wider">GAME SETTINGS</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Show first card</p>
+              <p className="text-xs text-muted-foreground">
+                Everyone can see each other's first card
+                {rawSettings && rawSettings.showFirstCard !== rawSettings.showFirstCardNextRound && (
+                  <span className="text-primary ml-1">(changes next round)</span>
+                )}
+              </p>
+            </div>
+            <Switch
+              checked={rawSettings?.showFirstCardNextRound ?? false}
+              onCheckedChange={onToggleShowFirstCard}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Host transfer dropdown */}
       {showTransfer && isHost && (
