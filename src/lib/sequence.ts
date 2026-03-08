@@ -160,7 +160,8 @@ export function teamsBalanced(state: SeqGameState): boolean {
   const assigned = teams.A.length + teams.B.length + teams.C.length;
   if (assigned !== players.length) return false; // everyone must pick
   if (teamCount === 2) {
-    return teams.A.length === teams.B.length && teams.A.length > 0;
+    // 2-team games use Blue (B) and Green (C)
+    return teams.B.length === teams.C.length && teams.B.length > 0 && teams.A.length === 0;
   }
   // 3 teams: all must be equal
   return teams.A.length === teams.B.length && teams.B.length === teams.C.length && teams.A.length > 0;
