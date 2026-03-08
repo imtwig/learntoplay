@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronDown, ChevronUp, Trophy } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Trophy, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DDGameState, DDPlayer, PlayedCombination } from "@/lib/daiDi";
 import { cardDisplay, detectCombination } from "@/lib/daiDi";
