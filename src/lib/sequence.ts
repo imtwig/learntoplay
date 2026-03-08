@@ -135,7 +135,7 @@ export function isValidPlayerCount(playerCount: number): boolean {
 
 export function initSequenceGame(
   playerNames: { id: string; name: string }[],
-  houseRules: boolean = false,
+  houseRules: boolean | SeqHouseRules = false,
   roundStartIndex: number = 0
 ): SeqGameState {
   const n = playerNames.length;
