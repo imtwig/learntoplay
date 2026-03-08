@@ -323,21 +323,21 @@ export function playCard(
   if (card === undefined) return s;
 
   const owner = ownerOf(s, playerId);
-  const hr = s.houseRules;
+  const hr = normalizeHouseRules(s.houseRules);
 
   // Determine if this is a removal action
-  const isRemoval = hr
+  const isRemoval = hr.allJacksRemove
     ? isJack(card)
     : isOneEyedJack(card);
 
   if (isRemoval) {
     const chip = s.board[row][col];
     if (!chip || chip.owner === owner) return s;
-    // Standard rules: can't remove from sequence. House rules: can.
-    if (!hr && chip.partOfSequence) return s;
+    // Can't remove from sequence unless removeFromSequence is on
+    if (!hr.removeFromSequence && chip.partOfSequence) return s;
 
-    // If removing from a sequence (house rules), invalidate that sequence
-    if (hr && chip.partOfSequence) {
+    // If removing from a sequence, invalidate that sequence
+    if (hr.removeFromSequence && chip.partOfSequence) {
       // Remove sequences that include this position
       s.sequences = s.sequences.filter((seq) => {
         const includes = seq.positions.some(([pr, pc]) => pr === row && pc === col);
