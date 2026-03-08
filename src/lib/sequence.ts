@@ -451,8 +451,10 @@ export function filterSeqStateForPlayer(state: SeqGameState, viewerPlayerId: str
 /* ── New round (rematch) ────────────────────────────────── */
 
 export function newSequenceRound(state: SeqGameState): SeqGameState {
+  const nextStart = (state.roundStartIndex + 1) % state.players.length;
   return initSequenceGame(
     state.players.map((p) => ({ id: p.playerId, name: p.name })),
-    state.houseRules
+    state.houseRules,
+    nextStart
   );
 }
