@@ -42,7 +42,7 @@ export interface SeqGameState {
   winner: string | null;
   lastMove: { row: number; col: number; type: "place" | "remove" } | null;
   message: string | null;
-  houseRules: boolean;
+  houseRules: boolean | SeqHouseRules;
   roundStartIndex: number;
 }
 
