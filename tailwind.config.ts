@@ -60,6 +60,7 @@ export default {
           gold: "hsl(var(--game-gold))",
           red: "hsl(var(--game-red))",
           blue: "hsl(var(--game-blue))",
+          green: "hsl(var(--game-green))",
           felt: "hsl(var(--game-felt))",
         },
         sidebar: {

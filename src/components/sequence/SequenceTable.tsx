@@ -26,20 +26,22 @@ interface Props {
 }
 
 const TEAM_COLORS: Record<string, string> = {
-  A: "bg-game-blue",
-  B: "bg-game-red",
+  A: "bg-game-red",
+  B: "bg-game-blue",
+  C: "bg-game-green",
 };
 
 const TEAM_BORDER: Record<string, string> = {
-  A: "border-game-blue",
-  B: "border-game-red",
+  A: "border-game-red",
+  B: "border-game-blue",
+  C: "border-game-green",
 };
 
 function chipColorClass(owner: string): string {
-  if (owner === "A") return "bg-game-blue";
-  if (owner === "B") return "bg-game-red";
-  // Individual: hash to a color
-  const colors = ["bg-game-blue", "bg-game-red", "bg-game-gold"];
+  if (owner === "A") return "bg-game-red";
+  if (owner === "B") return "bg-game-blue";
+  if (owner === "C") return "bg-game-green";
+  const colors = ["bg-game-red", "bg-game-blue", "bg-game-green"];
   let hash = 0;
   for (const ch of owner) hash = (hash * 31 + ch.charCodeAt(0)) & 0xfff;
   return colors[hash % colors.length];
