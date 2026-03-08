@@ -30,7 +30,8 @@ const PlayingCard = ({ card, index = 0, small = false }: PlayingCardProps) => {
       initial={{ rotateY: 180, opacity: 0, y: -20 }}
       animate={{ rotateY: 0, opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      className={`${small ? "w-12 h-[72px] text-[10px]" : "w-[66px] h-[96px] text-xs"} rounded-lg bg-foreground border border-border/30 shadow-lg flex flex-col justify-between p-1 select-none overflow-hidden`}
+      style={{ zIndex: index }}
+      className={`${small ? "w-12 h-[72px] text-[10px]" : "w-[66px] h-[96px] text-xs"} relative rounded-lg bg-foreground border border-border/30 shadow-lg flex flex-col justify-between p-1 select-none overflow-hidden`}
     >
       <div className={`font-bold leading-none ${isRed ? "text-game-red" : "text-background"}`}>
         <div className={small ? "text-[10px]" : "text-xs"}>{card.rank}</div>
