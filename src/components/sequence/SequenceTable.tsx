@@ -258,9 +258,9 @@ const SequenceTable = ({
             <div
               className={`
                 grid gap-[1px] w-full max-w-[520px] aspect-square bg-white rounded-lg p-1
-                transition-shadow duration-500
-                ${isMyTurn && turnFlash ? "ring-2 ring-primary shadow-[0_0_20px_hsl(var(--primary)/0.3)]" : ""}
-                ${isMyTurn && !turnFlash ? "ring-1 ring-primary/40" : ""}
+                transition-all duration-500
+                ${isMyTurn && turnFlash ? "ring-2 ring-green-500 shadow-[0_0_25px_rgba(34,197,94,0.4)]" : ""}
+                ${isMyTurn && !turnFlash ? "ring-2 ring-green-500/60 shadow-[0_0_12px_rgba(34,197,94,0.2)]" : ""}
               `}
               style={{ gridTemplateColumns: "repeat(10, 1fr)" }}
             >
