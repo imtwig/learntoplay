@@ -290,6 +290,7 @@ const GameLobby = () => {
                         </label>
                       </div>
                     </div>
+                  )}
                   <Button
                     onClick={handleCreate}
                     className="w-full font-display text-sm tracking-wider"
