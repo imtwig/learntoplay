@@ -87,6 +87,7 @@ const BlackjackTable = ({
   const [showAllWinnings, setShowAllWinnings] = useState(false);
   const [showDealingAnim, setShowDealingAnim] = useState(false);
   const [prevPhase, setPrevPhase] = useState(phase);
+  const [debugOverrides, setDebugOverrides] = useState<DealOverrides>({});
 
   // Show dealing animation when transitioning from betting, and result overlay for results
   useEffect(() => {
