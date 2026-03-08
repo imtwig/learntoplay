@@ -415,7 +415,7 @@ const SequenceTable = ({
                     >
                       <span
                         className="font-display font-bold text-sm leading-none"
-                        style={{ color: suitColor === "red" ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}
+                        style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
                       >
                         {rank}
                       </span>
