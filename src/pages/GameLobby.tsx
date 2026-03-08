@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { type SeqHouseRules, DEFAULT_HOUSE_RULES } from "@/lib/sequence";
 import { type ADDHouseRules, DEFAULT_ADD_HOUSE_RULES } from "@/lib/assholeDaiDi";
+import { type DDHouseRules, type DDPenaltyMultipliers, DEFAULT_DD_HOUSE_RULES, DEFAULT_DD_PENALTIES } from "@/lib/daiDi";
 import {
   Accordion,
   AccordionContent,
@@ -43,6 +44,8 @@ const GameLobby = () => {
   const [creating, setCreating] = useState(false);
   const [houseRules, setHouseRules] = useState<SeqHouseRules>({ jokers: false, allJacksRemove: false, removeFromSequence: false });
   const [addHouseRules, setAddHouseRules] = useState<ADDHouseRules>({ allowEndOn2: false });
+  const [ddHouseRules, setDdHouseRules] = useState<DDHouseRules>({ ...DEFAULT_DD_HOUSE_RULES });
+  const [ddPenalties, setDdPenalties] = useState<DDPenaltyMultipliers>({ ...DEFAULT_DD_PENALTIES });
 
   if (!game) {
     navigate("/");
@@ -66,6 +69,10 @@ const GameLobby = () => {
         if (addHouseRules.allowEndOn2) {
           settings.houseRules = addHouseRules;
         }
+      }
+      if (game.id === "dai_di") {
+        settings.houseRules = ddHouseRules;
+        settings.penalties = ddPenalties;
       }
       const { room } = await createRoom(
         game.id,
@@ -287,6 +294,51 @@ const GameLobby = () => {
                             onCheckedChange={(v) => setAddHouseRules((prev) => ({ ...prev, allowEndOn2: !!v }))}
                           />
                           <span className="text-[11px] text-muted-foreground">Allow ending round on a 2</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                  {game.id === "dai_di" && (
+                    <div className="rounded-lg border border-border/50 px-3 py-2 space-y-3">
+                      <Label className="text-sm font-medium">House Rules</Label>
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={ddHouseRules.allowEndOn2}
+                            onCheckedChange={(v) => setDdHouseRules((prev) => ({ ...prev, allowEndOn2: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Allow ending round on a 2</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={ddHouseRules.allowTriples}
+                            onCheckedChange={(v) => setDdHouseRules((prev) => ({ ...prev, allowTriples: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Allow triples</span>
+                        </label>
+                      </div>
+                      <Label className="text-sm font-medium">Penalty Multipliers</Label>
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={ddPenalties.tenPlusCards}
+                            onCheckedChange={(v) => setDdPenalties((prev) => ({ ...prev, tenPlusCards: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">10+ cards ×2 penalty</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={ddPenalties.thirteenCards}
+                            onCheckedChange={(v) => setDdPenalties((prev) => ({ ...prev, thirteenCards: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">13 cards ×3 penalty</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={ddPenalties.twosSurcharge}
+                            onCheckedChange={(v) => setDdPenalties((prev) => ({ ...prev, twosSurcharge: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">+2 per 2 held surcharge</span>
                         </label>
                       </div>
                     </div>

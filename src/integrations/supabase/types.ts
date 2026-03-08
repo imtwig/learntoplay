@@ -113,7 +113,7 @@ export type Database = {
       cleanup_empty_rooms: { Args: never; Returns: undefined }
     }
     Enums: {
-      game_type: "poker" | "sequence" | "blackjack" | "asshole_daidi"
+      game_type: "poker" | "sequence" | "blackjack" | "asshole_daidi" | "dai_di"
       room_status: "waiting" | "in_progress" | "closed"
     }
     CompositeTypes: {
@@ -242,7 +242,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      game_type: ["poker", "sequence", "blackjack", "asshole_daidi"],
+      game_type: ["poker", "sequence", "blackjack", "asshole_daidi", "dai_di"],
       room_status: ["waiting", "in_progress", "closed"],
     },
   },

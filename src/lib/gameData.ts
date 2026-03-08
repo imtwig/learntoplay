@@ -1,6 +1,6 @@
-import { Spade, Grid3X3, Club, Flame } from "lucide-react";
+import { Spade, Grid3X3, Club, Flame, Diamond } from "lucide-react";
 
-export type GameId = "poker" | "sequence" | "blackjack" | "asshole_daidi";
+export type GameId = "poker" | "sequence" | "blackjack" | "asshole_daidi" | "dai_di";
 
 export interface GameInfo {
   id: GameId;
@@ -58,6 +58,17 @@ export const games: GameInfo[] = [
     maxPlayers: 7,
     color: "text-game-red",
     gradient: "from-game-red/20 to-game-gold/10",
+  },
+  {
+    id: "dai_di",
+    name: "Dai Di (Big 2)",
+    tagline: "Classic Shedding Game",
+    description: "The classic 4-player shedding card game. Be the first to play all your cards using singles, pairs, and powerful 5-card combos.",
+    icon: Diamond,
+    minPlayers: 4,
+    maxPlayers: 4,
+    color: "text-game-blue",
+    gradient: "from-game-blue/20 to-primary/10",
   },
 ];
 

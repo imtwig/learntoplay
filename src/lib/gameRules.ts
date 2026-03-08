@@ -94,4 +94,26 @@ export const gameRules: Record<GameId, RuleSection[]> = {
         "The President earns points equal to the total cards remaining in all other players' hands. Highest cumulative score wins the session.",
     },
   ],
+  dai_di: [
+    {
+      title: "Overview",
+      content:
+        "Dai Di (Big 2) is a 4-player shedding card game. Be the first to play all 13 cards by beating each previous play with a higher combination.",
+    },
+    {
+      title: "Card Ranking",
+      content:
+        "Ranks: 3 < 4 < … < K < A < 2. Suits: ♦ < ♣ < ♥ < ♠. The 2 of Spades is the single highest card.",
+    },
+    {
+      title: "Combinations",
+      content:
+        "Singles, Pairs, and 5-card combos (Straight < Flush < Full House < Four of a Kind < Straight Flush). Triples available as a house rule.",
+    },
+    {
+      title: "Scoring",
+      content:
+        "Losers score penalties based on cards remaining (with optional multipliers: 10+ cards ×2, 13 cards ×3, +2 per 2 held). The winner earns the sum of all penalties.",
+    },
+  ],
 };
