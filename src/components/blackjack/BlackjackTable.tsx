@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 
 interface Props {
   gameState: BJGameState;
+  rawSettings: BJSettings | undefined;
   myBJPlayer: BJPlayerState | undefined;
   availableActions: PlayerAction[];
   isHost: boolean;
@@ -25,6 +26,7 @@ interface Props {
   onRevealAll: () => void;
   onLeave: () => void;
   onTransferHost: (playerId: string) => void;
+  onToggleShowFirstCard: () => void;
   players: Player[];
   myPlayerId: string | undefined;
 }
