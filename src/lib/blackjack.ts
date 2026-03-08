@@ -446,7 +446,7 @@ export function revealAll(state: BJGameState): BJGameState {
   const dealerCheck = s.players.find((p) => p.isDealer);
   const dealerCheckVal = dealerCheck ? handValue(dealerCheck.hands[0]?.cards ?? []) : 0;
   const dealerCheckNatural = dealerCheck?.hands[0] && (dealerCheck.hands[0].result === "blackjack" || dealerCheck.hands[0].result === "double_aces");
-  if (dealerCheckVal < 15 && !dealerCheckNatural) return s;
+  if (dealerCheckVal < 16 && !dealerCheckNatural) return s;
 
   const dealer = s.players.find((p) => p.isDealer);
   const dealerVal = dealer ? handValue(dealer.hands[0]?.cards ?? []) : 0;
