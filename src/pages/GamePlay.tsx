@@ -23,14 +23,14 @@ const GamePlay = () => {
   useEffect(() => {
     if (isSequence) {
       if (sequence.isHost && players.length > 0 && !sequence.gameState) {
-        sequence.initGame();
+        sequence.initGame(room?.settings as Record<string, unknown> | undefined);
       }
     } else {
       if (blackjack.isHost && players.length > 0 && !blackjack.gameState) {
         blackjack.initGame();
       }
     }
-  }, [isSequence, sequence.isHost, blackjack.isHost, players.length, sequence.gameState, blackjack.gameState, sequence.initGame, blackjack.initGame]);
+  }, [isSequence, sequence.isHost, blackjack.isHost, players.length, sequence.gameState, blackjack.gameState, sequence.initGame, blackjack.initGame, room?.settings]);
 
   const handleLeave = async () => {
     if (myPlayer && roomId) {
