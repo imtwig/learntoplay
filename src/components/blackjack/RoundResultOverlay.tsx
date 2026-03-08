@@ -53,8 +53,8 @@ const MiniHand = ({ cards, label, result }: { cards: Card[]; label: string; resu
           {val}
         </span>
         {badge && (
-          <span className="text-[8px] font-display font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-            {badge}
+          <span className={`text-[8px] font-display font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground ${badge.italic ? "italic" : ""}`}>
+            {badge.text}
           </span>
         )}
       </div>

@@ -47,7 +47,7 @@ const HandDisplay = ({ cards, label, result, bet, active, compact }: HandDisplay
           <span className="text-xs text-game-gold font-display">${bet}</span>
         )}
         {badge && (
-          <span className={`text-[10px] font-display font-bold px-2 py-0.5 rounded-full ${badge.class}`}>
+          <span className={`text-[10px] font-display font-bold px-2 py-0.5 rounded-full ${badge.class} ${badge.italic ? "italic" : ""}`}>
             {badge.text}
           </span>
         )}
