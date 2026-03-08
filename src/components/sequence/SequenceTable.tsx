@@ -145,7 +145,10 @@ const SequenceTable = ({
         <div className="flex items-center gap-2">
           <span className="font-display text-[10px] tracking-widest text-muted-foreground">SEQUENCE</span>
           {gameState.houseRules && (
-            <span className="text-[8px] font-display tracking-wider px-1.5 py-0.5 rounded bg-game-gold/20 text-game-gold">HOUSE RULES</span>
+            <span className="text-[9px] font-display tracking-wider font-bold px-2 py-0.5 rounded-full bg-game-gold/30 text-game-gold border border-game-gold/40">🏠 HOUSE RULES</span>
+          )}
+          {mySeqPlayer?.team && phase !== "team_setup" && (
+            <span className={`w-3 h-3 rounded-full ${TEAM_COLORS[mySeqPlayer.team]}`} title={`You: Team ${mySeqPlayer.team === "A" ? "Red" : mySeqPlayer.team === "B" ? "Blue" : "Green"}`} />
           )}
         </div>
         <div className="text-xs text-muted-foreground font-display">
@@ -188,14 +191,6 @@ const SequenceTable = ({
                       >
                         Red
                       </Button>
-                      <Button
-                        size="sm"
-                        variant={p.team === "B" ? "default" : "outline"}
-                        className={`text-xs h-7 px-3 ${p.team === "B" ? "bg-game-blue hover:bg-game-blue/90 text-white" : ""}`}
-                        onClick={() => onSetTeam(p.playerId, "B")}
-                      >
-                        Blue
-                      </Button>
                       {teamCount >= 3 && (
                         <Button
                           size="sm"
@@ -206,6 +201,14 @@ const SequenceTable = ({
                           Green
                         </Button>
                       )}
+                      <Button
+                        size="sm"
+                        variant={p.team === "B" ? "default" : "outline"}
+                        className={`text-xs h-7 px-3 ${p.team === "B" ? "bg-game-blue hover:bg-game-blue/90 text-white" : ""}`}
+                        onClick={() => onSetTeam(p.playerId, "B")}
+                      >
+                        Blue
+                      </Button>
                     </div>
                   ) : (
                     <span className={`text-xs font-display ${p.team ? "" : "text-muted-foreground"}`}>
@@ -372,9 +375,14 @@ const SequenceTable = ({
           {mySeqPlayer && phase === "playing" && (
             <div className="border-t border-border/30 px-3 py-3 bg-card/30">
               <div className="flex items-center gap-2 mb-2">
-                <p className="text-[10px] font-display tracking-widest text-muted-foreground flex-1">
-                  YOUR HAND ({mySeqPlayer.hand.length} cards)
-                </p>
+                <div className="flex items-center gap-1.5 flex-1">
+                  {mySeqPlayer.team && (
+                    <span className={`w-2.5 h-2.5 rounded-full ${TEAM_COLORS[mySeqPlayer.team]}`} />
+                  )}
+                  <p className="text-[10px] font-display tracking-widest text-muted-foreground">
+                    YOUR HAND ({mySeqPlayer.hand.length} cards)
+                  </p>
+                </div>
                 {selectedCardIsDead && selectedCardIndex !== null && (
                   <Button
                     size="sm"
