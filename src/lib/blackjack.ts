@@ -63,7 +63,7 @@ export function initGameState(
   hostId: string
 ): BJGameState {
   return {
-    deck: createDeck(6),
+    deck: createDeck(1),
     players: playerNames.map((p) => ({
       playerId: p.id,
       name: p.name,
