@@ -301,11 +301,9 @@ const SequenceTable = ({
                           onPlayCard(selectedCardIndex, r, c);
                         }
                       }}
-                      animate={isAnimating ? { scale: [1, 1.3, 1] } : {}}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
                       className={`
                         relative flex flex-col items-center justify-center rounded-[3px] leading-tight
-                        transition-all duration-150 aspect-square
+                        transition-all duration-150 aspect-square overflow-visible
                         ${isFree
                           ? "bg-game-gold/20 border border-game-gold/30"
                           : "bg-white border border-gray-200"
@@ -313,7 +311,6 @@ const SequenceTable = ({
                         ${isValid ? "ring-2 ring-primary/70 bg-green-50 cursor-pointer" : ""}
                         ${isPreview ? "ring-1 ring-green-400/50 bg-green-50/50" : ""}
                         ${isOccupiedMatch ? "ring-2 ring-orange-400 bg-orange-50/50" : ""}
-                        ${isLastMove && !isAnimating ? "ring-2 ring-accent" : ""}
                         ${isSeqCell ? "ring-1 ring-game-gold" : ""}
                       `}
                     >
@@ -346,6 +343,20 @@ const SequenceTable = ({
                           }`}
                         />
                       )}
+                      {/* Hand drop animation on last move */}
+                      <AnimatePresence>
+                        {isAnimating && (
+                          <motion.span
+                            initial={{ y: -20, opacity: 1, scale: 1.2 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            transition={{ duration: 0.4, ease: "easeOut" }}
+                            className="absolute inset-0 flex items-center justify-center text-lg z-10 pointer-events-none"
+                          >
+                            🫳
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                       {/* Free corner chip indicator */}
                       {isFree && (
                         <div className="absolute inset-[20%] rounded-full bg-game-gold/30" />
