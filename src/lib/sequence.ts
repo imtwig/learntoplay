@@ -46,6 +46,32 @@ export interface SeqGameState {
   roundStartIndex: number;
 }
 
+export interface SeqHouseRules {
+  jokers: boolean;       // Add 4 jokers as wild placement cards
+  allJacksRemove: boolean; // All jacks are removal cards (not just one-eyed)
+  removeFromSequence: boolean; // Can remove chips from completed sequences
+}
+
+export const DEFAULT_HOUSE_RULES: SeqHouseRules = {
+  jokers: true,
+  allJacksRemove: true,
+  removeFromSequence: true,
+};
+
+/** Normalize legacy boolean houseRules to the new object format */
+export function normalizeHouseRules(hr: boolean | SeqHouseRules): SeqHouseRules {
+  if (typeof hr === "boolean") {
+    return hr ? { ...DEFAULT_HOUSE_RULES } : { jokers: false, allJacksRemove: false, removeFromSequence: false };
+  }
+  return hr;
+}
+
+/** Check if any house rule is active */
+export function anyHouseRuleActive(hr: boolean | SeqHouseRules): boolean {
+  const rules = normalizeHouseRules(hr);
+  return rules.jokers || rules.allJacksRemove || rules.removeFromSequence;
+}
+
 /* ── Helpers ────────────────────────────────────────────── */
 
 function shuffle<T>(arr: T[]): T[] {
@@ -57,7 +83,8 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function createSequenceDeck(houseRules: boolean): string[] {
+function createSequenceDeck(hr: boolean | SeqHouseRules): string[] {
+  const rules = normalizeHouseRules(hr);
   const ranks = houseRules
     ? ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
     : ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
