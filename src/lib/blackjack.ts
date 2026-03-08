@@ -564,8 +564,10 @@ function finishDealerTurn(state: BJGameState) {
   }
 
   if (!dealerBust) {
-    // Set dealer hand result based on net outcome
-    if (dealer.roundProfit > 0) {
+    // Dealer under 16 = fail
+    if (dealerVal < 16) {
+      dealerHand.result = "fail";
+    } else if (dealer.roundProfit > 0) {
       dealerHand.result = "win";
     } else if (dealer.roundProfit < 0) {
       dealerHand.result = "lose";
