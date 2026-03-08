@@ -68,6 +68,11 @@ const GamePlay = () => {
     await transferHost(roomId, myPlayer.id, targetPlayerId);
   }, [roomId, myPlayer]);
 
+  const handleKickPlayer = useCallback(async (playerId: string) => {
+    if (!roomId) return;
+    await kickPlayer(roomId, playerId);
+  }, [roomId]);
+
   if (loading || !room || !game) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
