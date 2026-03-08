@@ -82,7 +82,16 @@ const SequenceTable = ({
     if (selectedCardIndex === null || !mySeqPlayer) return new Set<string>();
     const card = mySeqPlayer.hand[selectedCardIndex];
     if (!card || card === "HIDDEN") return new Set<string>();
-    const allPositions = getBoardPositions(card);
+    let allPositions = getBoardPositions(card);
+    // For jacks/jokers (wild cards), match all non-corner board cells
+    if (allPositions.length === 0 && (isJack(card) || card.startsWith("JKR"))) {
+      allPositions = [];
+      for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 10; c++) {
+          if (!isCorner(r, c)) allPositions.push([r, c]);
+        }
+      }
+    }
     const set = new Set<string>();
     for (const [r, c] of allPositions) {
       const key = `${r},${c}`;
