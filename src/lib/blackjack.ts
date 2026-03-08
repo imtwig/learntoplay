@@ -251,7 +251,8 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
         hand.revealed = true;
         const dealer = s.players.find((p) => p.isDealer);
         player.netProfit += hand.bet * 3;
-        if (dealer) dealer.netProfit -= hand.bet * 3;
+        player.roundProfit += hand.bet * 3;
+        if (dealer) { dealer.netProfit -= hand.bet * 3; dealer.roundProfit -= hand.bet * 3; }
         if (!s.revealedPlayerIds.includes(player.playerId)) {
           s.revealedPlayerIds.push(player.playerId);
         }
