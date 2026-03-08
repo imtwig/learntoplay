@@ -56,8 +56,9 @@ const GameLobby = () => {
     try {
       localStorage.setItem("player_name", playerName);
       const settings: Record<string, unknown> = {};
-      if (game.id === "sequence" && houseRules) {
-        settings.houseRules = true;
+      const anyActive = houseRules.jokers || houseRules.allJacksRemove || houseRules.removeFromSequence;
+      if (game.id === "sequence" && anyActive) {
+        settings.houseRules = houseRules;
       }
       const { room } = await createRoom(
         game.id,
