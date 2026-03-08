@@ -343,8 +343,11 @@ const BlackjackTable = ({
               ))}
             </div>
 
+            {/* Debug playtest panel */}
+            <DebugPanel onGetOverrides={setDebugOverrides} />
+
             {allReady && (
-              <Button onClick={onStartRound} className="w-full gap-2 font-display tracking-wider">
+              <Button onClick={() => onStartRound(debugOverrides)} className="w-full gap-2 font-display tracking-wider">
                 Deal Cards
               </Button>
             )}
