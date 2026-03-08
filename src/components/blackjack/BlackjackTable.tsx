@@ -350,12 +350,16 @@ const BlackjackTable = ({
         )}
 
         {/* Dealing animation */}
-        {phase === "dealing" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-            <p className="text-muted-foreground font-display tracking-wider animate-pulse">
-              Dealing cards...
-            </p>
-          </motion.div>
+        {showDealingAnim && (
+          <DealingAnimation
+            players={bjPlayers}
+            onComplete={() => {
+              setShowDealingAnim(false);
+              if (phase === "results") {
+                setShowResultOverlay(true);
+              }
+            }}
+          />
         )}
 
         {/* Active game phases */}
