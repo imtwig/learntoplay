@@ -80,6 +80,7 @@ const BlackjackTable = ({
 
   const dealerPlayer = bjPlayers.find((p) => p.isDealer);
   const nonDealerPlayers = bjPlayers.filter((p) => !p.isDealer);
+  const unrevealed = nonDealerPlayers.filter((p) => !revealedPlayerIds.includes(p.playerId));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -277,7 +278,7 @@ const BlackjackTable = ({
         )}
 
         {/* Active game phases */}
-        {(phase === "player_turns" || phase === "reveal" || phase === "results" || phase === "dealer_turn") && (
+        {(phase === "player_turns" || phase === "results" || phase === "dealer_turn") && (
           <>
             {/* Dealer's hand at the top */}
             {dealerPlayer && dealerPlayer.hands.length > 0 && (
@@ -382,65 +383,60 @@ const BlackjackTable = ({
             </p>
           )}
 
-          {/* Dealer turn actions */}
-          {phase === "dealer_turn" && iAmDealer && availableActions.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
-              <p className="text-center text-xs font-display text-game-gold tracking-wider">YOUR TURN (DEALER)</p>
-              <div className="flex gap-3 justify-center">
-                <Button
-                  onClick={() => onAction("hit")}
-                  className="font-display text-sm tracking-wider px-8 bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  Draw
-                </Button>
-                <Button
-                  onClick={() => onAction("stand")}
-                  className="font-display text-sm tracking-wider px-8 bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                >
-                  Done
-                </Button>
-              </div>
+          {/* Dealer turn: draw/done + reveal controls combined */}
+          {phase === "dealer_turn" && iAmDealer && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+              {/* Draw/Done buttons */}
+              {availableActions.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-center text-xs font-display text-game-gold tracking-wider">YOUR TURN (DEALER)</p>
+                  <div className="flex gap-3 justify-center">
+                    <Button
+                      onClick={() => onAction("hit")}
+                      className="font-display text-sm tracking-wider px-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      Draw
+                    </Button>
+                    <Button
+                      onClick={() => onAction("stand")}
+                      className="font-display text-sm tracking-wider px-8 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    >
+                      Done
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Reveal controls */}
+              {unrevealed.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-center text-xs font-display text-muted-foreground tracking-wider">REVEAL HANDS</p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {unrevealed.map((p) => (
+                      <Button
+                        key={p.playerId}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onRevealPlayer(p.playerId)}
+                        className="gap-1 text-xs"
+                      >
+                        <Eye className="h-3 w-3" />
+                        {p.name}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button onClick={onRevealAll} variant="outline" className="w-full gap-2 font-display tracking-wider text-xs">
+                    <Eye className="h-4 w-4" />
+                    Reveal All
+                  </Button>
+                </div>
+              )}
             </motion.div>
           )}
 
           {phase === "dealer_turn" && !iAmDealer && (
             <p className="text-center text-muted-foreground text-sm font-display tracking-wider">
               Dealer is playing...
-            </p>
-          )}
-
-          {/* Reveal phase — host/dealer controls */}
-          {phase === "reveal" && isHost && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-              <p className="text-center text-xs font-display text-muted-foreground tracking-wider">
-                REVEAL HANDS
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {nonDealerPlayers
-                  .filter((p) => p.playerId !== myPlayerId && !revealedPlayerIds.includes(p.playerId))
-                  .map((p) => (
-                    <Button
-                      key={p.playerId}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onRevealPlayer(p.playerId)}
-                      className="gap-1 text-xs"
-                    >
-                      <Eye className="h-3 w-3" />
-                      {p.name}
-                    </Button>
-                  ))}
-              </div>
-              <Button onClick={onRevealAll} className="w-full gap-2 font-display tracking-wider">
-                <Eye className="h-4 w-4" />
-                Reveal All & Play Dealer
-              </Button>
-            </motion.div>
-          )}
-
-          {phase === "reveal" && !isHost && (
-            <p className="text-center text-muted-foreground text-sm font-display tracking-wider">
-              Waiting for dealer to reveal hands...
             </p>
           )}
 
