@@ -169,6 +169,25 @@ export function teamsBalanced(state: SeqGameState): boolean {
 export function startSequenceGame(state: SeqGameState): SeqGameState {
   const s = structuredClone(state);
   s.phase = "playing";
+
+  // Reorder players so teams alternate turns
+  const teamOrder: SeqTeam[] = s.teamCount >= 3 ? ["A", "B", "C"] : ["B", "C"];
+  const buckets: Record<string, SeqPlayer[]> = {};
+  for (const t of teamOrder) buckets[t] = [];
+  for (const p of s.players) {
+    if (p.team && buckets[p.team]) buckets[p.team].push(p);
+  }
+
+  const reordered: SeqPlayer[] = [];
+  const maxPerTeam = Math.max(...teamOrder.map((t) => buckets[t].length));
+  for (let i = 0; i < maxPerTeam; i++) {
+    for (const t of teamOrder) {
+      if (i < buckets[t].length) reordered.push(buckets[t][i]);
+    }
+  }
+
+  s.players = reordered;
+  s.currentPlayerIndex = s.roundStartIndex % s.players.length;
   return s;
 }
 
