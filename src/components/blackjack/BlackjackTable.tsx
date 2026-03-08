@@ -109,7 +109,6 @@ const BlackjackTable = ({
           BLACKJACK • ROUND {roundNumber}
         </span>
         <div className="flex items-center gap-3">
-          <LeaderboardButton players={bjPlayers} myPlayerId={myPlayerId} />
           {isHost && (
             <>
               <Button
@@ -134,6 +133,59 @@ const BlackjackTable = ({
           )}
         </div>
       </header>
+
+      {/* Overall winnings display */}
+      {myBJPlayer && (
+        <div className="border-b border-border/30 bg-card/50">
+          <button
+            onClick={() => setShowAllWinnings(!showAllWinnings)}
+            className="w-full px-4 py-3 flex items-center justify-between hover:bg-card/70 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-display text-muted-foreground tracking-wider">YOUR OVERALL WINNINGS</span>
+              <ProfitDisplay profit={myBJPlayer.netProfit} />
+            </div>
+            {showAllWinnings ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+          
+          <AnimatePresence>
+            {showAllWinnings && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden border-t border-border/30"
+              >
+                <div className="px-4 py-3 space-y-2">
+                  <p className="text-xs font-display text-muted-foreground tracking-wider mb-3">ALL PLAYERS</p>
+                  {bjPlayers.map((p) => (
+                    <div
+                      key={p.playerId}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
+                        p.playerId === myPlayerId ? "border-primary/50 bg-primary/5" : "border-border/50 bg-card/50"
+                      }`}
+                    >
+                      <span className="text-sm font-medium">
+                        {p.name}
+                        {p.playerId === myPlayerId && " (You)"}
+                        {p.isDealer && (
+                          <span className="ml-1 text-game-gold text-xs font-display">• Dealer</span>
+                        )}
+                      </span>
+                      <ProfitDisplay profit={p.netProfit} />
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Settings panel */}
       {showSettings && isHost && (
