@@ -82,8 +82,8 @@ const SequenceTable = ({
     if (selectedCardIndex === null || !mySeqPlayer) return new Set<string>();
     const card = mySeqPlayer.hand[selectedCardIndex];
     if (!card || card === "HIDDEN") return new Set<string>();
-    // Skip occupied highlights for jokers — only show available spots
-    if (card.startsWith("JKR")) return new Set<string>();
+    // Skip occupied highlights for jokers and wild (two-eyed) jacks — only show available spots
+    if (card.startsWith("JKR") || isTwoEyedJack(card)) return new Set<string>();
     let allPositions = getBoardPositions(card);
     // For jacks (wild/remove), match all non-corner board cells
     if (allPositions.length === 0 && isJack(card)) {
