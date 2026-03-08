@@ -92,57 +92,71 @@ const SequenceTable = ({
       {/* Team setup phase */}
       {phase === "team_setup" && (
         <div className="flex-1 flex flex-col items-center justify-center px-4 gap-6">
-          <h2 className="font-display text-sm tracking-widest text-muted-foreground">TEAM SETUP</h2>
+          <h2 className="font-display text-sm tracking-widest text-muted-foreground">PICK YOUR TEAM</h2>
+          <p className="text-xs text-muted-foreground">{teamCount} teams &middot; {seqPlayers.length} players</p>
           <div className="w-full max-w-sm space-y-2">
-            {seqPlayers.map((p) => (
-              <div
-                key={p.playerId}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
-                  p.team ? TEAM_BORDER[p.team] + "/50" : "border-border/50"
-                } bg-card/50`}
-              >
-                <span className="text-sm font-medium">
-                  {p.name}
-                  {p.playerId === myPlayerId && " (You)"}
-                </span>
-                {isHost ? (
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant={p.team === "A" ? "default" : "outline"}
-                      className={`text-xs h-7 px-3 ${p.team === "A" ? "bg-game-blue hover:bg-game-blue/90" : ""}`}
-                      onClick={() => onSetTeam(p.playerId, "A")}
-                    >
-                      A
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={p.team === "B" ? "default" : "outline"}
-                      className={`text-xs h-7 px-3 ${p.team === "B" ? "bg-game-red hover:bg-game-red/90" : ""}`}
-                      onClick={() => onSetTeam(p.playerId, "B")}
-                    >
-                      B
-                    </Button>
-                  </div>
-                ) : (
-                  <span className={`text-xs font-display ${p.team ? "" : "text-muted-foreground"}`}>
-                    {p.team ? `Team ${p.team}` : "Unassigned"}
+            {seqPlayers.map((p) => {
+              const isMe = p.playerId === myPlayerId;
+              return (
+                <div
+                  key={p.playerId}
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
+                    p.team ? TEAM_BORDER[p.team] + "/50" : "border-border/50"
+                  } bg-card/50`}
+                >
+                  <span className="text-sm font-medium">
+                    {p.name}
+                    {isMe && " (You)"}
                   </span>
-                )}
-              </div>
-            ))}
+                  {isMe ? (
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant={p.team === "A" ? "default" : "outline"}
+                        className={`text-xs h-7 px-3 ${p.team === "A" ? "bg-game-red hover:bg-game-red/90 text-white" : ""}`}
+                        onClick={() => onSetTeam(p.playerId, "A")}
+                      >
+                        Red
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={p.team === "B" ? "default" : "outline"}
+                        className={`text-xs h-7 px-3 ${p.team === "B" ? "bg-game-blue hover:bg-game-blue/90 text-white" : ""}`}
+                        onClick={() => onSetTeam(p.playerId, "B")}
+                      >
+                        Blue
+                      </Button>
+                      {teamCount >= 3 && (
+                        <Button
+                          size="sm"
+                          variant={p.team === "C" ? "default" : "outline"}
+                          className={`text-xs h-7 px-3 ${p.team === "C" ? "bg-game-green hover:bg-game-green/90 text-white" : ""}`}
+                          onClick={() => onSetTeam(p.playerId, "C")}
+                        >
+                          Green
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <span className={`text-xs font-display ${p.team ? "" : "text-muted-foreground"}`}>
+                      {p.team === "A" ? "🔴 Red" : p.team === "B" ? "🔵 Blue" : p.team === "C" ? "🟢 Green" : "Choosing..."}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
           {isHost && (
             <Button
               onClick={onStartGame}
-              disabled={!gameState.isTeamGame || teams.A.length !== teams.B.length || teams.A.length === 0}
+              disabled={!teamsBalanced(gameState)}
               className="font-display tracking-wider"
             >
               Start Game
             </Button>
           )}
           {!isHost && (
-            <p className="text-xs text-muted-foreground font-display">Waiting for host to assign teams...</p>
+            <p className="text-xs text-muted-foreground font-display">Pick your team, then wait for host to start...</p>
           )}
         </div>
       )}
