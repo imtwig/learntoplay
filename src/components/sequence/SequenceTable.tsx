@@ -183,14 +183,6 @@ const SequenceTable = ({
                   </span>
                   {isMe ? (
                     <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant={p.team === "A" ? "default" : "outline"}
-                        className={`text-xs h-7 px-3 ${p.team === "A" ? "bg-game-red hover:bg-game-red/90 text-white" : ""}`}
-                        onClick={() => onSetTeam(p.playerId, "A")}
-                      >
-                        Red
-                      </Button>
                       {teamCount >= 3 && (
                         <Button
                           size="sm"
@@ -208,6 +200,14 @@ const SequenceTable = ({
                         onClick={() => onSetTeam(p.playerId, "B")}
                       >
                         Blue
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={p.team === "A" ? "default" : "outline"}
+                        className={`text-xs h-7 px-3 ${p.team === "A" ? "bg-game-red hover:bg-game-red/90 text-white" : ""}`}
+                        onClick={() => onSetTeam(p.playerId, "A")}
+                      >
+                        Red
                       </Button>
                     </div>
                   ) : (
