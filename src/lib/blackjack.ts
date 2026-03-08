@@ -266,9 +266,9 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
         hand.result = "triple_sevens";
         hand.revealed = true;
         const dealer = s.players.find((p) => p.isDealer);
-        player.netProfit += hand.bet * 3;
-        player.roundProfit += hand.bet * 3;
-        if (dealer) { dealer.netProfit -= hand.bet * 3; dealer.roundProfit -= hand.bet * 3; }
+        player.netProfit += hand.bet * 7;
+        player.roundProfit += hand.bet * 7;
+        if (dealer) { dealer.netProfit -= hand.bet * 7; dealer.roundProfit -= hand.bet * 7; }
         if (!s.revealedPlayerIds.includes(player.playerId)) {
           s.revealedPlayerIds.push(player.playerId);
         }
