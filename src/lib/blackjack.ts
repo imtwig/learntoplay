@@ -134,12 +134,15 @@ export function startDeal(state: BJGameState): BJGameState {
 
 function dealInitial(state: BJGameState): BJGameState {
   const s = state;
+  const showFirst = s.settings.showFirstCard;
 
+  // Round 1: first card (face-up if showFirstCard enabled)
   for (const p of s.players) {
     p.hands[0].cards.push(draw(s, true));
   }
+  // Round 2: second card (face-down if showFirstCard enabled, face-up otherwise)
   for (const p of s.players) {
-    p.hands[0].cards.push(draw(s, true));
+    p.hands[0].cards.push(draw(s, !showFirst));
   }
 
   // --- Opening hand rules ---
