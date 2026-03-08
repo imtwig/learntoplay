@@ -83,25 +83,28 @@ function ownerOf(state: SeqGameState, playerId: string): string {
   return state.isTeamGame && p.team ? p.team : playerId;
 }
 
+/* ── Team count by player count ─────────────────────────── */
+
+function getTeamCount(playerCount: number): number {
+  // 2→2, 3→3, 4→2, 6→3, 8→2, 9→3, 10→2, 12→3
+  if (playerCount === 3 || playerCount === 6 || playerCount === 9 || playerCount === 12) return 3;
+  return 2;
+}
+
 /* ── Init ───────────────────────────────────────────────── */
 
 export function initSequenceGame(
   playerNames: { id: string; name: string }[]
 ): SeqGameState {
   const n = playerNames.length;
-  const isTeam = n >= 4;
+  const teamCount = getTeamCount(n);
   const hs = handSize(n);
   const deck = createSequenceDeck();
 
-  const teams: { A: string[]; B: string[] } = { A: [], B: [] };
-  const players: SeqPlayer[] = playerNames.map((p, i) => {
-    let team: SeqTeam | null = null;
-    if (isTeam) {
-      team = i % 2 === 0 ? "A" : "B";
-      teams[team].push(p.id);
-    }
+  const teams: { A: string[]; B: string[]; C: string[] } = { A: [], B: [], C: [] };
+  const players: SeqPlayer[] = playerNames.map((p) => {
     const hand = deck.splice(0, hs);
-    return { playerId: p.id, name: p.name, hand, team };
+    return { playerId: p.id, name: p.name, hand, team: null };
   });
 
   const board: (SeqChip | null)[][] = Array.from({ length: 10 }, () =>
@@ -114,8 +117,9 @@ export function initSequenceGame(
     deck,
     discardPile: [],
     currentPlayerIndex: 0,
-    phase: isTeam ? "team_setup" : "playing",
-    isTeamGame: isTeam,
+    phase: "team_setup",
+    isTeamGame: true,
+    teamCount,
     teams,
     sequences: [],
     winner: null,
