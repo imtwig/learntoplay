@@ -277,6 +277,19 @@ const GameLobby = () => {
                       </div>
                     </div>
                   )}
+                  {game.id === "asshole_daidi" && (
+                    <div className="rounded-lg border border-border/50 px-3 py-2 space-y-2">
+                      <Label className="text-sm font-medium">House Rules</Label>
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={addHouseRules.allowEndOn2}
+                            onCheckedChange={(v) => setAddHouseRules((prev) => ({ ...prev, allowEndOn2: !!v }))}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Allow ending round on a 2</span>
+                        </label>
+                      </div>
+                    </div>
                   <Button
                     onClick={handleCreate}
                     className="w-full font-display text-sm tracking-wider"
