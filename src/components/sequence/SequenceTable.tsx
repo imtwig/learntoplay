@@ -183,16 +183,14 @@ const SequenceTable = ({
                   </span>
                   {isMe ? (
                     <div className="flex gap-1">
-                      {teamCount >= 3 && (
-                        <Button
-                          size="sm"
-                          variant={p.team === "C" ? "default" : "outline"}
-                          className={`text-xs h-7 px-3 ${p.team === "C" ? "bg-game-green hover:bg-game-green/90 text-white" : ""}`}
-                          onClick={() => onSetTeam(p.playerId, "C")}
-                        >
-                          Green
-                        </Button>
-                      )}
+                      <Button
+                        size="sm"
+                        variant={p.team === "C" ? "default" : "outline"}
+                        className={`text-xs h-7 px-3 ${p.team === "C" ? "bg-game-green hover:bg-game-green/90 text-white" : ""}`}
+                        onClick={() => onSetTeam(p.playerId, "C")}
+                      >
+                        Green
+                      </Button>
                       <Button
                         size="sm"
                         variant={p.team === "B" ? "default" : "outline"}
@@ -201,14 +199,16 @@ const SequenceTable = ({
                       >
                         Blue
                       </Button>
-                      <Button
-                        size="sm"
-                        variant={p.team === "A" ? "default" : "outline"}
-                        className={`text-xs h-7 px-3 ${p.team === "A" ? "bg-game-red hover:bg-game-red/90 text-white" : ""}`}
-                        onClick={() => onSetTeam(p.playerId, "A")}
-                      >
-                        Red
-                      </Button>
+                      {teamCount >= 3 && (
+                        <Button
+                          size="sm"
+                          variant={p.team === "A" ? "default" : "outline"}
+                          className={`text-xs h-7 px-3 ${p.team === "A" ? "bg-game-red hover:bg-game-red/90 text-white" : ""}`}
+                          onClick={() => onSetTeam(p.playerId, "A")}
+                        >
+                          Red
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <span className={`text-xs font-display ${p.team ? "" : "text-muted-foreground"}`}>
@@ -219,18 +219,13 @@ const SequenceTable = ({
               );
             })}
           </div>
-          {isHost && (
-            <Button
-              onClick={onStartGame}
-              disabled={!teamsBalanced(gameState)}
-              className="font-display tracking-wider"
-            >
-              Start Game
-            </Button>
-          )}
-          {!isHost && (
-            <p className="text-xs text-muted-foreground font-display">Pick your team, then wait for host to start...</p>
-          )}
+          <Button
+            onClick={onStartGame}
+            disabled={!teamsBalanced(gameState)}
+            className="font-display tracking-wider"
+          >
+            Start Game
+          </Button>
         </div>
       )}
 
