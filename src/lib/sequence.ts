@@ -485,3 +485,37 @@ export function newSequenceRound(state: SeqGameState): SeqGameState {
   }
   return fresh;
 }
+
+/* ── Remove player (when they leave) ─────────────────────── */
+
+export function removeSeqPlayer(state: SeqGameState, playerId: string): SeqGameState {
+  const s = structuredClone(state);
+  const playerIndex = s.players.findIndex((p) => p.playerId === playerId);
+  if (playerIndex === -1) return s;
+
+  const player = s.players[playerIndex];
+
+  // Remove from team
+  if (player.team) {
+    s.teams[player.team] = s.teams[player.team].filter((id) => id !== playerId);
+  }
+
+  // Return cards to deck
+  s.deck.push(...player.hand);
+
+  // Remove player
+  s.players.splice(playerIndex, 1);
+
+  // Fix currentPlayerIndex
+  if (s.players.length === 0) {
+    s.phase = "finished";
+    return s;
+  }
+  if (s.currentPlayerIndex >= s.players.length) {
+    s.currentPlayerIndex = 0;
+  } else if (playerIndex < s.currentPlayerIndex) {
+    s.currentPlayerIndex--;
+  }
+
+  return s;
+}
