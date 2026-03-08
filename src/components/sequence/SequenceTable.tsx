@@ -285,6 +285,7 @@ const SequenceTable = ({
                   const isFree = isCorner(r, c);
                   const isValid = validSet.has(`${r},${c}`);
                   const isPreview = previewSet.has(`${r},${c}`);
+                  const isOccupiedMatch = occupiedMatchSet.has(`${r},${c}`);
                   const cellKey = `${r},${c}`;
                   const isAnimating = animatingCell === cellKey;
                   const isLastMove = gameState.lastMove?.row === r && gameState.lastMove?.col === c;
