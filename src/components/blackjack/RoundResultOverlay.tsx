@@ -20,12 +20,19 @@ interface HandInfo {
   name: string;
 }
 
+interface PlayerBreakdown {
+  name: string;
+  profit: number;
+}
+
 interface Props {
   roundProfit: number;
   visible: boolean;
   onDismiss?: () => void;
   myHand?: HandInfo;
   dealerHand?: HandInfo;
+  isDealer?: boolean;
+  playerBreakdown?: PlayerBreakdown[];
 }
 
 const MiniHand = ({ cards, label, result }: { cards: Card[]; label: string; result?: HandResult }) => {
