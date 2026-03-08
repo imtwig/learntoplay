@@ -427,6 +427,9 @@ function finishDealerTurn(state: BJGameState) {
   const dealer = state.players.find((p) => p.isDealer);
   if (!dealer) return;
   dealer.done = true;
+  if (!state.revealedPlayerIds.includes(dealer.playerId)) {
+    state.revealedPlayerIds.push(dealer.playerId);
+  }
 
   const dealerHand = dealer.hands[0];
   const dealerVal = handValue(dealerHand.cards);
