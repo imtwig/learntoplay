@@ -360,6 +360,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
       // --- 5-card rule (non-dealer only) ---
       if (!player.isDealer && hand.cards.length >= 5) {
         hand.revealed = true;
+        for (const c of hand.cards) c.faceUp = true;
         if (!s.revealedPlayerIds.includes(player.playerId)) {
           s.revealedPlayerIds.push(player.playerId);
         }
@@ -392,6 +393,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
             if (h.result !== "pending") continue;
             h.result = "lose";
             h.revealed = true;
+            for (const c of h.cards) c.faceUp = true;
             p.netProfit -= h.bet * 7;
             p.roundProfit -= h.bet * 7;
             player.netProfit += h.bet * 7;
@@ -418,7 +420,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
               if (h.result !== "pending") continue;
               h.result = "lose";
               h.revealed = true;
-              p.netProfit -= h.bet * 2;
+              for (const c of h.cards) c.faceUp = true;
               p.roundProfit -= h.bet * 2;
               player.netProfit += h.bet * 2;
               player.roundProfit += h.bet * 2;
@@ -436,6 +438,7 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
               if (h.result !== "pending") continue;
               const pVal = handValue(h.cards);
               h.revealed = true;
+              for (const c of h.cards) c.faceUp = true;
               if (pVal > 21) {
                 h.result = "push";
               } else {
@@ -524,6 +527,7 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
 
   for (const h of player.hands) {
     h.revealed = true;
+    for (const c of h.cards) c.faceUp = true;
     if (h.result !== "pending") continue;
 
     const playerVal = handValue(h.cards);
@@ -561,6 +565,7 @@ export function revealAll(state: BJGameState): BJGameState {
     s.revealedPlayerIds.push(p.playerId);
     for (const h of p.hands) {
       h.revealed = true;
+      for (const c of h.cards) c.faceUp = true;
       if (h.result !== "pending") continue;
 
       const playerVal = handValue(h.cards);
@@ -643,6 +648,7 @@ function finishDealerTurn(state: BJGameState) {
     }
     for (const h of p.hands) {
       h.revealed = true;
+      for (const c of h.cards) c.faceUp = true;
       if (h.result !== "pending") continue;
       const pVal = handValue(h.cards);
       const playerBust = isBust(h.cards);
