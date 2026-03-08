@@ -246,7 +246,7 @@ export function getValidPlacements(
   card: string
 ): [number, number][] {
   const owner = ownerOf(state, playerId);
-  const hr = state.houseRules;
+  const hr = normalizeHouseRules(state.houseRules);
 
   // Jokers are wild (house rules only) — place on any empty non-corner
   if (isJoker(card)) {
