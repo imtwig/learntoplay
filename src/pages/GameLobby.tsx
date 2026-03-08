@@ -73,7 +73,24 @@ const GameLobby = () => {
     }
   };
 
-  const handleJoin = async (roomId: string, hasPassword: boolean) => {
+  const handleJoin = async (roomId: string, hasPassword: boolean, status: string) => {
+    // In-progress games: go directly to play page (useRoom reconnect handles the rest)
+    if (status === "in_progress") {
+      if (!playerName.trim()) {
+        toast({ title: "Enter your name", description: "Set your display name first.", variant: "destructive" });
+        return;
+      }
+      localStorage.setItem("player_name", playerName);
+      // Try to rejoin as existing player, or join fresh
+      try {
+        await rejoinOrJoin(roomId, playerName.trim());
+      } catch (err: any) {
+        toast({ title: "Error", description: err.message, variant: "destructive" });
+        return;
+      }
+      navigate(`/play/${roomId}`);
+      return;
+    }
     if (hasPassword) {
       setJoinRoomId(roomId);
       setJoinOpen(true);
