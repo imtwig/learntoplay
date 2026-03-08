@@ -71,8 +71,25 @@ const SequenceTable = ({
   const validSet = new Set(validPlacements.map(([r, c]) => `${r},${c}`));
   const currentPlayer = seqPlayers[currentPlayerIndex];
 
+  // Determine win/loss for overlay
+  const isFinished = phase === "finished" && winner;
+  const myTeam = mySeqPlayer?.team;
+  const iWon = isFinished && myTeam === winner;
+  const winnerPlayerNames = isFinished
+    ? seqPlayers.filter((p) => p.team === winner).map((p) => p.name)
+    : [];
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Result overlay */}
+      {isFinished && (
+        <SequenceResultOverlay
+          visible
+          isWinner={!!iWon}
+          winnerNames={winnerPlayerNames}
+          teamColor={winner ?? undefined}
+        />
+      )}
       {/* Header */}
       <header className="border-b border-border/30 px-3 py-2 flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={onLeave} className="gap-1 text-muted-foreground text-xs">
