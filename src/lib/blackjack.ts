@@ -409,12 +409,16 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
   if (s.phase !== "dealer_turn") return s;
   if (s.revealedPlayerIds.includes(playerId)) return s;
 
+  const dealer = s.players.find((p) => p.isDealer);
+  const dealerVal = dealer ? handValue(dealer.hands[0]?.cards ?? []) : 0;
+
+  // Dealer must have at least 15 points to reveal hands (unless they have a natural)
+  const dealerHasNatural = dealer?.hands[0] && (dealer.hands[0].result === "blackjack" || dealer.hands[0].result === "double_aces");
+  if (dealerVal < 15 && !dealerHasNatural) return s;
+
   s.revealedPlayerIds.push(playerId);
   const player = s.players.find((p) => p.playerId === playerId);
   if (!player) return s;
-
-  const dealer = s.players.find((p) => p.isDealer);
-  const dealerVal = dealer ? handValue(dealer.hands[0]?.cards ?? []) : 0;
 
   for (const h of player.hands) {
     h.revealed = true;
@@ -438,6 +442,12 @@ export function revealPlayer(state: BJGameState, playerId: string): BJGameState 
 export function revealAll(state: BJGameState): BJGameState {
   const s = structuredClone(state);
   if (s.phase !== "dealer_turn") return s;
+
+  // Dealer must have at least 15 points to reveal hands (unless they have a natural)
+  const dealerCheck = s.players.find((p) => p.isDealer);
+  const dealerCheckVal = dealerCheck ? handValue(dealerCheck.hands[0]?.cards ?? []) : 0;
+  const dealerCheckNatural = dealerCheck?.hands[0] && (dealerCheck.hands[0].result === "blackjack" || dealerCheck.hands[0].result === "double_aces");
+  if (dealerCheckVal < 15 && !dealerCheckNatural) return s;
 
   const dealer = s.players.find((p) => p.isDealer);
   const dealerVal = dealer ? handValue(dealer.hands[0]?.cards ?? []) : 0;

@@ -89,8 +89,6 @@ const BlackjackTable = ({
   useEffect(() => {
     if (phase === "results" && prevPhase !== "results" && !iAmDealer) {
       setShowResultOverlay(true);
-      const timer = setTimeout(() => setShowResultOverlay(false), 4000);
-      return () => clearTimeout(timer);
     }
     setPrevPhase(phase);
   }, [phase, prevPhase, iAmDealer]);
@@ -552,6 +550,7 @@ const BlackjackTable = ({
       <RoundResultOverlay
         roundProfit={myBJPlayer?.roundProfit ?? 0}
         visible={showResultOverlay}
+        onDismiss={() => setShowResultOverlay(false)}
         myHand={myBJPlayer && myBJPlayer.hands[0] ? {
           cards: myBJPlayer.hands[0].cards,
           result: myBJPlayer.hands[0].result,
