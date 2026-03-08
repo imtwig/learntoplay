@@ -53,7 +53,7 @@ const MiniHand = ({ cards, label, result }: { cards: Card[]; label: string; resu
   );
 };
 
-const RoundResultOverlay = ({ roundProfit, visible, myHand, dealerHand }: Props) => {
+const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHand }: Props) => {
   if (!visible) return null;
 
   const isWin = roundProfit > 0;
@@ -66,7 +66,8 @@ const RoundResultOverlay = ({ roundProfit, visible, myHand, dealerHand }: Props)
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-background/70 backdrop-blur-sm"
+          onClick={onDismiss}
+          className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer bg-background/70 backdrop-blur-sm"
         >
           <motion.div
             initial={{ scale: 0.5, opacity: 0, y: 30 }}
