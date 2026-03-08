@@ -332,12 +332,8 @@ export function playerAction(state: BJGameState, playerId: string, action: Playe
               const pVal = handValue(h.cards);
               h.revealed = true;
               if (pVal > 21) {
-                // Player also busted - they still lose normally
-                h.result = "lose";
-                p.netProfit -= h.bet;
-                p.roundProfit -= h.bet;
-                player.netProfit += h.bet;
-                player.roundProfit += h.bet;
+                // Both busted — push, no money exchanged
+                h.result = "push";
               } else {
                 // Player didn't bust - wins x2
                 h.result = "win";
