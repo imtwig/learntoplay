@@ -82,7 +82,7 @@ const BlackjackTable = ({
   useEffect(() => {
     if (phase === "results" && prevPhase !== "results") {
       setShowResultOverlay(true);
-      const timer = setTimeout(() => setShowResultOverlay(false), 2500);
+      const timer = setTimeout(() => setShowResultOverlay(false), 4000);
       return () => clearTimeout(timer);
     }
     setPrevPhase(phase);
