@@ -48,7 +48,7 @@ const SUIT_COLORS: Record<string, "red" | "black"> = { S: "black", C: "black", D
 
 export function parseCard(card: string): { rank: string; suitSymbol: string; suitColor: "red" | "black" } {
   if (card === "FREE") return { rank: "★", suitSymbol: "", suitColor: "black" };
-  if (card.startsWith("JKR")) return { rank: "🃏", suitSymbol: "", suitColor: "red" };
+  if (card.startsWith("JKR")) return { rank: "JKR", suitSymbol: "", suitColor: "black" };
   const suit = card[card.length - 1];
   const rank = card.slice(0, -1);
   return {
