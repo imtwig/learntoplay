@@ -333,7 +333,7 @@ const SequenceTable = ({
                           ${!isFree && !isLastPlaced ? "bg-white" : ""}
                           ${isValid ? `ring-2 cursor-pointer ${mySeqPlayer?.team === "A" ? "ring-game-red bg-red-50" : mySeqPlayer?.team === "B" ? "ring-game-blue bg-blue-50" : "ring-game-green bg-green-50"}` : ""}
                           ${isPreview ? `ring-2 ${mySeqPlayer?.team === "A" ? "ring-game-red bg-red-50" : mySeqPlayer?.team === "B" ? "ring-game-blue bg-blue-50" : "ring-game-green bg-green-50"}` : ""}
-                          ${isOccupiedMatch && chip ? `!ring-2 ${chip.owner === "A" ? "!ring-game-red !bg-red-100" : chip.owner === "B" ? "!ring-game-blue !bg-blue-100" : "!ring-game-green !bg-green-100"}` : ""}
+                          ${isOccupiedMatch ? "!ring-2 !ring-black !bg-gray-200" : ""}
                           ${isSeqCell ? "ring-1 ring-game-gold" : ""}
                           ${""}
                         `}
