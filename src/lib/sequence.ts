@@ -85,9 +85,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 function createSequenceDeck(hr: boolean | SeqHouseRules): string[] {
   const rules = normalizeHouseRules(hr);
-  const ranks = houseRules
-    ? ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
-    : ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+  const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
   const suits = ["S", "C", "D", "H"];
   const deck: string[] = [];
   for (let d = 0; d < 2; d++) {
@@ -98,7 +96,9 @@ function createSequenceDeck(hr: boolean | SeqHouseRules): string[] {
     }
   }
   // House rules: add 4 jokers (wild cards)
-  if (houseRules) {
+  if (rules.jokers) {
+    deck.push("JKR1", "JKR2", "JKR3", "JKR4");
+  }
     deck.push("JKR1", "JKR2", "JKR3", "JKR4");
   }
   return shuffle(deck);
