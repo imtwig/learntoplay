@@ -550,6 +550,7 @@ const BlackjackTable = ({
       <RoundResultOverlay
         roundProfit={myBJPlayer?.roundProfit ?? 0}
         visible={showResultOverlay}
+        onDismiss={() => setShowResultOverlay(false)}
         myHand={myBJPlayer && myBJPlayer.hands[0] ? {
           cards: myBJPlayer.hands[0].cards,
           result: myBJPlayer.hands[0].result,

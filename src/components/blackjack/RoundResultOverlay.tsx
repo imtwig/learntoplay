@@ -187,6 +187,15 @@ const RoundResultOverlay = ({ roundProfit, visible, onDismiss, myHand, dealerHan
                 </motion.p>
               </>
             )}
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              transition={{ delay: 1 }}
+              className="text-xs font-display text-muted-foreground tracking-wider mt-4"
+            >
+              Tap anywhere to dismiss
+            </motion.p>
           </motion.div>
         </motion.div>
       )}
