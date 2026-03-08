@@ -126,6 +126,7 @@ export function startDeal(state: BJGameState): BJGameState {
     p.hands = [{ cards: [], bet: p.currentBet, result: "pending", stood: false, revealed: false }];
     p.activeHandIndex = 0;
     p.done = false;
+    p.roundProfit = 0;
   }
   s.phase = "dealing";
   return dealInitial(s);
