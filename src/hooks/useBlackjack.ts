@@ -112,13 +112,18 @@ export function useBlackjack(roomId: string | undefined, players: Player[]) {
       .eq("id", roomId);
   }, [roomId]);
 
-  const initGame = useCallback(async () => {
+  const initGame = useCallback(async (settings?: Record<string, unknown>) => {
     if (!roomId || !isHost || initialized.current) return;
     const hostPlayer = players.find((p) => p.is_host);
     const state = initGameState(
       players.map((p) => ({ id: p.id, name: p.display_name })),
       hostPlayer?.id ?? players[0].id
     );
+    // Apply room-level settings
+    if (settings?.showFirstCard) {
+      state.settings.showFirstCard = true;
+      state.settings.showFirstCardNextRound = true;
+    }
     initialized.current = true;
     await saveState(state);
   }, [roomId, isHost, players, saveState]);
