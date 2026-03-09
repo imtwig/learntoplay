@@ -114,7 +114,7 @@ export const gamePRDs: PRDDocument[] = [
       {
         title: "2. Board & Deck",
         content:
-          "• The 10×10 board contains 96 card spaces (each standard card appears twice on the board) and 4 corner free spaces\n• Corner spaces are free for all players and count toward any Sequence\n• Two standard 52-card decks are used (104 cards total)\n• Hand sizes scale by player count: ≤2 players = 7 cards, ≤3 = 6 cards, ≤6 = 5 cards, ≤9 = 4 cards, 10+ = 3 cards\n• Board layout is defined in src/lib/sequenceBoard.ts",
+          "• The 10×10 board contains 96 card spaces (each standard card appears twice on the board) and 4 corner free spaces\n• Corner spaces are free for all players and count toward any Sequence\n• Two standard 52-card decks are used (104 cards total)\n• Hand sizes scale by player count: 2 players = 7 cards, 3–4 players = 6 cards, 5–6 players = 5 cards, 7–9 players = 4 cards, 10–12 players = 3 cards\n• Board layout is defined in src/lib/sequenceBoard.ts",
       },
       {
         title: "3. Team Setup Phase",

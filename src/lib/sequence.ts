@@ -104,7 +104,7 @@ function createSequenceDeck(hr: boolean | SeqHouseRules): string[] {
 
 function handSize(playerCount: number): number {
   if (playerCount <= 2) return 7;
-  if (playerCount <= 3) return 6;
+  if (playerCount <= 4) return 6;
   if (playerCount <= 6) return 5;
   if (playerCount <= 9) return 4;
   return 3;
