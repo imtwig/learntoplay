@@ -51,7 +51,7 @@ const GamePlay = () => {
       }
     } else {
       if (blackjack.isHost && players.length > 0 && !blackjack.gameState) {
-        blackjack.initGame();
+        blackjack.initGame(room?.settings as Record<string, unknown> | undefined);
       }
     }
   }, [isSequence, isPoker, isADD, isDD, sequence.isHost, blackjack.isHost, poker.isHost, add.isHost, dd.isHost, players.length, sequence.gameState, blackjack.gameState, poker.gameState, add.gameState, dd.gameState, sequence.initGame, blackjack.initGame, poker.initGame, add.initGame, dd.initGame, room?.settings]);

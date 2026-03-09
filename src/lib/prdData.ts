@@ -114,7 +114,7 @@ export const gamePRDs: PRDDocument[] = [
       {
         title: "2. Board & Deck",
         content:
-          "• The 10×10 board contains 96 card spaces (each standard card appears twice on the board) and 4 corner free spaces\n• Corner spaces are free for all players and count toward any Sequence\n• Two standard 52-card decks are used (104 cards total)\n• Hand sizes scale by player count: ≤2 players = 7 cards, ≤3 = 6 cards, ≤6 = 5 cards, ≤9 = 4 cards, 10+ = 3 cards\n• Board layout is defined in src/lib/sequenceBoard.ts",
+          "• The 10×10 board contains 96 card spaces (each standard card appears twice on the board) and 4 corner free spaces\n• Corner spaces are free for all players and count toward any Sequence\n• Two standard 52-card decks are used (104 cards total)\n• Hand sizes scale by player count: 2 players = 7 cards, 3–4 players = 6 cards, 5–6 players = 5 cards, 7–9 players = 4 cards, 10–12 players = 3 cards\n• Board layout is defined in src/lib/sequenceBoard.ts",
       },
       {
         title: "3. Team Setup Phase",
@@ -176,7 +176,7 @@ export const gamePRDs: PRDDocument[] = [
       {
         title: "6. Settings & Debug",
         content:
-          "Settings:\n• Show First Card: Toggle whether opponents' first card is visible before reveal. Applies next round (showFirstCardNextRound → showFirstCard on newRound).\n\nDebug Panel (test scenarios for development):\n• Scenario presets: ban_luck, ban_ban, triple_sevens, ngou_leng (five card charlie), bust, fail, normal\n• Can set scenarios separately for dealer and players\n• Rigged deck: specific cards are injected for the scenario, including hit-cards for multi-card specials",
+          "Settings (configurable at room creation):\n• Show First Card: Whether opponents' first card is visible before dealer reveals. Configured as a house rule when creating the room. Can also be toggled in-game by the host (applies next round).\n\nDebug Panel (test scenarios for development):\n• Scenario presets: ban_luck, ban_ban, triple_sevens, ngou_leng (five card charlie), bust, fail, normal\n• Can set scenarios separately for dealer and players\n• Rigged deck: specific cards are injected for the scenario, including hit-cards for multi-card specials",
       },
       {
         title: "7. State Filtering & Visibility",
