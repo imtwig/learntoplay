@@ -176,7 +176,7 @@ export const gamePRDs: PRDDocument[] = [
       {
         title: "6. Settings & Debug",
         content:
-          "Settings:\n• Show First Card: Toggle whether opponents' first card is visible before reveal. Applies next round (showFirstCardNextRound → showFirstCard on newRound).\n\nDebug Panel (test scenarios for development):\n• Scenario presets: ban_luck, ban_ban, triple_sevens, ngou_leng (five card charlie), bust, fail, normal\n• Can set scenarios separately for dealer and players\n• Rigged deck: specific cards are injected for the scenario, including hit-cards for multi-card specials",
+          "Settings (configurable at room creation):\n• Show First Card: Whether opponents' first card is visible before dealer reveals. Configured as a house rule when creating the room. Can also be toggled in-game by the host (applies next round).\n\nDebug Panel (test scenarios for development):\n• Scenario presets: ban_luck, ban_ban, triple_sevens, ngou_leng (five card charlie), bust, fail, normal\n• Can set scenarios separately for dealer and players\n• Rigged deck: specific cards are injected for the scenario, including hit-cards for multi-card specials",
       },
       {
         title: "7. State Filtering & Visibility",
