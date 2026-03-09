@@ -304,7 +304,19 @@ const GameLobby = () => {
                   )}
                   {game.id === "dai_di" && (
                     <div className="rounded-lg border border-border/50 px-3 py-2 space-y-3">
-                      <Label className="text-sm font-medium">House Rules</Label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">House Rules</Label>
+                        <button
+                          type="button"
+                          className="text-[10px] font-display tracking-wider text-primary hover:underline"
+                          onClick={() => {
+                            const allOn = ddHouseRules.allowEndOn2 && ddHouseRules.allowTriples;
+                            setDdHouseRules({ allowEndOn2: !allOn, allowTriples: !allOn });
+                          }}
+                        >
+                          {ddHouseRules.allowEndOn2 && ddHouseRules.allowTriples ? "Deselect All" : "Select All"}
+                        </button>
+                      </div>
                       <div className="space-y-1.5">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <Checkbox
@@ -321,7 +333,19 @@ const GameLobby = () => {
                           <span className="text-[11px] text-muted-foreground">Allow triples</span>
                         </label>
                       </div>
-                      <Label className="text-sm font-medium">Penalty Multipliers</Label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Penalty Multipliers</Label>
+                        <button
+                          type="button"
+                          className="text-[10px] font-display tracking-wider text-primary hover:underline"
+                          onClick={() => {
+                            const allOn = ddPenalties.tenPlusCards && ddPenalties.thirteenCards && ddPenalties.twosSurcharge;
+                            setDdPenalties({ tenPlusCards: !allOn, thirteenCards: !allOn, twosSurcharge: !allOn });
+                          }}
+                        >
+                          {ddPenalties.tenPlusCards && ddPenalties.thirteenCards && ddPenalties.twosSurcharge ? "Deselect All" : "Select All"}
+                        </button>
+                      </div>
                       <div className="space-y-1.5">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <Checkbox
@@ -343,6 +367,20 @@ const GameLobby = () => {
                             onCheckedChange={(v) => setDdPenalties((prev) => ({ ...prev, twosSurcharge: !!v }))}
                           />
                           <span className="text-[11px] text-muted-foreground">+2 per 2 held surcharge</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                  {game.id === "blackjack" && (
+                    <div className="rounded-lg border border-border/50 px-3 py-2 space-y-2">
+                      <Label className="text-sm font-medium">House Rules</Label>
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={bjShowFirstCard}
+                            onCheckedChange={(v) => setBjShowFirstCard(!!v)}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Show everyone's first card</span>
                         </label>
                       </div>
                     </div>
