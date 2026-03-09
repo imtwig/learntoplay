@@ -75,6 +75,9 @@ const GameLobby = () => {
         settings.houseRules = ddHouseRules;
         settings.penalties = ddPenalties;
       }
+      if (game.id === "blackjack") {
+        settings.showFirstCard = bjShowFirstCard;
+      }
       const { room } = await createRoom(
         game.id,
         roomName.trim(),
