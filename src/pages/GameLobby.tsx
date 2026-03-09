@@ -46,6 +46,7 @@ const GameLobby = () => {
   const [addHouseRules, setAddHouseRules] = useState<ADDHouseRules>({ allowEndOn2: false });
   const [ddHouseRules, setDdHouseRules] = useState<DDHouseRules>({ ...DEFAULT_DD_HOUSE_RULES });
   const [ddPenalties, setDdPenalties] = useState<DDPenaltyMultipliers>({ ...DEFAULT_DD_PENALTIES });
+  const [bjShowFirstCard, setBjShowFirstCard] = useState(false);
 
   if (!game) {
     navigate("/");
