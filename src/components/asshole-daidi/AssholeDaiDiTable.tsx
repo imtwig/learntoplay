@@ -357,8 +357,8 @@ const AssholeDaiDiTable = ({
                             key={card}
                             ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
                             drag
-                            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                            dragElastic={0.1}
+                            dragElastic={0.2}
+                            dragMomentum={false}
                             onDragStart={() => setDraggedCard(card)}
                             onDragEnd={(event, info) => handleDragEnd(card, event, info)}
                             whileDrag={{
@@ -368,7 +368,7 @@ const AssholeDaiDiTable = ({
                             }}
                             style={{
                               cursor: "grab",
-                              opacity: draggedCard === card ? 0.5 : 1,
+                              opacity: draggedCard === card ? 0.7 : 1,
                             }}
                             onClick={(e) => {
                               if (draggedCard) return;
@@ -521,8 +521,8 @@ const AssholeDaiDiTable = ({
                         key={card}
                         ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
                         drag
-                        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                        dragElastic={0.1}
+                        dragElastic={0.2}
+                        dragMomentum={false}
                         onDragStart={() => setDraggedCard(card)}
                         onDragEnd={(event, info) => handleDragEnd(card, event, info)}
                         whileDrag={{
@@ -532,7 +532,7 @@ const AssholeDaiDiTable = ({
                         }}
                         style={{
                           cursor: "grab",
-                          opacity: draggedCard === card ? 0.5 : 1,
+                          opacity: draggedCard === card ? 0.7 : 1,
                         }}
                         onClick={(e) => {
                           if (draggedCard) return;
