@@ -137,6 +137,7 @@ const SequenceTable = ({
   const [hand, setHand] = useState<Array<{ card: string; idx: number }>>([]);
   const [manuallyOrdered, setManuallyOrdered] = useState(false);
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Sync hand with player's hand
@@ -175,15 +176,10 @@ const SequenceTable = ({
     }
   }, [mySeqPlayer?.hand.length]);
 
-  const handleDragEnd = (cardObj: { card: string; idx: number }, event: any, info: any) => {
-    setDraggedCard(null);
-    setManuallyOrdered(true);
-
-    const dropX = info.point.x;
-    const dropY = info.point.y;
-
+  const updateDropTarget = (cardObj: { card: string; idx: number }, dragX: number, dragY: number) => {
     let closestIndex = -1;
     let closestDistance = Infinity;
+    let insertBefore = false;
 
     hand.forEach((c, idx) => {
       if (c.card === cardObj.card) return;
@@ -195,34 +191,44 @@ const SequenceTable = ({
       const cardCenterY = rect.top + rect.height / 2;
 
       const distance = Math.sqrt(
-        Math.pow(dropX - cardCenterX, 2) + Math.pow(dropY - cardCenterY, 2)
+        Math.pow(dragX - cardCenterX, 2) + Math.pow(dragY - cardCenterY, 2)
       );
 
       if (distance < closestDistance) {
         closestDistance = distance;
         closestIndex = idx;
+        insertBefore = dragX < cardCenterX;
       }
     });
 
     if (closestIndex !== -1) {
+      const currentIndex = hand.findIndex(c => c.card === cardObj.card);
+      let targetIndex = insertBefore ? closestIndex : closestIndex + 1;
+
+      if (currentIndex < closestIndex && !insertBefore) {
+        targetIndex--;
+      } else if (currentIndex > closestIndex && insertBefore) {
+        targetIndex++;
+      }
+
+      setDropTargetIndex(targetIndex);
+    } else {
+      setDropTargetIndex(null);
+    }
+  };
+
+  const handleDragEnd = (cardObj: { card: string; idx: number }) => {
+    if (dropTargetIndex !== null) {
       const newHand = [...hand];
       const currentIndex = newHand.findIndex(c => c.card === cardObj.card);
       newHand.splice(currentIndex, 1);
-
-      const targetCardEl = cardRefs.current[`${hand[closestIndex].idx}`];
-      if (targetCardEl) {
-        const rect = targetCardEl.getBoundingClientRect();
-        const cardCenterX = rect.left + rect.width / 2;
-
-        if (dropX < cardCenterX) {
-          newHand.splice(closestIndex > currentIndex ? closestIndex - 1 : closestIndex, 0, cardObj);
-        } else {
-          newHand.splice(closestIndex > currentIndex ? closestIndex : closestIndex + 1, 0, cardObj);
-        }
-      }
-
+      newHand.splice(dropTargetIndex > currentIndex ? dropTargetIndex - 1 : dropTargetIndex, 0, cardObj);
       setHand(newHand);
     }
+
+    setDraggedCard(null);
+    setDropTargetIndex(null);
+    setManuallyOrdered(true);
   };
 
   // Determine win/loss for overlay
@@ -520,12 +526,13 @@ const SequenceTable = ({
                 )}
               </div>
               <div className="flex gap-1.5 flex-wrap justify-start pb-1">
-                {hand.map(({ card, idx: i }) => {
+                {hand.map(({ card, idx: i }, handIdx) => {
                   if (card === "HIDDEN") return null;
                   const { rank, suitSymbol, suitColor } = parseCard(card);
                   const isSelected = selectedCardIndex === i;
                   const isJokerCard = card.startsWith("JKR");
                   const isSpecial = isJack(card) || isJokerCard;
+                  const isDragging = draggedCard === card;
                   const hr = normalizeHouseRules(gameState.houseRules);
 
                   // Label logic
@@ -541,67 +548,88 @@ const SequenceTable = ({
                   }
 
                   return (
-                    <motion.div
-                      key={i}
-                      ref={(el) => (cardRefs.current[`${i}`] = el)}
-                      drag
-                      dragElastic={0.2}
-                      dragMomentum={false}
-                      dragSnapToOrigin
-                      onDragStart={() => setDraggedCard(card)}
-                      onDragEnd={(event, info) => handleDragEnd({ card, idx: i }, event, info)}
-                      whileDrag={{
-                        scale: 1.1,
-                        zIndex: 50,
-                        cursor: "grabbing",
-                      }}
-                      animate={{
-                        x: 0,
-                        y: 0,
-                      }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 30,
-                      }}
-                      whileTap={{ scale: 0.95 }}
-                      style={{
-                        cursor: "grab",
-                        opacity: draggedCard === card ? 0.7 : 1,
-                      }}
-                      onClick={(e) => {
-                        if (draggedCard) return;
-                        onSelectCard(isSelected ? null : i);
-                      }}
-                      className={`
-                        flex-shrink-0 w-12 h-16 rounded-lg border-2 flex flex-col items-center justify-center
-                        transition-all duration-150 bg-white cursor-pointer
-                        ${isSelected
-                          ? "border-primary shadow-lg -translate-y-2 scale-105"
-                          : "border-border/50 hover:border-border"
-                        }
-                        ${isSpecial ? "bg-secondary/50" : ""}
-                        ${!isMyTurn ? "opacity-70" : ""}
-                      `}
-                    >
-                      <span
-                        className="font-display font-bold text-sm leading-none"
-                        style={{ color: isJokerCard ? "#7c3aed" : suitColor === "red" ? "#dc2626" : "#000000" }}
-                      >
-                        {isJokerCard ? "JKR" : rank}
-                      </span>
-                      {!isJokerCard && (
-                        <span
-                          className="text-xs leading-none"
-                          style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
+                    <>
+                      {dropTargetIndex === handIdx && !isDragging && (
+                        <div
+                          key={`placeholder-${handIdx}`}
+                          className="flex-shrink-0 w-12 h-16 rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center"
                         >
-                          {suitSymbol}
+                          <span className="text-xs text-primary">Drop</span>
+                        </div>
+                      )}
+
+                      <motion.div
+                        key={i}
+                        ref={(el) => (cardRefs.current[`${i}`] = el)}
+                        drag
+                        dragElastic={0.2}
+                        dragMomentum={false}
+                        dragSnapToOrigin
+                        onDragStart={() => setDraggedCard(card)}
+                        onDrag={(event, info) => updateDropTarget({ card, idx: i }, info.point.x, info.point.y)}
+                        onDragEnd={() => handleDragEnd({ card, idx: i })}
+                        whileDrag={{
+                          scale: 1.1,
+                          zIndex: 50,
+                          cursor: "grabbing",
+                        }}
+                        animate={{
+                          x: 0,
+                          y: 0,
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 30,
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{
+                          cursor: "grab",
+                          opacity: isDragging ? 0.3 : 1,
+                        }}
+                        onClick={(e) => {
+                          if (draggedCard) return;
+                          onSelectCard(isSelected ? null : i);
+                        }}
+                        className={`
+                          flex-shrink-0 w-12 h-16 rounded-lg border-2 flex flex-col items-center justify-center
+                          transition-all duration-150 bg-white cursor-pointer
+                          ${isSelected
+                            ? "border-primary shadow-lg -translate-y-2 scale-105"
+                            : "border-border/50 hover:border-border"
+                          }
+                          ${isSpecial ? "bg-secondary/50" : ""}
+                          ${!isMyTurn ? "opacity-70" : ""}
+                        `}
+                      >
+                        <span
+                          className="font-display font-bold text-sm leading-none"
+                          style={{ color: isJokerCard ? "#7c3aed" : suitColor === "red" ? "#dc2626" : "#000000" }}
+                        >
+                          {isJokerCard ? "JKR" : rank}
                         </span>
+                        {!isJokerCard && (
+                          <span
+                            className="text-xs leading-none"
+                            style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}
+                          >
+                            {suitSymbol}
+                          </span>
+                        )}
+                        {label && (
+                          <span className={`text-[6px] ${label.color} font-display mt-0.5`}>{label.text}</span>
+                        )}
+                      </motion.div>
+
+                      {dropTargetIndex === hand.length && handIdx === hand.length - 1 && (
+                        <div
+                          key={`placeholder-end`}
+                          className="flex-shrink-0 w-12 h-16 rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center"
+                        >
+                          <span className="text-xs text-primary">Drop</span>
+                        </div>
                       )}
-                      {label && (
-                        <span className={`text-[6px] ${label.color} font-display mt-0.5`}>{label.text}</span>
-                      )}
-                    </motion.div>
+                    </>
                   );
                 })}
               </div>

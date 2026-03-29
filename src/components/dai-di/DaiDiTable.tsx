@@ -85,6 +85,7 @@ const DaiDiTable = ({
   const [showPlayers, setShowPlayers] = useState(false);
   const [hand, setHand] = useState<string[]>([]);
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const otherPlayers = ddPlayers.filter((p) => p.playerId !== myPlayerId);
@@ -111,16 +112,10 @@ const DaiDiTable = ({
     );
   };
 
-  const handleDragEnd = (card: string, event: any, info: any) => {
-    setDraggedCard(null);
-
-    // Get the position where the card was dropped
-    const dropX = info.point.x;
-    const dropY = info.point.y;
-
-    // Find the closest card position
+  const updateDropTarget = (card: string, dragX: number, dragY: number) => {
     let closestIndex = -1;
     let closestDistance = Infinity;
+    let insertBefore = false;
 
     hand.forEach((c, idx) => {
       if (c === card) return;
@@ -132,37 +127,44 @@ const DaiDiTable = ({
       const cardCenterY = rect.top + rect.height / 2;
 
       const distance = Math.sqrt(
-        Math.pow(dropX - cardCenterX, 2) + Math.pow(dropY - cardCenterY, 2)
+        Math.pow(dragX - cardCenterX, 2) + Math.pow(dragY - cardCenterY, 2)
       );
 
       if (distance < closestDistance) {
         closestDistance = distance;
         closestIndex = idx;
+        insertBefore = dragX < cardCenterX;
       }
     });
 
     if (closestIndex !== -1) {
+      const currentIndex = hand.indexOf(card);
+      let targetIndex = insertBefore ? closestIndex : closestIndex + 1;
+
+      // Adjust for current position
+      if (currentIndex < closestIndex && !insertBefore) {
+        targetIndex--;
+      } else if (currentIndex > closestIndex && insertBefore) {
+        targetIndex++;
+      }
+
+      setDropTargetIndex(targetIndex);
+    } else {
+      setDropTargetIndex(null);
+    }
+  };
+
+  const handleDragEnd = (card: string) => {
+    if (dropTargetIndex !== null) {
       const newHand = [...hand];
       const currentIndex = newHand.indexOf(card);
       newHand.splice(currentIndex, 1);
-
-      // Determine if we should insert before or after
-      const targetCardEl = cardRefs.current[`${hand[closestIndex]}-${closestIndex}`];
-      if (targetCardEl) {
-        const rect = targetCardEl.getBoundingClientRect();
-        const cardCenterX = rect.left + rect.width / 2;
-
-        if (dropX < cardCenterX) {
-          // Insert before
-          newHand.splice(closestIndex > currentIndex ? closestIndex - 1 : closestIndex, 0, card);
-        } else {
-          // Insert after
-          newHand.splice(closestIndex > currentIndex ? closestIndex : closestIndex + 1, 0, card);
-        }
-      }
-
+      newHand.splice(dropTargetIndex > currentIndex ? dropTargetIndex - 1 : dropTargetIndex, 0, card);
       setHand(newHand);
     }
+
+    setDraggedCard(null);
+    setDropTargetIndex(null);
   };
 
   const selectedCombo = myDDPlayer && selectedCards.length > 0
@@ -409,46 +411,70 @@ const DaiDiTable = ({
                     // Check if this card is selected based on original hand position
                     const originalIdx = myDDPlayer?.hand.indexOf(card) ?? -1;
                     const isSelected = originalIdx !== -1 && selectedCards.includes(originalIdx);
+                    const isDragging = draggedCard === card;
 
                     return (
-                      <motion.div
-                        key={card}
-                        ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
-                        drag
-                        dragElastic={0.2}
-                        dragMomentum={false}
-                        dragSnapToOrigin
-                        onDragStart={() => setDraggedCard(card)}
-                        onDragEnd={(event, info) => handleDragEnd(card, event, info)}
-                        whileDrag={{
-                          scale: 1.1,
-                          zIndex: 50,
-                          cursor: "grabbing",
-                        }}
-                        animate={{
-                          x: 0,
-                          y: 0,
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                        }}
-                        style={{
-                          cursor: "grab",
-                          opacity: draggedCard === card ? 0.7 : 1,
-                        }}
-                        onClick={(e) => {
-                          // Only select if not dragging
-                          if (draggedCard) return;
-                          toggleCard(i);
-                        }}
-                      >
-                        <DDCard
-                          card={card}
-                          selected={isSelected}
-                        />
-                      </motion.div>
+                      <>
+                        {/* Placeholder before this card */}
+                        {dropTargetIndex === i && !isDragging && (
+                          <div
+                            key={`placeholder-${i}`}
+                            className="w-11 h-[60px] rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center shrink-0"
+                          >
+                            <span className="text-xs text-primary">Drop</span>
+                          </div>
+                        )}
+
+                        <motion.div
+                          key={card}
+                          ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
+                          drag
+                          dragElastic={0.2}
+                          dragMomentum={false}
+                          dragSnapToOrigin
+                          onDragStart={() => setDraggedCard(card)}
+                          onDrag={(event, info) => updateDropTarget(card, info.point.x, info.point.y)}
+                          onDragEnd={() => handleDragEnd(card)}
+                          whileDrag={{
+                            scale: 1.1,
+                            zIndex: 50,
+                            cursor: "grabbing",
+                          }}
+                          animate={{
+                            x: 0,
+                            y: 0,
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
+                          }}
+                          style={{
+                            cursor: "grab",
+                            opacity: isDragging ? 0.3 : 1,
+                          }}
+                          onClick={(e) => {
+                            // Only select if not dragging
+                            if (draggedCard) return;
+                            toggleCard(i);
+                          }}
+                        >
+                          <DDCard
+                            card={card}
+                            selected={isSelected}
+                          />
+                        </motion.div>
+
+                        {/* Placeholder after last card */}
+                        {dropTargetIndex === hand.length && i === hand.length - 1 && (
+                          <div
+                            key={`placeholder-end`}
+                            className="w-11 h-[60px] rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center shrink-0"
+                          >
+                            <span className="text-xs text-primary">Drop</span>
+                          </div>
+                        )}
+                      </>
                     );
                   })}
                 </div>

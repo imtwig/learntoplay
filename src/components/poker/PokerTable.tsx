@@ -88,6 +88,7 @@ const PokerTable = ({
   const [showPlayers, setShowPlayers] = useState(false);
   const [holeCards, setHoleCards] = useState<string[]>([]);
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Sync hole cards with player's cards
@@ -97,14 +98,10 @@ const PokerTable = ({
     }
   }, [myPokerPlayer?.holeCards.length, myPokerPlayer?.holeCards.join(",")]);
 
-  const handleDragEnd = (card: string, event: any, info: any) => {
-    setDraggedCard(null);
-
-    const dropX = info.point.x;
-    const dropY = info.point.y;
-
+  const updateDropTarget = (card: string, dragX: number, dragY: number) => {
     let closestIndex = -1;
     let closestDistance = Infinity;
+    let insertBefore = false;
 
     holeCards.forEach((c, idx) => {
       if (c === card) return;
@@ -116,34 +113,43 @@ const PokerTable = ({
       const cardCenterY = rect.top + rect.height / 2;
 
       const distance = Math.sqrt(
-        Math.pow(dropX - cardCenterX, 2) + Math.pow(dropY - cardCenterY, 2)
+        Math.pow(dragX - cardCenterX, 2) + Math.pow(dragY - cardCenterY, 2)
       );
 
       if (distance < closestDistance) {
         closestDistance = distance;
         closestIndex = idx;
+        insertBefore = dragX < cardCenterX;
       }
     });
 
     if (closestIndex !== -1) {
+      const currentIndex = holeCards.indexOf(card);
+      let targetIndex = insertBefore ? closestIndex : closestIndex + 1;
+
+      if (currentIndex < closestIndex && !insertBefore) {
+        targetIndex--;
+      } else if (currentIndex > closestIndex && insertBefore) {
+        targetIndex++;
+      }
+
+      setDropTargetIndex(targetIndex);
+    } else {
+      setDropTargetIndex(null);
+    }
+  };
+
+  const handleDragEnd = (card: string) => {
+    if (dropTargetIndex !== null) {
       const newHand = [...holeCards];
       const currentIndex = newHand.indexOf(card);
       newHand.splice(currentIndex, 1);
-
-      const targetCardEl = cardRefs.current[`${holeCards[closestIndex]}-${closestIndex}`];
-      if (targetCardEl) {
-        const rect = targetCardEl.getBoundingClientRect();
-        const cardCenterX = rect.left + rect.width / 2;
-
-        if (dropX < cardCenterX) {
-          newHand.splice(closestIndex > currentIndex ? closestIndex - 1 : closestIndex, 0, card);
-        } else {
-          newHand.splice(closestIndex > currentIndex ? closestIndex : closestIndex + 1, 0, card);
-        }
-      }
-
+      newHand.splice(dropTargetIndex > currentIndex ? dropTargetIndex - 1 : dropTargetIndex, 0, card);
       setHoleCards(newHand);
     }
+
+    setDraggedCard(null);
+    setDropTargetIndex(null);
   };
 
   const raiseAction = availableActions.find((a) => a.action === "raise");
@@ -379,38 +385,63 @@ const PokerTable = ({
                 className="flex flex-col items-center gap-2"
               >
                 <div className="flex gap-2 flex-wrap justify-center">
-                  {holeCards.map((card, i) => (
-                    <motion.div
-                      key={card}
-                      ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
-                      drag
-                      dragElastic={0.2}
-                      dragMomentum={false}
-                      dragSnapToOrigin
-                      onDragStart={() => setDraggedCard(card)}
-                      onDragEnd={(event, info) => handleDragEnd(card, event, info)}
-                      whileDrag={{
-                        scale: 1.1,
-                        zIndex: 50,
-                        cursor: "grabbing",
-                      }}
-                      animate={{
-                        x: 0,
-                        y: 0,
-                      }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 30,
-                      }}
-                      style={{
-                        cursor: "grab",
-                        opacity: draggedCard === card ? 0.7 : 1,
-                      }}
-                    >
-                      <PokerCard card={card} />
-                    </motion.div>
-                  ))}
+                  {holeCards.map((card, i) => {
+                    const isDragging = draggedCard === card;
+
+                    return (
+                      <>
+                        {dropTargetIndex === i && !isDragging && (
+                          <div
+                            key={`placeholder-${i}`}
+                            className="w-12 h-16 rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center shrink-0"
+                          >
+                            <span className="text-xs text-primary">Drop</span>
+                          </div>
+                        )}
+
+                        <motion.div
+                          key={card}
+                          ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
+                          drag
+                          dragElastic={0.2}
+                          dragMomentum={false}
+                          dragSnapToOrigin
+                          onDragStart={() => setDraggedCard(card)}
+                          onDrag={(event, info) => updateDropTarget(card, info.point.x, info.point.y)}
+                          onDragEnd={() => handleDragEnd(card)}
+                          whileDrag={{
+                            scale: 1.1,
+                            zIndex: 50,
+                            cursor: "grabbing",
+                          }}
+                          animate={{
+                            x: 0,
+                            y: 0,
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
+                          }}
+                          style={{
+                            cursor: "grab",
+                            opacity: isDragging ? 0.3 : 1,
+                          }}
+                        >
+                          <PokerCard card={card} />
+                        </motion.div>
+
+                        {dropTargetIndex === holeCards.length && i === holeCards.length - 1 && (
+                          <div
+                            key={`placeholder-end`}
+                            className="w-12 h-16 rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center shrink-0"
+                          >
+                            <span className="text-xs text-primary">Drop</span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })}
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-medium">
