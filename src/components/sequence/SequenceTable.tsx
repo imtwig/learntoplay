@@ -572,6 +572,8 @@ const SequenceTable = ({
                         dragElastic={0}
                         dragMomentum={false}
                         dragSnapToOrigin
+                        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                        dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                         onDragStart={() => setDraggedCard(card)}
                         onDrag={(event, info) => updateActiveDropZone(info.point.x, info.point.y)}
                         onDragEnd={() => {
@@ -585,7 +587,7 @@ const SequenceTable = ({
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                         whileDrag={{ scale: 1.05, zIndex: 50, cursor: "grabbing" }}
                         whileTap={{ scale: 0.95 }}
-                        style={{ cursor: "grab" }}
+                        style={{ cursor: "grab", touchAction: "none" }}
                         onClick={(e) => {
                           if (draggedCard) return;
                           onSelectCard(isSelected ? null : i);

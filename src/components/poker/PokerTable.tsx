@@ -410,6 +410,8 @@ const PokerTable = ({
                           dragElastic={0}
                           dragMomentum={false}
                           dragSnapToOrigin
+                          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                          dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                           onDragStart={() => setDraggedCard(card)}
                           onDrag={(event, info) => updateActiveDropZone(info.point.x, info.point.y)}
                           onDragEnd={() => {
@@ -422,7 +424,7 @@ const PokerTable = ({
                           animate={{ opacity: isDragging ? 0.3 : 1 }}
                           transition={{ type: "spring", stiffness: 500, damping: 30 }}
                           whileDrag={{ scale: 1.05, zIndex: 50, cursor: "grabbing" }}
-                          style={{ cursor: "grab" }}
+                          style={{ cursor: "grab", touchAction: "none" }}
                           className="shrink-0"
                         >
                           <PokerCard card={card} />
