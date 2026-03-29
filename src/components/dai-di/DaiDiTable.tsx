@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { ArrowLeft, ChevronDown, ChevronUp, Trophy, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DDGameState, DDPlayer, PlayedCombination } from "@/lib/daiDi";
@@ -86,8 +86,16 @@ const DaiDiTable = ({
   const { phase, roundNumber, currentCombination, currentPlayerIndex, message, houseRules, penalties } = gameState;
   const ddPlayers = gameState.players;
   const [showPlayers, setShowPlayers] = useState(false);
+  const [hand, setHand] = useState<string[]>([]);
 
   const otherPlayers = ddPlayers.filter((p) => p.playerId !== myPlayerId);
+
+  // Sync hand with player's hand
+  useEffect(() => {
+    if (myDDPlayer) {
+      setHand(myDDPlayer.hand);
+    }
+  }, [myDDPlayer?.hand.length, myDDPlayer?.hand.join(",")]);
 
   const toggleCard = (idx: number) => {
     setSelectedCards(
@@ -336,16 +344,31 @@ const DaiDiTable = ({
             {/* My hand */}
             {myDDPlayer && (
               <div className="w-full space-y-2">
-                <div className="flex gap-1 justify-center flex-wrap">
-                  {myDDPlayer.hand.map((card, i) => (
-                    <DDCard
-                      key={`${card}-${i}`}
-                      card={card}
-                      selected={selectedCards.includes(i)}
-                      onClick={() => toggleCard(i)}
-                    />
+                <Reorder.Group
+                  axis="x"
+                  values={hand}
+                  onReorder={setHand}
+                  className="flex gap-1 justify-center flex-wrap"
+                >
+                  {hand.map((card, i) => (
+                    <Reorder.Item
+                      key={card}
+                      value={card}
+                      className="cursor-grab active:cursor-grabbing"
+                      whileDrag={{
+                        scale: 1.05,
+                        zIndex: 50,
+                        cursor: "grabbing",
+                      }}
+                    >
+                      <DDCard
+                        card={card}
+                        selected={selectedCards.includes(i)}
+                        onClick={() => toggleCard(i)}
+                      />
+                    </Reorder.Item>
                   ))}
-                </div>
+                </Reorder.Group>
 
                 {selectedCards.length > 0 && (
                   <div className="text-center text-[10px] font-display text-muted-foreground">

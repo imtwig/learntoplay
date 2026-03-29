@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { ArrowLeft, RotateCcw, Crown, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SeqGameState, SeqTeam } from "@/lib/sequence";
@@ -132,6 +132,46 @@ const SequenceTable = ({
       setTurnFlash(false);
     }
   }, [isMyTurn, currentPlayerIndex]);
+
+  // Hand state for drag-and-drop
+  const [hand, setHand] = useState<Array<{ card: string; idx: number }>>([]);
+  const [manuallyOrdered, setManuallyOrdered] = useState(false);
+
+  // Sync hand with player's hand
+  useEffect(() => {
+    if (mySeqPlayer && !manuallyOrdered) {
+      const suitOrder: Record<string, number> = { "♠": 0, "♥": 1, "♣": 2, "♦": 3 };
+      const rankOrder: Record<string, number> = { A: 14, K: 13, Q: 12, J: 11, "10": 10, "9": 9, "8": 8, "7": 7, "6": 6, "5": 5, "4": 4, "3": 3, "2": 2 };
+      const sortedIndices = mySeqPlayer.hand
+        .map((c, i) => ({ card: c, idx: i }))
+        .filter((e) => e.card !== "HIDDEN")
+        .sort((a, b) => {
+          const aJkr = a.card.startsWith("JKR");
+          const bJkr = b.card.startsWith("JKR");
+          if (aJkr && !bJkr) return -1;
+          if (!aJkr && bJkr) return 1;
+          if (aJkr && bJkr) return 0;
+          const aJack = isJack(a.card);
+          const bJack = isJack(b.card);
+          if (aJack && !bJack) return -1;
+          if (!aJack && bJack) return 1;
+          const aP = parseCard(a.card);
+          const bP = parseCard(b.card);
+          const aSuit = suitOrder[aP.suitSymbol] ?? 9;
+          const bSuit = suitOrder[bP.suitSymbol] ?? 9;
+          if (aSuit !== bSuit) return aSuit - bSuit;
+          return (rankOrder[bP.rank] ?? 0) - (rankOrder[aP.rank] ?? 0);
+        });
+      setHand(sortedIndices);
+    }
+  }, [mySeqPlayer?.hand.length, mySeqPlayer?.hand.join(","), manuallyOrdered]);
+
+  // Reset manual ordering when hand changes significantly (new cards dealt)
+  useEffect(() => {
+    if (mySeqPlayer) {
+      setManuallyOrdered(false);
+    }
+  }, [mySeqPlayer?.hand.length]);
 
   // Determine win/loss for overlay
   const isFinished = phase === "finished" && winner;
@@ -427,31 +467,16 @@ const SequenceTable = ({
                   </Button>
                 )}
               </div>
-              <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {(() => {
-                  const suitOrder: Record<string, number> = { "♠": 0, "♥": 1, "♣": 2, "♦": 3 };
-                  const rankOrder: Record<string, number> = { A: 14, K: 13, Q: 12, J: 11, "10": 10, "9": 9, "8": 8, "7": 7, "6": 6, "5": 5, "4": 4, "3": 3, "2": 2 };
-                  const sortedIndices = mySeqPlayer.hand
-                    .map((c, i) => ({ card: c, idx: i }))
-                    .filter((e) => e.card !== "HIDDEN")
-                    .sort((a, b) => {
-                      const aJkr = a.card.startsWith("JKR");
-                      const bJkr = b.card.startsWith("JKR");
-                      if (aJkr && !bJkr) return -1;
-                      if (!aJkr && bJkr) return 1;
-                      if (aJkr && bJkr) return 0;
-                      const aJack = isJack(a.card);
-                      const bJack = isJack(b.card);
-                      if (aJack && !bJack) return -1;
-                      if (!aJack && bJack) return 1;
-                      const aP = parseCard(a.card);
-                      const bP = parseCard(b.card);
-                      const aSuit = suitOrder[aP.suitSymbol] ?? 9;
-                      const bSuit = suitOrder[bP.suitSymbol] ?? 9;
-                      if (aSuit !== bSuit) return aSuit - bSuit;
-                      return (rankOrder[bP.rank] ?? 0) - (rankOrder[aP.rank] ?? 0);
-                    });
-                  return sortedIndices.map(({ card, idx: i }) => {
+              <Reorder.Group
+                axis="x"
+                values={hand}
+                onReorder={(newOrder) => {
+                  setHand(newOrder);
+                  setManuallyOrdered(true);
+                }}
+                className="flex gap-1.5 overflow-x-auto pb-1"
+              >
+                {hand.map(({ card, idx: i }) => {
                   if (card === "HIDDEN") return null;
                   const { rank, suitSymbol, suitColor } = parseCard(card);
                   const isSelected = selectedCardIndex === i;
@@ -472,21 +497,30 @@ const SequenceTable = ({
                   }
 
                   return (
-                    <motion.button
+                    <Reorder.Item
                       key={`${card}-${i}`}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => onSelectCard(isSelected ? null : i)}
-                      className={`
-                        flex-shrink-0 w-12 h-16 rounded-lg border-2 flex flex-col items-center justify-center
-                        transition-all duration-150 bg-white
-                        ${isSelected
-                          ? "border-primary shadow-lg -translate-y-2 scale-105"
-                          : "border-border/50 hover:border-border"
-                        }
-                        ${isSpecial ? "bg-secondary/50" : ""}
-                        ${!isMyTurn ? "opacity-70" : ""}
-                      `}
+                      value={{ card, idx: i }}
+                      className="cursor-grab active:cursor-grabbing"
+                      whileDrag={{
+                        scale: 1.05,
+                        zIndex: 50,
+                        cursor: "grabbing",
+                      }}
                     >
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => onSelectCard(isSelected ? null : i)}
+                        className={`
+                          flex-shrink-0 w-12 h-16 rounded-lg border-2 flex flex-col items-center justify-center
+                          transition-all duration-150 bg-white
+                          ${isSelected
+                            ? "border-primary shadow-lg -translate-y-2 scale-105"
+                            : "border-border/50 hover:border-border"
+                          }
+                          ${isSpecial ? "bg-secondary/50" : ""}
+                          ${!isMyTurn ? "opacity-70" : ""}
+                        `}
+                      >
                       <span
                         className="font-display font-bold text-sm leading-none"
                         style={{ color: isJokerCard ? "#7c3aed" : suitColor === "red" ? "#dc2626" : "#000000" }}
@@ -505,10 +539,10 @@ const SequenceTable = ({
                         <span className={`text-[6px] ${label.color} font-display mt-0.5`}>{label.text}</span>
                       )}
                     </motion.button>
+                    </Reorder.Item>
                   );
-                  });
-                })()}
-              </div>
+                })}
+              </Reorder.Group>
             </div>
           )}
 

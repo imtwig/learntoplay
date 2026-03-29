@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { ArrowLeft, ChevronDown, ChevronUp, Trophy, Crown, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ADDGameState, ADDPlayer, PlayedCombination } from "@/lib/assholeDaiDi";
@@ -102,8 +102,16 @@ const AssholeDaiDiTable = ({
   const { phase, roundNumber, currentCombination, currentPlayerIndex, message, houseRules } = gameState;
   const addPlayers = gameState.players;
   const [showPlayers, setShowPlayers] = useState(false);
+  const [hand, setHand] = useState<string[]>([]);
 
   const otherPlayers = addPlayers.filter((p) => p.playerId !== myPlayerId);
+
+  // Sync hand with player's hand
+  useEffect(() => {
+    if (myADDPlayer) {
+      setHand(myADDPlayer.hand);
+    }
+  }, [myADDPlayer?.hand.length, myADDPlayer?.hand.join(",")]);
 
   const toggleCard = (idx: number) => {
     setSelectedCards(
@@ -284,17 +292,32 @@ const AssholeDaiDiTable = ({
                 {myADDPlayer && (
                   <>
                     <p className="text-[10px] font-display tracking-wider text-muted-foreground">YOUR HAND — TAP TO SELECT</p>
-                    <div className="flex gap-1 justify-center flex-wrap">
-                      {myADDPlayer.hand.map((card, i) => (
-                        <ADDCard
-                          key={i}
-                          card={card}
-                          small
-                          selected={selectedCards.includes(i)}
-                          onClick={() => toggleCard(i)}
-                        />
+                    <Reorder.Group
+                      axis="x"
+                      values={hand}
+                      onReorder={setHand}
+                      className="flex gap-1 justify-center flex-wrap"
+                    >
+                      {hand.map((card, i) => (
+                        <Reorder.Item
+                          key={card}
+                          value={card}
+                          className="cursor-grab active:cursor-grabbing"
+                          whileDrag={{
+                            scale: 1.05,
+                            zIndex: 50,
+                            cursor: "grabbing",
+                          }}
+                        >
+                          <ADDCard
+                            card={card}
+                            small
+                            selected={selectedCards.includes(i)}
+                            onClick={() => toggleCard(i)}
+                          />
+                        </Reorder.Item>
                       ))}
-                    </div>
+                    </Reorder.Group>
                     <Button
                       onClick={() => onSubmitSwapReturn(selectedCards)}
                       disabled={selectedCards.length !== mySwapPending.count}
@@ -422,16 +445,31 @@ const AssholeDaiDiTable = ({
             {/* My hand */}
             {myADDPlayer && myADDPlayer.finishOrder === 0 && (
               <div className="w-full space-y-2">
-                <div className="flex gap-1 justify-center flex-wrap">
-                  {myADDPlayer.hand.map((card, i) => (
-                    <ADDCard
-                      key={`${card}-${i}`}
-                      card={card}
-                      selected={selectedCards.includes(i)}
-                      onClick={() => toggleCard(i)}
-                    />
+                <Reorder.Group
+                  axis="x"
+                  values={hand}
+                  onReorder={setHand}
+                  className="flex gap-1 justify-center flex-wrap"
+                >
+                  {hand.map((card, i) => (
+                    <Reorder.Item
+                      key={card}
+                      value={card}
+                      className="cursor-grab active:cursor-grabbing"
+                      whileDrag={{
+                        scale: 1.05,
+                        zIndex: 50,
+                        cursor: "grabbing",
+                      }}
+                    >
+                      <ADDCard
+                        card={card}
+                        selected={selectedCards.includes(i)}
+                        onClick={() => toggleCard(i)}
+                      />
+                    </Reorder.Item>
                   ))}
-                </div>
+                </Reorder.Group>
 
                 {selectedCards.length > 0 && (
                   <div className="text-center text-[10px] font-display text-muted-foreground">

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { ArrowLeft, Crown, ChevronDown, ChevronUp, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +86,14 @@ const PokerTable = ({
   const { phase, communityCards, pot, handNumber, winners, message, smallBlind, bigBlind, dealerIndex } = gameState;
   const pokerPlayers = gameState.players;
   const [showPlayers, setShowPlayers] = useState(false);
+  const [holeCards, setHoleCards] = useState<string[]>([]);
+
+  // Sync hole cards with player's cards
+  useEffect(() => {
+    if (myPokerPlayer) {
+      setHoleCards(myPokerPlayer.holeCards);
+    }
+  }, [myPokerPlayer?.holeCards.length, myPokerPlayer?.holeCards.join(",")]);
 
   const raiseAction = availableActions.find((a) => a.action === "raise");
   const callAction = availableActions.find((a) => a.action === "call");
@@ -319,18 +327,27 @@ const PokerTable = ({
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center gap-2"
               >
-                <div className="flex gap-2">
-                  {myPokerPlayer.holeCards.map((card, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 + i * 0.1 }}
+                <Reorder.Group
+                  axis="x"
+                  values={holeCards}
+                  onReorder={setHoleCards}
+                  className="flex gap-2"
+                >
+                  {holeCards.map((card, i) => (
+                    <Reorder.Item
+                      key={card}
+                      value={card}
+                      className="cursor-grab active:cursor-grabbing"
+                      whileDrag={{
+                        scale: 1.05,
+                        zIndex: 50,
+                        cursor: "grabbing",
+                      }}
                     >
                       <PokerCard card={card} />
-                    </motion.div>
+                    </Reorder.Item>
                   ))}
-                </div>
+                </Reorder.Group>
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-medium">
                     {myPokerPlayer.name} (You)
