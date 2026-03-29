@@ -123,17 +123,36 @@ const DaiDiTable = ({
     Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
       if (!el) return;
       const rect = el.getBoundingClientRect();
+
+      // Expand detection area by treating dropzone as wider
+      const expandedWidth = rect.width + 80;
       const zoneCenterX = rect.left + rect.width / 2;
       const zoneCenterY = rect.top + rect.height / 2;
 
-      // Prioritize horizontal distance for better touch detection
-      const horizontalDistance = Math.abs(dragX - zoneCenterX);
-      const verticalDistance = Math.abs(adjustedY - zoneCenterY);
-      const distance = horizontalDistance + verticalDistance * 0.3;
+      // Check if within expanded horizontal bounds
+      const leftBound = rect.left - 40;
+      const rightBound = rect.right + 40;
 
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestZone = parseInt(zoneIndex);
+      if (dragX >= leftBound && dragX <= rightBound) {
+        // Prioritize zones the finger is directly over
+        const horizontalDistance = Math.abs(dragX - zoneCenterX);
+        const verticalDistance = Math.abs(adjustedY - zoneCenterY);
+        const distance = horizontalDistance * 0.5 + verticalDistance * 0.1;
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestZone = parseInt(zoneIndex);
+        }
+      } else {
+        // For zones finger is not over, use normal distance
+        const horizontalDistance = Math.abs(dragX - zoneCenterX);
+        const verticalDistance = Math.abs(adjustedY - zoneCenterY);
+        const distance = horizontalDistance + verticalDistance * 0.2;
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestZone = parseInt(zoneIndex);
+        }
       }
     });
 
