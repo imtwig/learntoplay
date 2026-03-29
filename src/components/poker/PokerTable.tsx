@@ -102,6 +102,9 @@ const PokerTable = ({
     let closestZone = -1;
     let closestDistance = Infinity;
 
+    // Adjust touch position to account for finger offset (touch registers higher than visual position)
+    const adjustedY = dragY + 40;
+
     Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
       if (!el) return;
       const rect = el.getBoundingClientRect();
@@ -110,7 +113,7 @@ const PokerTable = ({
 
       // Prioritize horizontal distance for better touch detection
       const horizontalDistance = Math.abs(dragX - zoneCenterX);
-      const verticalDistance = Math.abs(dragY - zoneCenterY);
+      const verticalDistance = Math.abs(adjustedY - zoneCenterY);
       const distance = horizontalDistance + verticalDistance * 0.3;
 
       if (distance < closestDistance) {
