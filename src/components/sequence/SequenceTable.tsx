@@ -547,12 +547,22 @@ const SequenceTable = ({
                       drag
                       dragElastic={0.2}
                       dragMomentum={false}
+                      dragSnapToOrigin
                       onDragStart={() => setDraggedCard(card)}
                       onDragEnd={(event, info) => handleDragEnd({ card, idx: i }, event, info)}
                       whileDrag={{
                         scale: 1.1,
                         zIndex: 50,
                         cursor: "grabbing",
+                      }}
+                      animate={{
+                        x: 0,
+                        y: 0,
+                      }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
                       }}
                       whileTap={{ scale: 0.95 }}
                       style={{
