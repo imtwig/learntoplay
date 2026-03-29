@@ -500,19 +500,18 @@ const SequenceTable = ({
                     <Reorder.Item
                       key={`${card}-${i}`}
                       value={{ card, idx: i }}
-                      className="cursor-grab active:cursor-grabbing"
                       whileDrag={{
                         scale: 1.05,
                         zIndex: 50,
-                        cursor: "grabbing",
                       }}
+                      style={{ cursor: "grab" }}
                     >
-                      <motion.button
+                      <motion.div
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onSelectCard(isSelected ? null : i)}
                         className={`
                           flex-shrink-0 w-12 h-16 rounded-lg border-2 flex flex-col items-center justify-center
-                          transition-all duration-150 bg-white
+                          transition-all duration-150 bg-white cursor-pointer
                           ${isSelected
                             ? "border-primary shadow-lg -translate-y-2 scale-105"
                             : "border-border/50 hover:border-border"
@@ -538,7 +537,7 @@ const SequenceTable = ({
                       {label && (
                         <span className={`text-[6px] ${label.color} font-display mt-0.5`}>{label.text}</span>
                       )}
-                    </motion.button>
+                    </motion.div>
                     </Reorder.Item>
                   );
                 })}

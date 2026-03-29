@@ -337,12 +337,11 @@ const PokerTable = ({
                     <Reorder.Item
                       key={card}
                       value={card}
-                      className="cursor-grab active:cursor-grabbing"
                       whileDrag={{
                         scale: 1.05,
                         zIndex: 50,
-                        cursor: "grabbing",
                       }}
+                      style={{ cursor: "grab" }}
                     >
                       <PokerCard card={card} />
                     </Reorder.Item>

@@ -24,19 +24,16 @@ interface Props {
   myPlayerId: string | undefined;
 }
 
-const DDCard = ({ card, small = false, selected = false, onClick }: {
-  card: string; small?: boolean; selected?: boolean; onClick?: () => void;
+const DDCard = ({ card, small = false, selected = false }: {
+  card: string; small?: boolean; selected?: boolean;
 }) => {
   const { rank, suitSymbol, suitColor } = cardDisplay(card);
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       className={`
         ${small ? "w-9 h-13" : "w-11 h-[60px]"} rounded-lg border-2 flex flex-col items-center justify-center
         transition-all shrink-0
         ${selected ? "border-primary bg-primary/10 -translate-y-2 shadow-md" : "border-border/50 bg-white hover:border-primary/30"}
-        ${onClick ? "cursor-pointer" : "cursor-default"}
       `}
     >
       <span
@@ -51,7 +48,7 @@ const DDCard = ({ card, small = false, selected = false, onClick }: {
       >
         {suitSymbol}
       </span>
-    </button>
+    </div>
   );
 };
 
@@ -354,18 +351,27 @@ const DaiDiTable = ({
                     <Reorder.Item
                       key={card}
                       value={card}
-                      className="cursor-grab active:cursor-grabbing"
                       whileDrag={{
                         scale: 1.05,
                         zIndex: 50,
-                        cursor: "grabbing",
+                      }}
+                      style={{ cursor: "grab" }}
+                      onPointerDown={(e) => {
+                        // If clicking on card content, select it
+                        if ((e.target as HTMLElement).closest('button')) {
+                          e.preventDefault();
+                        }
                       }}
                     >
-                      <DDCard
-                        card={card}
-                        selected={selectedCards.includes(i)}
+                      <div
+                        className="relative cursor-pointer"
                         onClick={() => toggleCard(i)}
-                      />
+                      >
+                        <DDCard
+                          card={card}
+                          selected={selectedCards.includes(i)}
+                        />
+                      </div>
                     </Reorder.Item>
                   ))}
                 </Reorder.Group>
