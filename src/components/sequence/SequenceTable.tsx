@@ -180,8 +180,8 @@ const SequenceTable = ({
     let closestZone = -1;
     let closestDistance = Infinity;
 
-    // Use the actual touch position without offset
-    const adjustedY = dragY;
+    // Adjust touch position downward to compensate for finger offset (touch registers higher)
+    const adjustedY = dragY + 70;
 
     Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
       if (!el) return;
