@@ -122,9 +122,12 @@ const DaiDiTable = ({
       const rect = el.getBoundingClientRect();
       const zoneCenterX = rect.left + rect.width / 2;
       const zoneCenterY = rect.top + rect.height / 2;
-      const distance = Math.sqrt(
-        Math.pow(dragX - zoneCenterX, 2) + Math.pow(dragY - zoneCenterY, 2)
-      );
+
+      // Prioritize horizontal distance for better touch detection
+      const horizontalDistance = Math.abs(dragX - zoneCenterX);
+      const verticalDistance = Math.abs(dragY - zoneCenterY);
+      const distance = horizontalDistance + verticalDistance * 0.3;
+
       if (distance < closestDistance) {
         closestDistance = distance;
         closestZone = parseInt(zoneIndex);
@@ -412,7 +415,7 @@ const DaiDiTable = ({
                     <div
                       ref={(el) => (dropZoneRefs.current[0] = el)}
                       className={`w-3 h-[60px] flex items-center justify-center shrink-0 transition-all ${
-                        activeDropZone === 0 ? 'w-12 bg-primary/20' : 'bg-transparent'
+                        activeDropZone === 0 ? 'w-16 bg-primary/20' : 'bg-transparent'
                       }`}
                     >
                       {activeDropZone === 0 && (
@@ -463,7 +466,7 @@ const DaiDiTable = ({
                           <div
                             ref={(el) => (dropZoneRefs.current[i + 1] = el)}
                             className={`w-3 h-[60px] flex items-center justify-center shrink-0 transition-all ${
-                              activeDropZone === i + 1 ? 'w-12 bg-primary/20' : 'bg-transparent'
+                              activeDropZone === i + 1 ? 'w-16 bg-primary/20' : 'bg-transparent'
                             }`}
                           >
                             {activeDropZone === i + 1 && (
