@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronDown, ChevronUp, Trophy, Crown, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ADDGameState, ADDPlayer, PlayedCombination } from "@/lib/assholeDaiDi";
@@ -100,6 +100,8 @@ const AssholeDaiDiTable = ({
   const addPlayers = gameState.players;
   const [showPlayers, setShowPlayers] = useState(false);
   const [hand, setHand] = useState<string[]>([]);
+  const [draggedCard, setDraggedCard] = useState<string | null>(null);
+  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const otherPlayers = addPlayers.filter((p) => p.playerId !== myPlayerId);
 
@@ -123,6 +125,55 @@ const AssholeDaiDiTable = ({
         ? selectedCards.filter((i) => i !== originalIdx)
         : [...selectedCards, originalIdx]
     );
+  };
+
+  const handleDragEnd = (card: string, event: any, info: any) => {
+    setDraggedCard(null);
+
+    const dropX = info.point.x;
+    const dropY = info.point.y;
+
+    let closestIndex = -1;
+    let closestDistance = Infinity;
+
+    hand.forEach((c, idx) => {
+      if (c === card) return;
+      const cardEl = cardRefs.current[`${c}-${idx}`];
+      if (!cardEl) return;
+
+      const rect = cardEl.getBoundingClientRect();
+      const cardCenterX = rect.left + rect.width / 2;
+      const cardCenterY = rect.top + rect.height / 2;
+
+      const distance = Math.sqrt(
+        Math.pow(dropX - cardCenterX, 2) + Math.pow(dropY - cardCenterY, 2)
+      );
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = idx;
+      }
+    });
+
+    if (closestIndex !== -1) {
+      const newHand = [...hand];
+      const currentIndex = newHand.indexOf(card);
+      newHand.splice(currentIndex, 1);
+
+      const targetCardEl = cardRefs.current[`${hand[closestIndex]}-${closestIndex}`];
+      if (targetCardEl) {
+        const rect = targetCardEl.getBoundingClientRect();
+        const cardCenterX = rect.left + rect.width / 2;
+
+        if (dropX < cardCenterX) {
+          newHand.splice(closestIndex > currentIndex ? closestIndex - 1 : closestIndex, 0, card);
+        } else {
+          newHand.splice(closestIndex > currentIndex ? closestIndex : closestIndex + 1, 0, card);
+        }
+      }
+
+      setHand(newHand);
+    }
   };
 
   const selectedCombo = myADDPlayer && selectedCards.length > 0
@@ -296,31 +347,31 @@ const AssholeDaiDiTable = ({
                 {myADDPlayer && (
                   <>
                     <p className="text-[10px] font-display tracking-wider text-muted-foreground">YOUR HAND — TAP TO SELECT</p>
-                    <Reorder.Group
-                      axis="x"
-                      values={hand}
-                      onReorder={setHand}
-                      className="flex gap-1 overflow-x-auto pb-2 px-2 justify-start"
-                      style={{
-                        WebkitOverflowScrolling: 'touch',
-                        scrollbarWidth: 'thin'
-                      }}
-                    >
+                    <div className="flex gap-1 justify-center flex-wrap px-2">
                       {hand.map((card, i) => {
                         const originalIdx = myADDPlayer?.hand.indexOf(card) ?? -1;
                         const isSelected = originalIdx !== -1 && selectedCards.includes(originalIdx);
 
                         return (
-                          <Reorder.Item
+                          <motion.div
                             key={card}
-                            value={card}
+                            ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
+                            drag
+                            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                            dragElastic={0.1}
+                            onDragStart={() => setDraggedCard(card)}
+                            onDragEnd={(event, info) => handleDragEnd(card, event, info)}
                             whileDrag={{
-                              scale: 1.05,
+                              scale: 1.1,
                               zIndex: 50,
+                              cursor: "grabbing",
                             }}
-                            style={{ cursor: "grab" }}
+                            style={{
+                              cursor: "grab",
+                              opacity: draggedCard === card ? 0.5 : 1,
+                            }}
                             onClick={(e) => {
-                              if (e.defaultPrevented) return;
+                              if (draggedCard) return;
                               toggleCard(i);
                             }}
                           >
@@ -329,10 +380,10 @@ const AssholeDaiDiTable = ({
                               small
                               selected={isSelected}
                             />
-                          </Reorder.Item>
+                          </motion.div>
                         );
                       })}
-                    </Reorder.Group>
+                    </div>
                     <Button
                       onClick={() => onSubmitSwapReturn(selectedCards)}
                       disabled={selectedCards.length !== mySwapPending.count}
@@ -460,27 +511,31 @@ const AssholeDaiDiTable = ({
             {/* My hand */}
             {myADDPlayer && myADDPlayer.finishOrder === 0 && (
               <div className="w-full space-y-2">
-                <Reorder.Group
-                  axis="x"
-                  values={hand}
-                  onReorder={setHand}
-                  className="flex gap-1 justify-center flex-wrap"
-                >
+                <div className="flex gap-1 justify-center flex-wrap px-2">
                   {hand.map((card, i) => {
                     const originalIdx = myADDPlayer?.hand.indexOf(card) ?? -1;
                     const isSelected = originalIdx !== -1 && selectedCards.includes(originalIdx);
 
                     return (
-                      <Reorder.Item
+                      <motion.div
                         key={card}
-                        value={card}
+                        ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
+                        drag
+                        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                        dragElastic={0.1}
+                        onDragStart={() => setDraggedCard(card)}
+                        onDragEnd={(event, info) => handleDragEnd(card, event, info)}
                         whileDrag={{
-                          scale: 1.05,
+                          scale: 1.1,
                           zIndex: 50,
+                          cursor: "grabbing",
                         }}
-                        style={{ cursor: "grab" }}
+                        style={{
+                          cursor: "grab",
+                          opacity: draggedCard === card ? 0.5 : 1,
+                        }}
                         onClick={(e) => {
-                          if (e.defaultPrevented) return;
+                          if (draggedCard) return;
                           toggleCard(i);
                         }}
                       >
@@ -488,10 +543,10 @@ const AssholeDaiDiTable = ({
                           card={card}
                           selected={isSelected}
                         />
-                      </Reorder.Item>
+                      </motion.div>
                     );
                   })}
-                </Reorder.Group>
+                </div>
 
                 {selectedCards.length > 0 && (
                   <div className="text-center text-[10px] font-display text-muted-foreground">

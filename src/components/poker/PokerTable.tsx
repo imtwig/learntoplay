@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Crown, ChevronDown, ChevronUp, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +87,8 @@ const PokerTable = ({
   const pokerPlayers = gameState.players;
   const [showPlayers, setShowPlayers] = useState(false);
   const [holeCards, setHoleCards] = useState<string[]>([]);
+  const [draggedCard, setDraggedCard] = useState<string | null>(null);
+  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Sync hole cards with player's cards
   useEffect(() => {
@@ -94,6 +96,55 @@ const PokerTable = ({
       setHoleCards(myPokerPlayer.holeCards);
     }
   }, [myPokerPlayer?.holeCards.length, myPokerPlayer?.holeCards.join(",")]);
+
+  const handleDragEnd = (card: string, event: any, info: any) => {
+    setDraggedCard(null);
+
+    const dropX = info.point.x;
+    const dropY = info.point.y;
+
+    let closestIndex = -1;
+    let closestDistance = Infinity;
+
+    holeCards.forEach((c, idx) => {
+      if (c === card) return;
+      const cardEl = cardRefs.current[`${c}-${idx}`];
+      if (!cardEl) return;
+
+      const rect = cardEl.getBoundingClientRect();
+      const cardCenterX = rect.left + rect.width / 2;
+      const cardCenterY = rect.top + rect.height / 2;
+
+      const distance = Math.sqrt(
+        Math.pow(dropX - cardCenterX, 2) + Math.pow(dropY - cardCenterY, 2)
+      );
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = idx;
+      }
+    });
+
+    if (closestIndex !== -1) {
+      const newHand = [...holeCards];
+      const currentIndex = newHand.indexOf(card);
+      newHand.splice(currentIndex, 1);
+
+      const targetCardEl = cardRefs.current[`${holeCards[closestIndex]}-${closestIndex}`];
+      if (targetCardEl) {
+        const rect = targetCardEl.getBoundingClientRect();
+        const cardCenterX = rect.left + rect.width / 2;
+
+        if (dropX < cardCenterX) {
+          newHand.splice(closestIndex > currentIndex ? closestIndex - 1 : closestIndex, 0, card);
+        } else {
+          newHand.splice(closestIndex > currentIndex ? closestIndex : closestIndex + 1, 0, card);
+        }
+      }
+
+      setHoleCards(newHand);
+    }
+  };
 
   const raiseAction = availableActions.find((a) => a.action === "raise");
   const callAction = availableActions.find((a) => a.action === "call");
@@ -327,29 +378,30 @@ const PokerTable = ({
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center gap-2"
               >
-                <Reorder.Group
-                  axis="x"
-                  values={holeCards}
-                  onReorder={setHoleCards}
-                  className="flex gap-2 overflow-x-auto"
-                  style={{
-                    WebkitOverflowScrolling: 'touch'
-                  }}
-                >
+                <div className="flex gap-2 flex-wrap justify-center">
                   {holeCards.map((card, i) => (
-                    <Reorder.Item
+                    <motion.div
                       key={card}
-                      value={card}
+                      ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
+                      drag
+                      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                      dragElastic={0.1}
+                      onDragStart={() => setDraggedCard(card)}
+                      onDragEnd={(event, info) => handleDragEnd(card, event, info)}
                       whileDrag={{
-                        scale: 1.05,
+                        scale: 1.1,
                         zIndex: 50,
+                        cursor: "grabbing",
                       }}
-                      style={{ cursor: "grab" }}
+                      style={{
+                        cursor: "grab",
+                        opacity: draggedCard === card ? 0.5 : 1,
+                      }}
                     >
                       <PokerCard card={card} />
-                    </Reorder.Item>
+                    </motion.div>
                   ))}
-                </Reorder.Group>
+                </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-medium">
                     {myPokerPlayer.name} (You)

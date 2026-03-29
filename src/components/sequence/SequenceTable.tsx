@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, RotateCcw, Crown, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SeqGameState, SeqTeam } from "@/lib/sequence";
@@ -136,6 +136,8 @@ const SequenceTable = ({
   // Hand state for drag-and-drop
   const [hand, setHand] = useState<Array<{ card: string; idx: number }>>([]);
   const [manuallyOrdered, setManuallyOrdered] = useState(false);
+  const [draggedCard, setDraggedCard] = useState<string | null>(null);
+  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Sync hand with player's hand
   useEffect(() => {
@@ -172,6 +174,56 @@ const SequenceTable = ({
       setManuallyOrdered(false);
     }
   }, [mySeqPlayer?.hand.length]);
+
+  const handleDragEnd = (cardObj: { card: string; idx: number }, event: any, info: any) => {
+    setDraggedCard(null);
+    setManuallyOrdered(true);
+
+    const dropX = info.point.x;
+    const dropY = info.point.y;
+
+    let closestIndex = -1;
+    let closestDistance = Infinity;
+
+    hand.forEach((c, idx) => {
+      if (c.card === cardObj.card) return;
+      const cardEl = cardRefs.current[`${c.idx}`];
+      if (!cardEl) return;
+
+      const rect = cardEl.getBoundingClientRect();
+      const cardCenterX = rect.left + rect.width / 2;
+      const cardCenterY = rect.top + rect.height / 2;
+
+      const distance = Math.sqrt(
+        Math.pow(dropX - cardCenterX, 2) + Math.pow(dropY - cardCenterY, 2)
+      );
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = idx;
+      }
+    });
+
+    if (closestIndex !== -1) {
+      const newHand = [...hand];
+      const currentIndex = newHand.findIndex(c => c.card === cardObj.card);
+      newHand.splice(currentIndex, 1);
+
+      const targetCardEl = cardRefs.current[`${hand[closestIndex].idx}`];
+      if (targetCardEl) {
+        const rect = targetCardEl.getBoundingClientRect();
+        const cardCenterX = rect.left + rect.width / 2;
+
+        if (dropX < cardCenterX) {
+          newHand.splice(closestIndex > currentIndex ? closestIndex - 1 : closestIndex, 0, cardObj);
+        } else {
+          newHand.splice(closestIndex > currentIndex ? closestIndex : closestIndex + 1, 0, cardObj);
+        }
+      }
+
+      setHand(newHand);
+    }
+  };
 
   // Determine win/loss for overlay
   const isFinished = phase === "finished" && winner;
@@ -467,19 +519,7 @@ const SequenceTable = ({
                   </Button>
                 )}
               </div>
-              <Reorder.Group
-                axis="x"
-                values={hand}
-                onReorder={(newOrder) => {
-                  setHand(newOrder);
-                  setManuallyOrdered(true);
-                }}
-                className="flex gap-1.5 overflow-x-auto pb-1"
-                style={{
-                  WebkitOverflowScrolling: 'touch',
-                  scrollbarWidth: 'thin'
-                }}
-              >
+              <div className="flex gap-1.5 flex-wrap justify-start pb-1">
                 {hand.map(({ card, idx: i }) => {
                   if (card === "HIDDEN") return null;
                   const { rank, suitSymbol, suitColor } = parseCard(card);
@@ -501,17 +541,26 @@ const SequenceTable = ({
                   }
 
                   return (
-                    <Reorder.Item
+                    <motion.div
                       key={i}
-                      value={{ card, idx: i }}
+                      ref={(el) => (cardRefs.current[`${i}`] = el)}
+                      drag
+                      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                      dragElastic={0.1}
+                      onDragStart={() => setDraggedCard(card)}
+                      onDragEnd={(event, info) => handleDragEnd({ card, idx: i }, event, info)}
                       whileDrag={{
-                        scale: 1.05,
+                        scale: 1.1,
                         zIndex: 50,
+                        cursor: "grabbing",
                       }}
                       whileTap={{ scale: 0.95 }}
-                      style={{ cursor: "grab" }}
+                      style={{
+                        cursor: "grab",
+                        opacity: draggedCard === card ? 0.5 : 1,
+                      }}
                       onClick={(e) => {
-                        if (e.defaultPrevented) return;
+                        if (draggedCard) return;
                         onSelectCard(isSelected ? null : i);
                       }}
                       className={`
@@ -542,10 +591,10 @@ const SequenceTable = ({
                       {label && (
                         <span className={`text-[6px] ${label.color} font-display mt-0.5`}>{label.text}</span>
                       )}
-                    </Reorder.Item>
+                    </motion.div>
                   );
                 })}
-              </Reorder.Group>
+              </div>
             </div>
           )}
 
