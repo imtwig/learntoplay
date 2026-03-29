@@ -187,35 +187,27 @@ const SequenceTable = ({
       if (!el) return;
       const rect = el.getBoundingClientRect();
 
-      // Expand detection area by treating dropzone as wider
-      const expandedWidth = rect.width + 80;
       const zoneCenterX = rect.left + rect.width / 2;
       const zoneCenterY = rect.top + rect.height / 2;
 
-      // Check if within expanded horizontal bounds
-      const leftBound = rect.left - 40;
-      const rightBound = rect.right + 40;
+      // Check if drag is within the same row (vertical range) as this drop zone
+      const verticalDistance = Math.abs(adjustedY - zoneCenterY);
+      const inSameRow = verticalDistance < 40; // Within same row if less than 40px vertical distance
 
-      if (dragX >= leftBound && dragX <= rightBound) {
-        // Prioritize zones the finger is directly over
-        const horizontalDistance = Math.abs(dragX - zoneCenterX);
-        const verticalDistance = Math.abs(adjustedY - zoneCenterY);
-        const distance = horizontalDistance * 0.5 + verticalDistance * 0.1;
+      const horizontalDistance = Math.abs(dragX - zoneCenterX);
 
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestZone = parseInt(zoneIndex);
-        }
+      let distance;
+      if (inSameRow) {
+        // In same row: only consider horizontal distance, ignore vertical
+        distance = horizontalDistance;
       } else {
-        // For zones finger is not over, use normal distance
-        const horizontalDistance = Math.abs(dragX - zoneCenterX);
-        const verticalDistance = Math.abs(adjustedY - zoneCenterY);
-        const distance = horizontalDistance + verticalDistance * 0.2;
+        // Different row: heavily penalize to prevent jumping between rows
+        distance = horizontalDistance + verticalDistance * 10;
+      }
 
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestZone = parseInt(zoneIndex);
-        }
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestZone = parseInt(zoneIndex);
       }
     });
 
