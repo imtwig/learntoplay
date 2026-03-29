@@ -102,8 +102,8 @@ const PokerTable = ({
     let closestZone = -1;
     let closestDistance = Infinity;
 
-    // Adjust touch position downward to compensate for finger offset (touch registers higher)
-    const adjustedY = dragY + 70;
+    // Adjust touch position upward to compensate for finger offset (touch registers lower)
+    const adjustedY = dragY - 70;
 
     Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
       if (!el) return;
