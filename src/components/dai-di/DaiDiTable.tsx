@@ -94,11 +94,18 @@ const DaiDiTable = ({
     }
   }, [myDDPlayer?.hand.length, myDDPlayer?.hand.join(",")]);
 
-  const toggleCard = (idx: number) => {
+  const toggleCard = (displayIdx: number) => {
+    // Find the card value at this display position
+    const cardValue = hand[displayIdx];
+    // Find its original index in the player's hand
+    const originalIdx = myDDPlayer?.hand.indexOf(cardValue) ?? -1;
+
+    if (originalIdx === -1) return;
+
     setSelectedCards(
-      selectedCards.includes(idx)
-        ? selectedCards.filter((i) => i !== idx)
-        : [...selectedCards, idx]
+      selectedCards.includes(originalIdx)
+        ? selectedCards.filter((i) => i !== originalIdx)
+        : [...selectedCards, originalIdx]
     );
   };
 
@@ -347,33 +354,33 @@ const DaiDiTable = ({
                   onReorder={setHand}
                   className="flex gap-1 justify-center flex-wrap"
                 >
-                  {hand.map((card, i) => (
-                    <Reorder.Item
-                      key={card}
-                      value={card}
-                      whileDrag={{
-                        scale: 1.05,
-                        zIndex: 50,
-                      }}
-                      style={{ cursor: "grab" }}
-                      onPointerDown={(e) => {
-                        // If clicking on card content, select it
-                        if ((e.target as HTMLElement).closest('button')) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => toggleCard(i)}
+                  {hand.map((card, i) => {
+                    // Check if this card is selected based on original hand position
+                    const originalIdx = myDDPlayer?.hand.indexOf(card) ?? -1;
+                    const isSelected = originalIdx !== -1 && selectedCards.includes(originalIdx);
+
+                    return (
+                      <Reorder.Item
+                        key={card}
+                        value={card}
+                        whileDrag={{
+                          scale: 1.05,
+                          zIndex: 50,
+                        }}
+                        style={{ cursor: "grab" }}
+                        onClick={(e) => {
+                          // Only select if not dragging
+                          if (e.defaultPrevented) return;
+                          toggleCard(i);
+                        }}
                       >
                         <DDCard
                           card={card}
-                          selected={selectedCards.includes(i)}
+                          selected={isSelected}
                         />
-                      </div>
-                    </Reorder.Item>
-                  ))}
+                      </Reorder.Item>
+                    );
+                  })}
                 </Reorder.Group>
 
                 {selectedCards.length > 0 && (

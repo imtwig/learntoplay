@@ -498,28 +498,29 @@ const SequenceTable = ({
 
                   return (
                     <Reorder.Item
-                      key={`${card}-${i}`}
+                      key={i}
                       value={{ card, idx: i }}
                       whileDrag={{
                         scale: 1.05,
                         zIndex: 50,
                       }}
+                      whileTap={{ scale: 0.95 }}
                       style={{ cursor: "grab" }}
+                      onClick={(e) => {
+                        if (e.defaultPrevented) return;
+                        onSelectCard(isSelected ? null : i);
+                      }}
+                      className={`
+                        flex-shrink-0 w-12 h-16 rounded-lg border-2 flex flex-col items-center justify-center
+                        transition-all duration-150 bg-white cursor-pointer
+                        ${isSelected
+                          ? "border-primary shadow-lg -translate-y-2 scale-105"
+                          : "border-border/50 hover:border-border"
+                        }
+                        ${isSpecial ? "bg-secondary/50" : ""}
+                        ${!isMyTurn ? "opacity-70" : ""}
+                      `}
                     >
-                      <motion.div
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => onSelectCard(isSelected ? null : i)}
-                        className={`
-                          flex-shrink-0 w-12 h-16 rounded-lg border-2 flex flex-col items-center justify-center
-                          transition-all duration-150 bg-white cursor-pointer
-                          ${isSelected
-                            ? "border-primary shadow-lg -translate-y-2 scale-105"
-                            : "border-border/50 hover:border-border"
-                          }
-                          ${isSpecial ? "bg-secondary/50" : ""}
-                          ${!isMyTurn ? "opacity-70" : ""}
-                        `}
-                      >
                       <span
                         className="font-display font-bold text-sm leading-none"
                         style={{ color: isJokerCard ? "#7c3aed" : suitColor === "red" ? "#dc2626" : "#000000" }}
@@ -537,7 +538,6 @@ const SequenceTable = ({
                       {label && (
                         <span className={`text-[6px] ${label.color} font-display mt-0.5`}>{label.text}</span>
                       )}
-                    </motion.div>
                     </Reorder.Item>
                   );
                 })}

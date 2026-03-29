@@ -110,11 +110,18 @@ const AssholeDaiDiTable = ({
     }
   }, [myADDPlayer?.hand.length, myADDPlayer?.hand.join(",")]);
 
-  const toggleCard = (idx: number) => {
+  const toggleCard = (displayIdx: number) => {
+    // Find the card value at this display position
+    const cardValue = hand[displayIdx];
+    // Find its original index in the player's hand
+    const originalIdx = myADDPlayer?.hand.indexOf(cardValue) ?? -1;
+
+    if (originalIdx === -1) return;
+
     setSelectedCards(
-      selectedCards.includes(idx)
-        ? selectedCards.filter((i) => i !== idx)
-        : [...selectedCards, idx]
+      selectedCards.includes(originalIdx)
+        ? selectedCards.filter((i) => i !== originalIdx)
+        : [...selectedCards, originalIdx]
     );
   };
 
@@ -295,28 +302,32 @@ const AssholeDaiDiTable = ({
                       onReorder={setHand}
                       className="flex gap-1 justify-center flex-wrap"
                     >
-                      {hand.map((card, i) => (
-                        <Reorder.Item
-                          key={card}
-                          value={card}
-                          whileDrag={{
-                            scale: 1.05,
-                            zIndex: 50,
-                          }}
-                          style={{ cursor: "grab" }}
-                        >
-                          <div
-                            className="relative cursor-pointer"
-                            onClick={() => toggleCard(i)}
+                      {hand.map((card, i) => {
+                        const originalIdx = myADDPlayer?.hand.indexOf(card) ?? -1;
+                        const isSelected = originalIdx !== -1 && selectedCards.includes(originalIdx);
+
+                        return (
+                          <Reorder.Item
+                            key={card}
+                            value={card}
+                            whileDrag={{
+                              scale: 1.05,
+                              zIndex: 50,
+                            }}
+                            style={{ cursor: "grab" }}
+                            onClick={(e) => {
+                              if (e.defaultPrevented) return;
+                              toggleCard(i);
+                            }}
                           >
                             <ADDCard
                               card={card}
                               small
-                              selected={selectedCards.includes(i)}
+                              selected={isSelected}
                             />
-                          </div>
-                        </Reorder.Item>
-                      ))}
+                          </Reorder.Item>
+                        );
+                      })}
                     </Reorder.Group>
                     <Button
                       onClick={() => onSubmitSwapReturn(selectedCards)}
@@ -451,27 +462,31 @@ const AssholeDaiDiTable = ({
                   onReorder={setHand}
                   className="flex gap-1 justify-center flex-wrap"
                 >
-                  {hand.map((card, i) => (
-                    <Reorder.Item
-                      key={card}
-                      value={card}
-                      whileDrag={{
-                        scale: 1.05,
-                        zIndex: 50,
-                      }}
-                      style={{ cursor: "grab" }}
-                    >
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => toggleCard(i)}
+                  {hand.map((card, i) => {
+                    const originalIdx = myADDPlayer?.hand.indexOf(card) ?? -1;
+                    const isSelected = originalIdx !== -1 && selectedCards.includes(originalIdx);
+
+                    return (
+                      <Reorder.Item
+                        key={card}
+                        value={card}
+                        whileDrag={{
+                          scale: 1.05,
+                          zIndex: 50,
+                        }}
+                        style={{ cursor: "grab" }}
+                        onClick={(e) => {
+                          if (e.defaultPrevented) return;
+                          toggleCard(i);
+                        }}
                       >
                         <ADDCard
                           card={card}
-                          selected={selectedCards.includes(i)}
+                          selected={isSelected}
                         />
-                      </div>
-                    </Reorder.Item>
-                  ))}
+                      </Reorder.Item>
+                    );
+                  })}
                 </Reorder.Group>
 
                 {selectedCards.length > 0 && (
