@@ -88,8 +88,8 @@ const PokerTable = ({
   const [showPlayers, setShowPlayers] = useState(false);
   const [holeCards, setHoleCards] = useState<string[]>([]);
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
-  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
-  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [activeDropZone, setActiveDropZone] = useState<number | null>(null);
+  const dropZoneRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   // Sync hole cards with player's cards
   useEffect(() => {
@@ -98,58 +98,58 @@ const PokerTable = ({
     }
   }, [myPokerPlayer?.holeCards.length, myPokerPlayer?.holeCards.join(",")]);
 
-  const updateDropTarget = (card: string, dragX: number, dragY: number) => {
-    let closestIndex = -1;
+  const updateActiveDropZone = (dragX: number, dragY: number) => {
+    let closestZone = -1;
     let closestDistance = Infinity;
-    let insertBefore = false;
 
-    holeCards.forEach((c, idx) => {
-      if (c === card) return;
-      const cardEl = cardRefs.current[`${c}-${idx}`];
-      if (!cardEl) return;
-
-      const rect = cardEl.getBoundingClientRect();
-      const cardCenterX = rect.left + rect.width / 2;
-      const cardCenterY = rect.top + rect.height / 2;
-
+    Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const zoneCenterX = rect.left + rect.width / 2;
+      const zoneCenterY = rect.top + rect.height / 2;
       const distance = Math.sqrt(
-        Math.pow(dragX - cardCenterX, 2) + Math.pow(dragY - cardCenterY, 2)
+        Math.pow(dragX - zoneCenterX, 2) + Math.pow(dragY - zoneCenterY, 2)
       );
-
       if (distance < closestDistance) {
         closestDistance = distance;
-        closestIndex = idx;
-        insertBefore = dragX < cardCenterX;
+        closestZone = parseInt(zoneIndex);
       }
     });
 
-    if (closestIndex !== -1) {
-      const currentIndex = holeCards.indexOf(card);
-      let targetIndex = insertBefore ? closestIndex : closestIndex + 1;
-
-      if (currentIndex < closestIndex && !insertBefore) {
-        targetIndex--;
-      } else if (currentIndex > closestIndex && insertBefore) {
-        targetIndex++;
-      }
-
-      setDropTargetIndex(targetIndex);
-    } else {
-      setDropTargetIndex(null);
+    if (closestZone !== -1) {
+      setActiveDropZone(closestZone);
     }
   };
 
-  const handleDragEnd = (card: string) => {
-    if (dropTargetIndex !== null) {
-      const newHand = [...holeCards];
-      const currentIndex = newHand.indexOf(card);
-      newHand.splice(currentIndex, 1);
-      newHand.splice(dropTargetIndex > currentIndex ? dropTargetIndex - 1 : dropTargetIndex, 0, card);
-      setHoleCards(newHand);
+  const handleDrop = (dropZoneIndex: number) => {
+    if (!draggedCard) return;
+
+    const originalIndex = holeCards.indexOf(draggedCard);
+
+    // If dropping in the same position, don't do anything
+    if (dropZoneIndex === originalIndex || dropZoneIndex === originalIndex + 1) {
+      setDraggedCard(null);
+      setActiveDropZone(null);
+      return;
     }
 
+    // Remove the dragged card from its current position
+    const filteredHand = holeCards.filter(c => c !== draggedCard);
+
+    // Adjust drop zone index if dropping after the original position
+    // (because removing the card shifts all subsequent indices down by 1)
+    let adjustedDropZone = dropZoneIndex;
+    if (dropZoneIndex > originalIndex) {
+      adjustedDropZone = dropZoneIndex - 1;
+    }
+
+    // Insert at the adjusted position
+    const newHand = [...filteredHand];
+    newHand.splice(adjustedDropZone, 0, draggedCard);
+
+    setHoleCards(newHand);
     setDraggedCard(null);
-    setDropTargetIndex(null);
+    setActiveDropZone(null);
   };
 
   const raiseAction = availableActions.find((a) => a.action === "raise");
@@ -384,59 +384,61 @@ const PokerTable = ({
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center gap-2"
               >
-                <div className="flex gap-2 flex-wrap justify-center">
+                <div className="flex gap-0 justify-center flex-wrap">
+                  {/* Drop zone at the beginning */}
+                  {draggedCard && (
+                    <div
+                      ref={(el) => (dropZoneRefs.current[0] = el)}
+                      className={`w-3 h-16 flex items-center justify-center shrink-0 transition-all ${
+                        activeDropZone === 0 ? 'w-12 bg-primary/20' : 'bg-transparent'
+                      }`}
+                    >
+                      {activeDropZone === 0 && (
+                        <div className="w-full h-full rounded-lg border-2 border-dashed border-primary bg-primary/10" />
+                      )}
+                    </div>
+                  )}
+
                   {holeCards.map((card, i) => {
                     const isDragging = draggedCard === card;
 
                     return (
                       <>
-                        {dropTargetIndex === i && !isDragging && (
-                          <div
-                            key={`placeholder-${i}`}
-                            className="w-12 h-16 rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center shrink-0"
-                          >
-                            <span className="text-xs text-primary">Drop</span>
-                          </div>
-                        )}
-
                         <motion.div
                           key={card}
-                          ref={(el) => (cardRefs.current[`${card}-${i}`] = el)}
                           drag
-                          dragElastic={0.2}
+                          dragElastic={0}
                           dragMomentum={false}
                           dragSnapToOrigin
                           onDragStart={() => setDraggedCard(card)}
-                          onDrag={(event, info) => updateDropTarget(card, info.point.x, info.point.y)}
-                          onDragEnd={() => handleDragEnd(card)}
-                          whileDrag={{
-                            scale: 1.1,
-                            zIndex: 50,
-                            cursor: "grabbing",
+                          onDrag={(event, info) => updateActiveDropZone(info.point.x, info.point.y)}
+                          onDragEnd={() => {
+                            if (activeDropZone !== null) {
+                              handleDrop(activeDropZone);
+                            }
+                            setDraggedCard(null);
+                            setActiveDropZone(null);
                           }}
-                          animate={{
-                            x: 0,
-                            y: 0,
-                          }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 500,
-                            damping: 30,
-                          }}
-                          style={{
-                            cursor: "grab",
-                            opacity: isDragging ? 0.3 : 1,
-                          }}
+                          animate={{ opacity: isDragging ? 0.3 : 1 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          whileDrag={{ scale: 1.05, zIndex: 50, cursor: "grabbing" }}
+                          style={{ cursor: "grab" }}
+                          className="shrink-0"
                         >
                           <PokerCard card={card} />
                         </motion.div>
 
-                        {dropTargetIndex === holeCards.length && i === holeCards.length - 1 && (
+                        {/* Drop zone after this card */}
+                        {draggedCard && (
                           <div
-                            key={`placeholder-end`}
-                            className="w-12 h-16 rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center shrink-0"
+                            ref={(el) => (dropZoneRefs.current[i + 1] = el)}
+                            className={`w-3 h-16 flex items-center justify-center shrink-0 transition-all ${
+                              activeDropZone === i + 1 ? 'w-12 bg-primary/20' : 'bg-transparent'
+                            }`}
                           >
-                            <span className="text-xs text-primary">Drop</span>
+                            {activeDropZone === i + 1 && (
+                              <div className="w-full h-full rounded-lg border-2 border-dashed border-primary bg-primary/10" />
+                            )}
                           </div>
                         )}
                       </>
