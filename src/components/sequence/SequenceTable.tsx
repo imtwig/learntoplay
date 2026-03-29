@@ -475,6 +475,10 @@ const SequenceTable = ({
                   setManuallyOrdered(true);
                 }}
                 className="flex gap-1.5 overflow-x-auto pb-1"
+                style={{
+                  WebkitOverflowScrolling: 'touch',
+                  scrollbarWidth: 'thin'
+                }}
               >
                 {hand.map(({ card, idx: i }) => {
                   if (card === "HIDDEN") return null;

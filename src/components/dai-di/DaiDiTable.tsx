@@ -352,7 +352,11 @@ const DaiDiTable = ({
                   axis="x"
                   values={hand}
                   onReorder={setHand}
-                  className="flex gap-1 justify-center flex-wrap"
+                  className="flex gap-1 overflow-x-auto pb-2 px-2 justify-start"
+                  style={{
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'thin'
+                  }}
                 >
                   {hand.map((card, i) => {
                     // Check if this card is selected based on original hand position

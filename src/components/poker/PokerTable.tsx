@@ -331,7 +331,10 @@ const PokerTable = ({
                   axis="x"
                   values={holeCards}
                   onReorder={setHoleCards}
-                  className="flex gap-2"
+                  className="flex gap-2 overflow-x-auto"
+                  style={{
+                    WebkitOverflowScrolling: 'touch'
+                  }}
                 >
                   {holeCards.map((card, i) => (
                     <Reorder.Item
