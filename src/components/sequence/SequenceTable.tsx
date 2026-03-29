@@ -140,12 +140,14 @@ const SequenceTable = ({
   const [activeDropZone, setActiveDropZone] = useState<number | null>(null);
   const dropZoneRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
-  // Sync hand with player's hand
+  // Sync hand with player's hand (but preserve manual arrangement when cards are removed)
   useEffect(() => {
-    if (mySeqPlayer && !manuallyOrdered) {
+    if (!mySeqPlayer) return;
+
+    const sortCards = () => {
       const suitOrder: Record<string, number> = { "♠": 0, "♥": 1, "♣": 2, "♦": 3 };
       const rankOrder: Record<string, number> = { A: 14, K: 13, Q: 12, J: 11, "10": 10, "9": 9, "8": 8, "7": 7, "6": 6, "5": 5, "4": 4, "3": 3, "2": 2 };
-      const sortedIndices = mySeqPlayer.hand
+      return mySeqPlayer.hand
         .map((c, i) => ({ card: c, idx: i }))
         .filter((e) => e.card !== "HIDDEN")
         .sort((a, b) => {
@@ -165,23 +167,37 @@ const SequenceTable = ({
           if (aSuit !== bSuit) return aSuit - bSuit;
           return (rankOrder[bP.rank] ?? 0) - (rankOrder[aP.rank] ?? 0);
         });
-      setHand(sortedIndices);
-    }
-  }, [mySeqPlayer?.hand.length, mySeqPlayer?.hand.join(","), manuallyOrdered]);
+    };
 
-  // Reset manual ordering when hand changes significantly (new cards dealt)
-  useEffect(() => {
-    if (mySeqPlayer) {
+    // If hand length increased or is a completely new hand, reset arrangement
+    if (mySeqPlayer.hand.length > hand.length || hand.length === 0) {
+      setHand(sortCards());
+      setManuallyOrdered(false);
+      return;
+    }
+
+    // If hand length decreased, remove missing cards while preserving order
+    if (mySeqPlayer.hand.length < hand.length) {
+      const newHand = hand.filter(h => mySeqPlayer.hand.includes(h.card));
+      setHand(newHand);
+      return;
+    }
+
+    // If same length but different cards (cards were swapped/drawn), reset
+    const sameCards = hand.every(h => mySeqPlayer.hand.includes(h.card));
+    if (!sameCards) {
+      setHand(sortCards());
       setManuallyOrdered(false);
     }
-  }, [mySeqPlayer?.hand.length]);
+  }, [mySeqPlayer?.hand.length, mySeqPlayer?.hand.join(",")]);
 
-  const updateActiveDropZone = (dragX: number, dragY: number) => {
+  const updateActiveDropZone = (dragX: number, dragY: number, isTouchEvent: boolean) => {
     let closestZone = -1;
     let closestDistance = Infinity;
 
     // Adjust touch position upward to compensate for finger offset (touch registers lower)
-    const adjustedY = dragY - 70;
+    // On desktop/mouse, use minimal offset for better cursor alignment
+    const adjustedY = isTouchEvent ? dragY - 70 : dragY;
 
     Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
       if (!el) return;
@@ -592,7 +608,10 @@ const SequenceTable = ({
                         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                         dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                         onDragStart={() => setDraggedCard(card)}
-                        onDrag={(event, info) => updateActiveDropZone(info.point.x, info.point.y)}
+                        onDrag={(event, info) => {
+                          const isTouch = event.type.includes('touch');
+                          updateActiveDropZone(info.point.x, info.point.y, isTouch);
+                        }}
                         onDragEnd={() => {
                           if (activeDropZone !== null) {
                             handleDrop(activeDropZone);

@@ -21,6 +21,8 @@ function normalizeState(gs: ADDGameState): ADDGameState {
   if (!gs.discardPile) gs.discardPile = [];
   if (!gs.swapPending) gs.swapPending = [];
   if (!gs.houseRules) gs.houseRules = DEFAULT_ADD_HOUSE_RULES;
+  // Remove deprecated fields from old game states
+  delete (gs as any).allowTwosToEnd;
   return gs;
 }
 

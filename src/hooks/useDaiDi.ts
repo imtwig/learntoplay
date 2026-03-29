@@ -130,7 +130,8 @@ export function useDaiDi(roomId: string | undefined, players: Player[]) {
       (myDDPlayer?.finishOrder === 0)
     : false;
 
-  const canPass = isMyTurn && !!gameState?.currentCombination;
+  // Can always pass during your turn
+  const canPass = isMyTurn;
 
   return {
     gameState,

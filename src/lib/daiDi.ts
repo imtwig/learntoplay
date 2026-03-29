@@ -291,11 +291,27 @@ export function ddPass(state: DDGameState, playerId: string): DDGameState {
   const player = s.players[pIdx];
   if (player.finishOrder > 0) return s;
 
-  // Can't pass if you're the round leader
-  if (!s.currentCombination) return s;
-
   player.passed = true;
   s.consecutivePasses++;
+
+  // If passing as the round leader (no combination on table), move to next player
+  if (!s.currentCombination) {
+    // Check if this is the last unfinished player
+    const unfinishedPlayers = s.players.filter((p) => p.finishOrder === 0);
+    if (unfinishedPlayers.length === 1) {
+      // This player is the last one, assign them last place and end round
+      s.finishCounter++;
+      player.finishOrder = s.finishCounter;
+      return endDDRound(s);
+    }
+
+    // Move to next player and make them the new leader
+    s.currentPlayerIndex = nextActivePlayer(s, pIdx);
+    s.roundLeaderId = s.players[s.currentPlayerIndex].playerId;
+    // Reset this player's pass flag for next time they might need to lead
+    player.passed = false;
+    return s;
+  }
 
   // Check if all other active players passed
   const activePlayers = s.players.filter((p) => p.finishOrder === 0 && !p.passed);

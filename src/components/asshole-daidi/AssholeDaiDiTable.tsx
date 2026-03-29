@@ -104,11 +104,26 @@ const AssholeDaiDiTable = ({
   const [activeDropZone, setActiveDropZone] = useState<number | null>(null);
   const dropZoneRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
-  const otherPlayers = addPlayers.filter((p) => p.playerId !== myPlayerId);
-
-  // Sync hand with player's hand
+  // Sync hand with player's hand (but preserve manual arrangement when cards are removed)
   useEffect(() => {
-    if (myADDPlayer) {
+    if (!myADDPlayer) return;
+
+    // If hand length increased or is a completely new hand, reset arrangement
+    if (myADDPlayer.hand.length > hand.length || hand.length === 0) {
+      setHand(myADDPlayer.hand);
+      return;
+    }
+
+    // If hand length decreased, remove missing cards while preserving order
+    if (myADDPlayer.hand.length < hand.length) {
+      const newHand = hand.filter(card => myADDPlayer.hand.includes(card));
+      setHand(newHand);
+      return;
+    }
+
+    // If same length but different cards (swap happened), reset
+    const sameCards = hand.every(card => myADDPlayer.hand.includes(card));
+    if (!sameCards) {
       setHand(myADDPlayer.hand);
     }
   }, [myADDPlayer?.hand.length, myADDPlayer?.hand.join(",")]);
@@ -128,12 +143,13 @@ const AssholeDaiDiTable = ({
     );
   };
 
-  const updateActiveDropZone = (dragX: number, dragY: number) => {
+  const updateActiveDropZone = (dragX: number, dragY: number, isTouchEvent: boolean) => {
     let closestZone = -1;
     let closestDistance = Infinity;
 
     // Adjust touch position upward to compensate for finger offset (touch registers lower)
-    const adjustedY = dragY - 70;
+    // On desktop/mouse, use minimal offset for better cursor alignment
+    const adjustedY = isTouchEvent ? dragY - 70 : dragY;
 
     Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
       if (!el) return;
@@ -221,11 +237,7 @@ const AssholeDaiDiTable = ({
             {phase === "playing" ? "PLAYING" : phase === "round_end" ? "ROUND END" : phase === "swap_give" ? "CARD SWAP" : phase === "swap_summary" ? "SWAP DONE" : phase === "waiting" ? "WAITING" : phase.toUpperCase()}
           </span>
         </div>
-        {houseRules.allowEndOn2 && (
-          <span className="text-[8px] font-display tracking-wider text-game-gold bg-game-gold/10 px-1.5 py-0.5 rounded">
-            END ON 2
-          </span>
-        )}
+        <div className="w-6" />
       </header>
 
       {/* Players panel */}
@@ -401,7 +413,10 @@ const AssholeDaiDiTable = ({
                               dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                               dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                               onDragStart={() => setDraggedCard(card)}
-                              onDrag={(event, info) => updateActiveDropZone(info.point.x, info.point.y)}
+                              onDrag={(event, info) => {
+                                const isTouch = event.type.includes('touch');
+                                updateActiveDropZone(info.point.x, info.point.y, isTouch);
+                              }}
                               onDragEnd={() => {
                                 if (activeDropZone !== null) {
                                   handleDrop(activeDropZone);
@@ -463,6 +478,16 @@ const AssholeDaiDiTable = ({
             {phase === "swap_summary" && (
               <div className="space-y-3 text-center">
                 <p className="text-sm text-primary font-display">{message}</p>
+                {myADDPlayer?.swapCardsToGive && myADDPlayer.swapCardsToGive.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-display text-muted-foreground mb-1">YOU GAVE</p>
+                    <div className="flex gap-1 justify-center">
+                      {myADDPlayer.swapCardsToGive.map((c, i) => (
+                        <ADDCard key={i} card={c} small />
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {myADDPlayer?.swapCardsReceived && myADDPlayer.swapCardsReceived.length > 0 && (
                   <div>
                     <p className="text-[10px] font-display text-muted-foreground mb-1">YOU RECEIVED</p>
@@ -486,10 +511,11 @@ const AssholeDaiDiTable = ({
         {/* Active gameplay */}
         {phase === "playing" && (
           <>
-            {/* Other players */}
+            {/* All players */}
             <div className="flex flex-wrap justify-center gap-2 w-full">
-              {otherPlayers.map((p, i) => {
-                const isCurrent = currentPlayerIndex === addPlayers.indexOf(p);
+              {addPlayers.map((p, i) => {
+                const isCurrent = currentPlayerIndex === i;
+                const isMe = p.playerId === myPlayerId;
                 return (
                   <motion.div
                     key={p.playerId}
@@ -497,10 +523,12 @@ const AssholeDaiDiTable = ({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
                     className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg border transition-all min-w-[60px] ${
-                      isCurrent ? "border-primary/50 bg-primary/5" : "border-border/20 bg-card/30"
+                      isMe ? "border-primary bg-primary/10" : isCurrent ? "border-primary/50 bg-primary/5" : "border-border/20 bg-card/30"
                     } ${p.finishOrder > 0 ? "opacity-40" : ""}`}
                   >
-                    <span className="text-[9px] font-medium truncate max-w-[70px]">{p.name}</span>
+                    <span className="text-[9px] font-medium truncate max-w-[70px]">
+                      {p.name}{isMe && " (You!)"}
+                    </span>
                     {p.rank && (
                       <span className={`text-[7px] font-display px-1 py-0.5 rounded ${RANK_BADGES[p.rank]?.color || ""}`}>
                         {RANK_BADGES[p.rank]?.label}
@@ -601,7 +629,10 @@ const AssholeDaiDiTable = ({
                           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                           dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                           onDragStart={() => setDraggedCard(card)}
-                          onDrag={(event, info) => updateActiveDropZone(info.point.x, info.point.y)}
+                          onDrag={(event, info) => {
+                            const isTouch = event.type.includes('touch');
+                            updateActiveDropZone(info.point.x, info.point.y, isTouch);
+                          }}
                           onDragEnd={() => {
                             if (activeDropZone !== null) {
                               handleDrop(activeDropZone);
@@ -651,6 +682,7 @@ const AssholeDaiDiTable = ({
                   </div>
                 )}
 
+                {/* Warning/info message when stuck with 2s */}
                 {/* Action buttons */}
                 {isMyTurn && (
                   <div className="flex gap-2 justify-center">

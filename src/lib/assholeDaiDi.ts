@@ -76,11 +76,11 @@ export interface PlayedCombination {
 }
 
 export interface ADDHouseRules {
-  allowEndOn2: boolean;
+  // Future house rules can go here
 }
 
 export const DEFAULT_ADD_HOUSE_RULES: ADDHouseRules = {
-  allowEndOn2: false,
+  // No house rules by default
 };
 
 export interface ADDGameState {
@@ -376,22 +376,15 @@ export function dealRound(state: ADDGameState): ADDGameState {
     }
   }
 
-  // Sort hands and set card counts
+  // Sort hands initially so players start organized
   for (const p of s.players) {
     p.hand = sortHand(p.hand);
     p.cardCount = p.hand.length;
   }
 
-  // Determine first player
-  if (s.roundNumber === 1) {
-    // Player holding 3♦ goes first
-    const idx = s.players.findIndex((p) => p.hand.includes("3D"));
-    s.currentPlayerIndex = idx >= 0 ? idx : 0;
-  } else {
-    // President leads
-    const presIdx = s.players.findIndex((p) => p.rank === "President");
-    s.currentPlayerIndex = presIdx >= 0 ? presIdx : 0;
-  }
+  // Determine first player - whoever has 3♦
+  const idx = s.players.findIndex((p) => p.hand.includes("3D"));
+  s.currentPlayerIndex = idx >= 0 ? idx : 0;
 
   s.roundLeaderId = s.players[s.currentPlayerIndex].playerId;
   s.phase = "playing";
@@ -426,16 +419,6 @@ export function playCards(state: ADDGameState, playerId: string, cardIndices: nu
   // If there's a current combination, must beat it
   if (s.currentCombination) {
     if (!beats(cards, s.currentCombination)) return s;
-  }
-
-  // Check end-on-2 restriction
-  if (!s.houseRules.allowEndOn2) {
-    const remainingAfter = player.hand.length - cards.length;
-    if (remainingAfter === 0) {
-      // Check if all played cards are 2s
-      const allTwos = cards.every((c) => parseCard(c).rank === "2");
-      if (allTwos && cards.length <= 3) return s; // Can't end on 2s
-    }
   }
 
   // Play the cards
@@ -477,6 +460,23 @@ export function playCards(state: ADDGameState, playerId: string, cardIndices: nu
       }
       return endRound(s);
     }
+
+    // Player finished - clear the table so next player can play any cards
+    s.currentCombination = null;
+    s.discardPile = [];
+    s.consecutivePasses = 0;
+
+    // Reset all passes for remaining players
+    for (const p of s.players) {
+      if (p.finishOrder === 0) p.passed = false;
+    }
+
+    // Move to next active player and they lead
+    s.currentPlayerIndex = nextActivePlayer(s, pIdx);
+    s.roundLeaderId = s.players[s.currentPlayerIndex].playerId;
+    // Keep lastPlayerId set so round 1 3♦ rule doesn't re-trigger
+
+    return s;
   }
 
   // Move to next active player
@@ -512,7 +512,7 @@ export function passPlay(state: ADDGameState, playerId: string): ADDGameState {
 
   // Check if all other active players have passed
   const activePlayers = s.players.filter((p) => p.finishOrder === 0 && !p.passed);
-  
+
   if (activePlayers.length <= 1) {
     // The last player who played wins this round of play
     // Clear the table, they lead next
@@ -520,7 +520,7 @@ export function passPlay(state: ADDGameState, playerId: string): ADDGameState {
     s.currentCombination = null;
     s.discardPile = [];
     s.consecutivePasses = 0;
-    
+
     // Reset passes
     for (const p of s.players) {
       if (p.finishOrder === 0) p.passed = false;
@@ -601,17 +601,38 @@ function endRound(state: ADDGameState): ADDGameState {
     byFinish[i].rank = titles[i];
   }
 
-  // Scoring: President earns sum of all other players' remaining cards
-  const president = s.players.find((p) => p.rank === "President");
-  if (president) {
-    const totalPenalty = s.players
-      .filter((p) => p.rank !== "President")
-      .reduce((sum, p) => sum + p.cardCount, 0);
-    president.roundScore = totalPenalty;
-    president.cumulativeScore += totalPenalty;
+  // Scoring: Placement-based points
+  // 1st = +2, 2nd = +1, last = -2, second-to-last = -1, middle = 0
+  const n = s.players.length;
+  const byFinishOrder = [...s.players].sort((a, b) => a.finishOrder - b.finishOrder);
+
+  for (let i = 0; i < byFinishOrder.length; i++) {
+    const player = byFinishOrder[i];
+    let points = 0;
+
+    if (i === 0) {
+      // 1st place
+      points = 2;
+    } else if (i === 1) {
+      // 2nd place
+      points = 1;
+    } else if (i === n - 1) {
+      // Last place
+      points = -2;
+    } else if (i === n - 2) {
+      // Second to last
+      points = -1;
+    } else {
+      // Middle positions
+      points = 0;
+    }
+
+    player.roundScore = points;
+    player.cumulativeScore += points;
   }
 
-  s.message = `${president?.name || "Winner"} earns ${president?.roundScore || 0} points!`;
+  const winner = byFinishOrder[0];
+  s.message = `${winner?.name || "Winner"} wins! Scores updated.`;
 
   return s;
 }
@@ -624,9 +645,8 @@ export function startSwapPhase(state: ADDGameState): ADDGameState {
 
   // Deal new cards first
   const dealt = dealRound(s);
-  dealt.phase = "swap_give";
 
-  // Setup swaps
+  // Setup and execute swaps automatically
   const n = dealt.players.length;
   const president = dealt.players.find((p) => p.rank === "President");
   const asshole = dealt.players.find((p) => p.rank === "Asshole");
@@ -635,29 +655,97 @@ export function startSwapPhase(state: ADDGameState): ADDGameState {
 
   dealt.swapPending = [];
 
+  // President <-> Asshole swap
   if (president && asshole) {
     const swapCount = n === 3 ? 1 : 2;
-    // Auto-take asshole's best cards
-    const assholeBest = sortHand(asshole.hand).slice(-swapCount);
+
+    // Take asshole's best cards
+    const assholeSorted = sortHand(asshole.hand);
+    const assholeBest = assholeSorted.slice(-swapCount);
+
+    // Take president's worst cards
+    const presidentSorted = sortHand(president.hand);
+    const presidentWorst = presidentSorted.slice(0, swapCount);
+
+    // Execute swap
+    // Remove cards from each player
+    for (const card of assholeBest) {
+      const idx = asshole.hand.indexOf(card);
+      if (idx >= 0) asshole.hand.splice(idx, 1);
+    }
+    for (const card of presidentWorst) {
+      const idx = president.hand.indexOf(card);
+      if (idx >= 0) president.hand.splice(idx, 1);
+    }
+
+    // Give cards to opposite player
+    president.hand.push(...assholeBest);
+    asshole.hand.push(...presidentWorst);
+
+    // Sort hands after swap so players can start fresh
+    president.hand = sortHand(president.hand);
+    asshole.hand = sortHand(asshole.hand);
+    president.cardCount = president.hand.length;
+    asshole.cardCount = asshole.hand.length;
+
+    // Record for display
+    president.swapCardsReceived = assholeBest;
+    president.swapCardsToGive = presidentWorst;
+    asshole.swapCardsReceived = presidentWorst;
+    asshole.swapCardsToGive = assholeBest;
+
     dealt.swapPending.push({
       fromId: asshole.playerId,
       toId: president.playerId,
       count: swapCount,
       autoCards: assholeBest,
-      returnedCards: [],
+      returnedCards: presidentWorst,
     });
   }
 
+  // VP <-> Vice Asshole swap
   if (vp && va && n >= 4) {
-    const vaBest = sortHand(va.hand).slice(-1);
+    const vaSorted = sortHand(va.hand);
+    const vaBest = vaSorted.slice(-1);
+
+    const vpSorted = sortHand(vp.hand);
+    const vpWorst = vpSorted.slice(0, 1);
+
+    // Execute swap
+    for (const card of vaBest) {
+      const idx = va.hand.indexOf(card);
+      if (idx >= 0) va.hand.splice(idx, 1);
+    }
+    for (const card of vpWorst) {
+      const idx = vp.hand.indexOf(card);
+      if (idx >= 0) vp.hand.splice(idx, 1);
+    }
+
+    vp.hand.push(...vaBest);
+    va.hand.push(...vpWorst);
+
+    // Sort hands after swap so players can start fresh
+    vp.hand = sortHand(vp.hand);
+    va.hand = sortHand(va.hand);
+    vp.cardCount = vp.hand.length;
+    va.cardCount = va.hand.length;
+
+    vp.swapCardsReceived = vaBest;
+    vp.swapCardsToGive = vpWorst;
+    va.swapCardsReceived = vpWorst;
+    va.swapCardsToGive = vaBest;
+
     dealt.swapPending.push({
       fromId: va.playerId,
       toId: vp.playerId,
       count: 1,
       autoCards: vaBest,
-      returnedCards: [],
+      returnedCards: vpWorst,
     });
   }
+
+  dealt.phase = "swap_summary";
+  dealt.message = "Card swap complete!";
 
   return dealt;
 }
@@ -704,9 +792,7 @@ export function submitSwapReturn(state: ADDGameState, playerId: string, cardIndi
     fromPlayer.hand.push(card);
   }
 
-  // Sort hands and update counts
-  fromPlayer.hand = sortHand(fromPlayer.hand);
-  toPlayer.hand = sortHand(toPlayer.hand);
+  // Update counts (no sorting - let players arrange their own cards)
   fromPlayer.cardCount = fromPlayer.hand.length;
   toPlayer.cardCount = toPlayer.hand.length;
 
@@ -748,9 +834,9 @@ export function finishSwapAndPlay(state: ADDGameState): ADDGameState {
     p.swapCardsReceived = [];
   }
 
-  // President leads
-  const presIdx = s.players.findIndex((p) => p.rank === "President");
-  s.currentPlayerIndex = presIdx >= 0 ? presIdx : 0;
+  // Player with 3♦ leads
+  const idx = s.players.findIndex((p) => p.hand.includes("3D"));
+  s.currentPlayerIndex = idx >= 0 ? idx : 0;
   s.roundLeaderId = s.players[s.currentPlayerIndex].playerId;
 
   return s;

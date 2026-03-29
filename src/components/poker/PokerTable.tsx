@@ -91,19 +91,37 @@ const PokerTable = ({
   const [activeDropZone, setActiveDropZone] = useState<number | null>(null);
   const dropZoneRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
-  // Sync hole cards with player's cards
+  // Sync hole cards with player's cards (but preserve manual arrangement when cards are removed)
   useEffect(() => {
-    if (myPokerPlayer) {
+    if (!myPokerPlayer) return;
+
+    // If hand length increased or is a completely new hand, reset arrangement
+    if (myPokerPlayer.holeCards.length > holeCards.length || holeCards.length === 0) {
+      setHoleCards(myPokerPlayer.holeCards);
+      return;
+    }
+
+    // If hand length decreased, remove missing cards while preserving order
+    if (myPokerPlayer.holeCards.length < holeCards.length) {
+      const newHand = holeCards.filter(card => myPokerPlayer.holeCards.includes(card));
+      setHoleCards(newHand);
+      return;
+    }
+
+    // If same length but different cards (swap happened), reset
+    const sameCards = holeCards.every(card => myPokerPlayer.holeCards.includes(card));
+    if (!sameCards) {
       setHoleCards(myPokerPlayer.holeCards);
     }
   }, [myPokerPlayer?.holeCards.length, myPokerPlayer?.holeCards.join(",")]);
 
-  const updateActiveDropZone = (dragX: number, dragY: number) => {
+  const updateActiveDropZone = (dragX: number, dragY: number, isTouchEvent: boolean) => {
     let closestZone = -1;
     let closestDistance = Infinity;
 
     // Adjust touch position upward to compensate for finger offset (touch registers lower)
-    const adjustedY = dragY - 70;
+    // On desktop/mouse, use minimal offset for better cursor alignment
+    const adjustedY = isTouchEvent ? dragY - 70 : dragY;
 
     Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
       if (!el) return;
@@ -430,7 +448,10 @@ const PokerTable = ({
                           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                           dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                           onDragStart={() => setDraggedCard(card)}
-                          onDrag={(event, info) => updateActiveDropZone(info.point.x, info.point.y)}
+                          onDrag={(event, info) => {
+                            const isTouch = event.type.includes('touch');
+                            updateActiveDropZone(info.point.x, info.point.y, isTouch);
+                          }}
                           onDragEnd={() => {
                             if (activeDropZone !== null) {
                               handleDrop(activeDropZone);

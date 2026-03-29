@@ -89,11 +89,26 @@ const DaiDiTable = ({
   const dropZoneRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  const otherPlayers = ddPlayers.filter((p) => p.playerId !== myPlayerId);
-
-  // Sync hand with player's hand
+  // Sync hand with player's hand (but preserve manual arrangement when cards are removed)
   useEffect(() => {
-    if (myDDPlayer) {
+    if (!myDDPlayer) return;
+
+    // If hand length increased or is a completely new hand, reset arrangement
+    if (myDDPlayer.hand.length > hand.length || hand.length === 0) {
+      setHand(myDDPlayer.hand);
+      return;
+    }
+
+    // If hand length decreased, remove missing cards while preserving order
+    if (myDDPlayer.hand.length < hand.length) {
+      const newHand = hand.filter(card => myDDPlayer.hand.includes(card));
+      setHand(newHand);
+      return;
+    }
+
+    // If same length but different cards (swap happened), reset
+    const sameCards = hand.every(card => myDDPlayer.hand.includes(card));
+    if (!sameCards) {
       setHand(myDDPlayer.hand);
     }
   }, [myDDPlayer?.hand.length, myDDPlayer?.hand.join(",")]);
@@ -113,12 +128,13 @@ const DaiDiTable = ({
     );
   };
 
-  const updateActiveDropZone = (dragX: number, dragY: number) => {
+  const updateActiveDropZone = (dragX: number, dragY: number, isTouchEvent: boolean) => {
     let closestZone = -1;
     let closestDistance = Infinity;
 
     // Adjust touch position upward to compensate for finger offset (touch registers lower)
-    const adjustedY = dragY - 70;
+    // On desktop/mouse, use minimal offset for better cursor alignment
+    const adjustedY = isTouchEvent ? dragY - 70 : dragY;
 
     Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
       if (!el) return;
@@ -258,7 +274,10 @@ const DaiDiTable = ({
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] text-muted-foreground">{p.cardCount} cards</span>
                     <span className="text-[9px] text-destructive">-{p.cumulativeScore}</span>
-                    <span className="font-display text-game-gold">+{p.cumulativeEarnings}</span>
+                    <span className="text-[9px] text-green-600">+{p.cumulativeEarnings}</span>
+                    <span className="text-xs font-display font-bold text-game-gold">
+                      {p.cumulativeEarnings - p.cumulativeScore >= 0 ? '+' : ''}{p.cumulativeEarnings - p.cumulativeScore}
+                    </span>
                     {isHost && p.playerId !== myPlayerId && (
                       <Button variant="ghost" size="sm" onClick={() => onKickPlayer(p.playerId)} className="text-destructive h-6 w-6 p-0">
                         <UserX className="h-3 w-3" />
@@ -296,33 +315,43 @@ const DaiDiTable = ({
             <h2 className="font-display font-bold text-lg tracking-wider">ROUND {roundNumber} COMPLETE</h2>
 
             <div className="w-full space-y-1.5">
-              {[...ddPlayers]
-                .sort((a, b) => {
-                  if (a.finishOrder === 1) return -1;
-                  if (b.finishOrder === 1) return 1;
-                  return b.penaltyScore - a.penaltyScore;
-                })
-                .map((p) => (
-                  <div key={p.playerId} className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
-                    p.finishOrder === 1 ? "border-game-gold/50 bg-game-gold/10" : "border-border/30 bg-card/30"
-                  }`}>
-                    <div className="flex items-center gap-2">
-                      {p.finishOrder === 1 && <span className="text-game-gold text-xs">👑</span>}
-                      <span className="text-xs font-medium">{p.name}</span>
-                      {p.playerId === myPlayerId && <span className="text-primary text-[9px]">(You)</span>}
+              {(() => {
+                const roundEarnings = ddPlayers.filter((x) => x.finishOrder !== 1).reduce((sum, x) => sum + x.penaltyScore, 0);
+                return [...ddPlayers]
+                  .sort((a, b) => {
+                    if (a.finishOrder === 1) return -1;
+                    if (b.finishOrder === 1) return 1;
+                    return b.penaltyScore - a.penaltyScore;
+                  })
+                  .map((p) => (
+                    <div key={p.playerId} className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
+                      p.finishOrder === 1 ? "border-game-gold/50 bg-game-gold/10" : "border-border/30 bg-card/30"
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        {p.finishOrder === 1 && <span className="text-game-gold text-xs">👑</span>}
+                        <span className="text-xs font-medium">{p.name}</span>
+                        {p.playerId === myPlayerId && <span className="text-primary text-[9px]">(You)</span>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {p.finishOrder === 1 ? (
+                          <>
+                            <span className="text-[9px] text-green-600">+{roundEarnings} this round</span>
+                            <span className="text-sm font-display font-bold text-game-gold">
+                              {p.cumulativeEarnings - p.cumulativeScore >= 0 ? '+' : ''}{p.cumulativeEarnings - p.cumulativeScore}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-[9px] text-destructive">-{p.penaltyScore} this round</span>
+                            <span className="text-sm font-display font-bold text-game-gold">
+                              {p.cumulativeEarnings - p.cumulativeScore >= 0 ? '+' : ''}{p.cumulativeEarnings - p.cumulativeScore}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      {p.finishOrder === 1 ? (
-                        <span className="text-xs font-display text-game-gold">+{p.cumulativeEarnings - (p.cumulativeEarnings - ddPlayers.filter((x) => x.finishOrder !== 1).reduce((sum, x) => sum + x.penaltyScore, 0))} earned</span>
-                      ) : (
-                        <>
-                          <span className="text-[9px] text-muted-foreground">{p.cardCount} left</span>
-                          <span className="text-xs font-display text-destructive">-{p.penaltyScore}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ));
+              })()}
             </div>
 
             {message && (
@@ -345,10 +374,11 @@ const DaiDiTable = ({
         {/* Active gameplay */}
         {phase === "playing" && (
           <>
-            {/* Other players */}
+            {/* All players */}
             <div className="flex flex-wrap justify-center gap-2 w-full">
-              {otherPlayers.map((p, i) => {
-                const isCurrent = currentPlayerIndex === ddPlayers.indexOf(p);
+              {ddPlayers.map((p, i) => {
+                const isCurrent = currentPlayerIndex === i;
+                const isMe = p.playerId === myPlayerId;
                 return (
                   <motion.div
                     key={p.playerId}
@@ -359,7 +389,10 @@ const DaiDiTable = ({
                       isCurrent ? "border-primary/50 bg-primary/5" : "border-border/20 bg-card/30"
                     }`}
                   >
-                    <span className="text-[9px] font-medium truncate max-w-[70px]">{p.name}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[9px] font-medium truncate max-w-[70px]">{p.name}</span>
+                      {isMe && <span className="text-primary text-[8px]">(You!)</span>}
+                    </div>
                     <span className="text-[9px] text-muted-foreground">{p.cardCount} cards</span>
                     {p.passed && <span className="text-[7px] text-muted-foreground">Passed</span>}
                   </motion.div>
@@ -454,7 +487,10 @@ const DaiDiTable = ({
                           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                           dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                           onDragStart={() => setDraggedCard(card)}
-                          onDrag={(event, info) => updateActiveDropZone(info.point.x, info.point.y)}
+                          onDrag={(event, info) => {
+                            const isTouch = event.type.includes('touch');
+                            updateActiveDropZone(info.point.x, info.point.y, isTouch);
+                          }}
                           onDragEnd={() => {
                             if (activeDropZone !== null) {
                               handleDrop(activeDropZone);
@@ -498,6 +534,17 @@ const DaiDiTable = ({
                     {selectedCombo
                       ? (comboValid ? COMBO_LABELS[selectedCombo.type] : "Triples not allowed")
                       : "Invalid combination"}
+                  </div>
+                )}
+
+                {/* Warning message when stuck with 2s */}
+                {isMyTurn && myDDPlayer && myDDPlayer.hand.length > 0 && !houseRules.allowEndOn2 &&
+                 myDDPlayer.hand.every((c: string) => {
+                   const rank = c.slice(0, -1);
+                   return rank === "2";
+                 }) && (
+                  <div className="text-center text-[10px] font-display text-amber-500 bg-amber-500/10 px-2 py-1 rounded">
+                    Can't end on 2s - Pass to skip turn
                   </div>
                 )}
 
