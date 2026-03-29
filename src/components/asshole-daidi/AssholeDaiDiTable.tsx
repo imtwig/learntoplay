@@ -132,8 +132,8 @@ const AssholeDaiDiTable = ({
     let closestZone = -1;
     let closestDistance = Infinity;
 
-    // Adjust touch position to account for finger offset (touch registers higher than visual position)
-    const adjustedY = dragY + 40;
+    // Use the actual touch position without offset
+    const adjustedY = dragY;
 
     Object.entries(dropZoneRefs.current).forEach(([zoneIndex, el]) => {
       if (!el) return;
