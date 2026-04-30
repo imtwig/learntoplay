@@ -176,16 +176,28 @@ const SequenceTable = ({
       return;
     }
 
-    // If hand length decreased, remove missing cards while preserving order
+    // If hand length decreased, rebuild from server state with correct indices
     if (mySeqPlayer.hand.length < hand.length) {
-      const newHand = hand.filter(h => mySeqPlayer.hand.includes(h.card));
+      // Always rebuild with correct indices from server
+      const newHand = mySeqPlayer.hand
+        .map((card, idx) => ({ card, idx }))
+        .filter((e) => e.card !== "HIDDEN");
+
       setHand(newHand);
+      // Reset manual ordering since indices have changed
+      setManuallyOrdered(false);
       return;
     }
 
     // If same length but different cards (cards were swapped/drawn), reset
-    const sameCards = hand.every(h => mySeqPlayer.hand.includes(h.card));
-    if (!sameCards) {
+    // Compare cards at each index position, not just presence in array
+    const cardsByIndex = mySeqPlayer.hand.map((c, i) => ({ card: c, idx: i }));
+    const indexMismatch = hand.some((h, i) => {
+      const expected = cardsByIndex[i];
+      return !expected || h.card !== expected.card || h.idx !== expected.idx;
+    });
+
+    if (indexMismatch) {
       setHand(sortCards());
       setManuallyOrdered(false);
     }
