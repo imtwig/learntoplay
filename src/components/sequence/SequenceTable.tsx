@@ -441,7 +441,7 @@ const SequenceTable = ({
 
           {/* Last Played Card Indicator */}
           <AnimatePresence>
-            {gameState.lastMove && (
+            {gameState.lastMove && gameState.lastMove.card && gameState.lastMove.playerId && (
               <motion.div
                 key={`${gameState.lastMove.row}-${gameState.lastMove.col}-${gameState.lastMove.card}`}
                 initial={{ opacity: 0, scale: 0.8, y: -10 }}
@@ -455,7 +455,7 @@ const SequenceTable = ({
                     {seqPlayers.find((p) => p.playerId === gameState.lastMove?.playerId)?.name || "Player"} played:
                   </span>
                   {(() => {
-                    const card = gameState.lastMove.card;
+                    const card = gameState.lastMove!.card;
                     const isJokerCard = card.startsWith("JKR");
                     if (isJokerCard) {
                       return (
