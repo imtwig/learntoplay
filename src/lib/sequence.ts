@@ -40,7 +40,7 @@ export interface SeqGameState {
   teams: { A: string[]; B: string[]; C: string[] };
   sequences: SeqSequenceData[];
   winner: string | null;
-  lastMove: { row: number; col: number; type: "place" | "remove" } | null;
+  lastMove: { row: number; col: number; type: "place" | "remove"; card: string; playerId: string } | null;
   message: string | null;
   houseRules: boolean | SeqHouseRules;
   roundStartIndex: number;
@@ -358,14 +358,14 @@ export function playCard(
     }
 
     s.board[row][col] = null;
-    s.lastMove = { row, col, type: "remove" };
+    s.lastMove = { row, col, type: "remove", card, playerId };
     s.message = `${player.name} removed a chip at ${SEQUENCE_BOARD[row][col]}`;
   } else {
     // Placement (normal card, joker, or two-eyed jack in standard rules)
     if (s.board[row][col] !== null && !isCorner(row, col)) return s;
     if (isCorner(row, col)) return s;
     s.board[row][col] = { owner, partOfSequence: false };
-    s.lastMove = { row, col, type: "place" };
+    s.lastMove = { row, col, type: "place", card, playerId };
     s.message = null;
 
     detectNewSequences(s, owner);

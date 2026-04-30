@@ -427,6 +427,52 @@ const SequenceTable = ({
             </motion.div>
           </AnimatePresence>
 
+          {/* Last Played Card Indicator */}
+          <AnimatePresence>
+            {gameState.lastMove && (
+              <motion.div
+                key={`${gameState.lastMove.row}-${gameState.lastMove.col}-${gameState.lastMove.card}`}
+                initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="px-3 py-2 mb-2 bg-accent/10 border border-accent/30 rounded-lg"
+              >
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">
+                    {seqPlayers.find((p) => p.playerId === gameState.lastMove?.playerId)?.name || "Player"} played:
+                  </span>
+                  {(() => {
+                    const card = gameState.lastMove.card;
+                    const isJokerCard = card.startsWith("JKR");
+                    if (isJokerCard) {
+                      return (
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded font-bold text-purple-700 dark:text-purple-300">
+                          <span>🃏</span>
+                          <span>JOKER</span>
+                        </div>
+                      );
+                    }
+                    const { rank, suitSymbol, suitColor } = parseCard(card);
+                    return (
+                      <div className="flex items-center gap-0.5 px-2 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded font-bold">
+                        <span style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}>
+                          {rank}
+                        </span>
+                        <span style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}>
+                          {suitSymbol}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                  <span className="text-muted-foreground text-[10px]">
+                    at {SEQUENCE_BOARD[gameState.lastMove.row][gameState.lastMove.col]}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Board */}
           <div className="flex-1 flex items-center justify-center p-2 overflow-auto">
             <div className="flex flex-col items-center w-full max-w-[520px]">
