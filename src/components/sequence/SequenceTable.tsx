@@ -8,6 +8,7 @@ import type { SeqPlayer } from "@/lib/sequence";
 import type { Player } from "@/hooks/useRoom";
 import { SEQUENCE_BOARD, parseCard, isCorner, isOneEyedJack, isTwoEyedJack, isJack, getBoardPositions } from "@/lib/sequenceBoard";
 import SequenceResultOverlay from "./SequenceResultOverlay";
+import PlayHistoryModal from "./PlayHistoryModal";
 
 interface Props {
   gameState: SeqGameState;
@@ -132,6 +133,9 @@ const SequenceTable = ({
       setTurnFlash(false);
     }
   }, [isMyTurn, currentPlayerIndex]);
+
+  // Play history modal
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   // Hand state for drag-and-drop
   const [hand, setHand] = useState<Array<{ card: string; idx: number }>>([]);
@@ -439,52 +443,6 @@ const SequenceTable = ({
             </motion.div>
           </AnimatePresence>
 
-          {/* Last Played Card Indicator */}
-          <AnimatePresence>
-            {gameState.lastMove && gameState.lastMove.card && gameState.lastMove.playerId && (
-              <motion.div
-                key={`${gameState.lastMove.row}-${gameState.lastMove.col}-${gameState.lastMove.card}`}
-                initial={{ opacity: 0, scale: 0.8, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="px-3 py-2 mb-2 bg-accent/10 border border-accent/30 rounded-lg"
-              >
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">
-                    {seqPlayers.find((p) => p.playerId === gameState.lastMove?.playerId)?.name || "Player"} played:
-                  </span>
-                  {(() => {
-                    const card = gameState.lastMove!.card;
-                    const isJokerCard = card.startsWith("JKR");
-                    if (isJokerCard) {
-                      return (
-                        <div className="flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded font-bold text-purple-700 dark:text-purple-300">
-                          <span>🃏</span>
-                          <span>JOKER</span>
-                        </div>
-                      );
-                    }
-                    const { rank, suitSymbol, suitColor } = parseCard(card);
-                    return (
-                      <div className="flex items-center gap-0.5 px-2 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded font-bold">
-                        <span style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}>
-                          {rank}
-                        </span>
-                        <span style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}>
-                          {suitSymbol}
-                        </span>
-                      </div>
-                    );
-                  })()}
-                  <span className="text-muted-foreground text-[10px]">
-                    at {SEQUENCE_BOARD[gameState.lastMove.row][gameState.lastMove.col]}
-                  </span>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Board */}
           <div className="flex-1 flex items-center justify-center p-2 overflow-auto">
             <div className="flex flex-col items-center w-full max-w-[520px]">
@@ -607,6 +565,43 @@ const SequenceTable = ({
                     YOUR HAND ({mySeqPlayer.hand.length} cards)
                   </p>
                 </div>
+
+                {/* Last Played Card Indicator */}
+                {gameState.lastMove && gameState.lastMove.card && gameState.lastMove.playerId && (
+                  <motion.button
+                    onClick={() => setShowHistoryModal(true)}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-1.5 px-2 py-1 bg-accent/10 hover:bg-accent/20 border border-accent/30 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <span className="text-[9px] text-muted-foreground font-display tracking-wider">LAST:</span>
+                    {(() => {
+                      const card = gameState.lastMove!.card;
+                      const isJokerCard = card.startsWith("JKR");
+                      if (isJokerCard) {
+                        return (
+                          <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                            <span className="text-xs">🃏</span>
+                          </div>
+                        );
+                      }
+                      const { rank, suitSymbol, suitColor } = parseCard(card);
+                      return (
+                        <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs font-bold">
+                          <span style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}>
+                            {rank}
+                          </span>
+                          <span style={{ color: suitColor === "red" ? "#dc2626" : "#000000" }}>
+                            {suitSymbol}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </motion.button>
+                )}
+
                 {selectedCardIsDead && selectedCardIndex !== null && (
                   <Button
                     size="sm"
@@ -774,6 +769,14 @@ const SequenceTable = ({
           )}
         </div>
       )}
+
+      {/* Play History Modal */}
+      <PlayHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        playHistory={gameState.playHistory || []}
+        players={seqPlayers}
+      />
     </div>
   );
 };

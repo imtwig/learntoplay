@@ -28,6 +28,15 @@ export interface SeqPlayer {
   team: SeqTeam | null;
 }
 
+export interface SeqPlayHistory {
+  row: number;
+  col: number;
+  type: "place" | "remove";
+  card: string;
+  playerId: string;
+  timestamp: number;
+}
+
 export interface SeqGameState {
   board: (SeqChip | null)[][];
   players: SeqPlayer[];
@@ -41,6 +50,7 @@ export interface SeqGameState {
   sequences: SeqSequenceData[];
   winner: string | null;
   lastMove: { row: number; col: number; type: "place" | "remove"; card: string; playerId: string } | null;
+  playHistory: SeqPlayHistory[];
   message: string | null;
   houseRules: boolean | SeqHouseRules;
   roundStartIndex: number;
@@ -164,6 +174,7 @@ export function initSequenceGame(
     sequences: [],
     winner: null,
     lastMove: null,
+    playHistory: [],
     message: null,
     houseRules,
     roundStartIndex: roundStartIndex % n,
@@ -359,6 +370,11 @@ export function playCard(
 
     s.board[row][col] = null;
     s.lastMove = { row, col, type: "remove", card, playerId };
+    // Add to play history (keep last 50 moves)
+    s.playHistory = [
+      { row, col, type: "remove", card, playerId, timestamp: Date.now() },
+      ...s.playHistory.slice(0, 49)
+    ];
     s.message = `${player.name} removed a chip at ${SEQUENCE_BOARD[row][col]}`;
   } else {
     // Placement (normal card, joker, or two-eyed jack in standard rules)
@@ -366,6 +382,11 @@ export function playCard(
     if (isCorner(row, col)) return s;
     s.board[row][col] = { owner, partOfSequence: false };
     s.lastMove = { row, col, type: "place", card, playerId };
+    // Add to play history (keep last 50 moves)
+    s.playHistory = [
+      { row, col, type: "place", card, playerId, timestamp: Date.now() },
+      ...s.playHistory.slice(0, 49)
+    ];
     s.message = null;
 
     detectNewSequences(s, owner);
