@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { GameId } from "@/lib/gameData";
 
-// Generate a persistent session ID for this browser tab
+// Generate a persistent session ID for this browser (survives page refresh)
 const getSessionId = () => {
-  let id = sessionStorage.getItem("game_session_id");
+  let id = localStorage.getItem("game_session_id");
   if (!id) {
     id = crypto.randomUUID();
-    sessionStorage.setItem("game_session_id", id);
+    localStorage.setItem("game_session_id", id);
   }
   return id;
 };
@@ -120,18 +120,33 @@ export function useRoom(roomId: string | undefined) {
     const tryReconnect = async () => {
       if (reconnected.current) return;
       reconnected.current = true;
-      const { data: existing } = await supabase
+
+      // Try to find a disconnected player with matching session_id
+      const { data: existing, error: queryError } = await supabase
         .from("players")
-        .select("id")
+        .select("id, display_name")
         .eq("room_id", roomId)
         .eq("session_id", sessionId)
         .eq("connected", false)
         .limit(1);
+
+      if (queryError) {
+        console.error("Reconnection query error:", queryError);
+        return;
+      }
+
       if (existing && existing.length > 0) {
-        await supabase
+        console.log(`Reconnecting player: ${existing[0].display_name} (${existing[0].id})`);
+        const { error: updateError } = await supabase
           .from("players")
           .update({ connected: true })
           .eq("id", existing[0].id);
+
+        if (updateError) {
+          console.error("Reconnection update error:", updateError);
+        } else {
+          console.log("Player reconnected successfully");
+        }
       }
     };
 
